@@ -223,11 +223,9 @@ export function GuestUpload({
       <div className="blob blob-1" aria-hidden />
       <div className="blob blob-2" aria-hidden />
 
-      <div className="relative mx-auto max-w-lg px-4 pb-14 pt-6">
-        <div className="mb-5 flex items-center justify-between">
-          <span className="font-display text-xl font-bold text-gradient">
-            მემენტო ✨
-          </span>
+      <div className="relative container-narrow pb-14 pt-6">
+        <div className="mb-6 flex items-center justify-between gap-3">
+          <span className="font-display text-lg font-bold text-gradient">მემენტო</span>
           <LocaleToggle value={locale} onChange={setLocale} />
         </div>
 
@@ -256,10 +254,9 @@ export function GuestUpload({
             />
           )}
           <div className="p-5">
-            <h1 className="text-2xl font-extrabold leading-tight">
-              {info.coupleNames}
-            </h1>
-            <p className="mt-1 text-sm text-[var(--text-muted)]" suppressHydrationWarning>
+            <p className="type-label">{t(locale, "eventLabel")}</p>
+            <h1 className="mt-1 font-display text-2xl font-bold leading-snug">{info.coupleNames}</h1>
+            <p className="mt-2 text-sm text-[var(--muted)]" suppressHydrationWarning>
               {new Date(info.eventDate).toLocaleDateString(
                 locale === "ka" ? "ka-GE" : locale === "ru" ? "ru-RU" : "en-GB",
                 { dateStyle: "long" },
@@ -275,7 +272,7 @@ export function GuestUpload({
             transition={{ repeat: Infinity, duration: 2 }}
           >
             <p className="text-center text-xs font-bold uppercase tracking-widest text-pink-300">
-              📷 Disposable
+              დარჩენილი კადრები
             </p>
             <p className="mt-2 text-center font-display text-5xl font-bold">
               {shotsLeft}
@@ -298,7 +295,7 @@ export function GuestUpload({
                 tab === id ? "btn-gradient text-white" : "bg-white card-chunky border-0 shadow-none",
               )}
             >
-              {id === "photos" ? "ფოტოები 📸" : "Guestbook 💌"}
+              {id === "photos" ? "ფოტოები" : "Guestbook"}
             </button>
           ))}
         </div>

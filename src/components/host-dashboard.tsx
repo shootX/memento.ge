@@ -207,14 +207,12 @@ export function HostDashboard({
   return (
     <div className="min-h-screen bg-[var(--bg-page)]" data-testid="host-ready">
       <PhotoLightbox item={lightbox} onClose={() => setLightbox(null)} />
-      <header className="border-b-2 border-pink-100 bg-white/90 backdrop-blur-md sticky top-0 z-30">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-4">
-          <div>
-            <p className="font-display text-2xl font-bold text-gradient">
-              მემენტო
-            </p>
-            <h1 className="text-xl font-extrabold">{event.coupleNames}</h1>
-            <p className="text-sm text-[var(--text-muted)]" suppressHydrationWarning>
+      <header className="sticky top-0 z-30 border-b-2 border-[var(--border-soft)] bg-white/92 backdrop-blur-md">
+        <div className="container-page flex flex-wrap items-center justify-between gap-4 py-4">
+          <div className="min-w-0">
+            <p className="type-label">Host · მემენტო</p>
+            <h1 className="font-display text-2xl font-bold leading-tight">{event.coupleNames}</h1>
+            <p className="mt-1 text-sm text-[var(--muted)]" suppressHydrationWarning>
               {new Date(event.eventDate).toLocaleDateString("ka-GE")} ·{" "}
               {plan?.nameKa ?? event.planTier}
               {!event.isPaid && (
@@ -240,17 +238,17 @@ export function HostDashboard({
             </Button>
           </div>
         </div>
-        <nav className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-4 pb-3">
+        <nav className="container-page flex gap-2 overflow-x-auto pb-3">
           {tabs.map((t) => (
             <button
               key={t.id}
               type="button"
               onClick={() => setTab(t.id)}
               className={cn(
-                "flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition",
+                "flex shrink-0 items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold transition",
                 tab === t.id
                   ? "btn-gradient text-white"
-                  : "bg-pink-50 text-[var(--text-muted)] hover:bg-pink-100",
+                  : "bg-[var(--surface-warm)] text-[var(--fg-2)] hover:bg-pink-100",
               )}
             >
               <t.icon className="h-4 w-4" />
@@ -260,28 +258,22 @@ export function HostDashboard({
         </nav>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-8">
+      <main className="container-page section-y pt-6 pb-10">
         <div className="mb-8 grid gap-4 sm:grid-cols-3">
           {[
-            { label: "ატვირთვები", value: event.usage.uploadCount, emoji: "📸" },
+            { label: "ატვირთვები", value: event.usage.uploadCount },
             {
               label: "ლიმიტი",
               value: `${event.usage.uploadCount}/${event.usage.maxUploads}`,
-              emoji: "🎯",
             },
-            { label: "ფასი", value: `${event.usage.priceGel} ₾`, emoji: "💜" },
+            { label: "პაკეტი", value: `${event.usage.priceGel} ₾` },
           ].map((s) => (
             <div
               key={s.label}
-              className="card-chunky flex items-center gap-4 p-5"
+              className="card-chunky flex flex-col gap-1 p-5"
             >
-              <span className="text-3xl">{s.emoji}</span>
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-[var(--text-muted)]">
-                  {s.label}
-                </p>
-                <p className="text-2xl font-extrabold">{s.value}</p>
-              </div>
+              <p className="type-label">{s.label}</p>
+              <p className="font-display text-3xl font-bold">{s.value}</p>
             </div>
           ))}
         </div>
@@ -362,8 +354,8 @@ export function HostDashboard({
         {tab === "qr" && (
           <section className="grid gap-8 lg:grid-cols-2">
             <div className="card-chunky p-6">
-              <h2 className="mb-4 text-lg font-extrabold">აირჩიე სტილი 🎨</h2>
-              <div className="grid gap-3">
+              <h2 className="type-section-title text-xl">QR ბარათის სტილი</h2>
+              <div className="mt-4 grid gap-3">
                 {templates.map((t) => (
                   <button
                     key={t.id}
@@ -372,8 +364,8 @@ export function HostDashboard({
                     className={cn(
                       "flex items-center gap-3 rounded-2xl border-2 p-4 text-left font-bold transition",
                       activeTemplate === t.id
-                        ? "border-[var(--pink)] bg-pink-50"
-                        : "border-transparent bg-gray-50",
+                        ? "border-[var(--accent)] bg-[var(--surface-warm)]"
+                        : "border-transparent bg-[var(--surface-warm)]/60",
                     )}
                   >
                     <span className="text-2xl">{t.emoji}</span>
