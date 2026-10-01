@@ -8,12 +8,12 @@ const links = [
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-50 border-b-2 border-pink-100 bg-white/90 backdrop-blur-md">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
+    <header className="sticky top-0 z-50 border-b-2 border-[var(--border-soft)] bg-white/92 backdrop-blur-md">
+      <div className="container-page flex items-center justify-between py-4">
         <Link href="/" className="font-display text-xl font-bold text-gradient">
-          მემენტო ✨
+          მემენტო
         </Link>
-        <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-[var(--text-muted)]">
+        <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-[var(--muted)]">
           {links.map((l) => (
             <Link
               key={l.href}
@@ -27,7 +27,7 @@ export function SiteHeader() {
         <div className="flex items-center gap-2">
           <Link
             href="/login"
-            className="hidden sm:inline text-sm font-semibold text-[var(--text-muted)] hover:text-[var(--pink)]"
+            className="hidden sm:inline text-sm font-semibold text-[var(--muted)] hover:text-[var(--accent)]"
           >
             შესვლა
           </Link>

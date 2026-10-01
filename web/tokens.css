@@ -1,0 +1,120 @@
+/* Memento · Electric Sunset — canonical semantic tokens (see DESIGN.md) */
+
+:root {
+  --bg: #fff8fc;
+  --surface: #ffffff;
+  --surface-warm: #ffe4f0;
+  --surface-dark: #1a0a2e;
+  --fg: #1a1025;
+  --fg-2: #3d2f4a;
+  --muted: #6b5f7a;
+  --meta: #ff2d8a;
+  --border: rgba(255, 45, 138, 0.15);
+  --border-soft: rgba(255, 45, 138, 0.08);
+  --border-strong: rgba(26, 16, 37, 0.12);
+
+  --accent: #ff2d8a;
+  --accent-mid: #ff6b35;
+  --accent-cool: #a855f7;
+  --accent-on: #ffffff;
+  --accent-hover: color-mix(in oklab, var(--accent), #1a1025 8%);
+  --accent-active: color-mix(in oklab, var(--accent), #1a1025 14%);
+
+  --success: #34d399;
+  --warn: #fbbf24;
+  --danger: #ef4444;
+
+  --gradient-signature: linear-gradient(
+    125deg,
+    #ff2d8a 0%,
+    #ff6b35 45%,
+    #a855f7 100%
+  );
+  --gradient-soft: linear-gradient(
+    160deg,
+    rgba(255, 45, 138, 0.12) 0%,
+    rgba(255, 107, 53, 0.1) 50%,
+    rgba(168, 85, 247, 0.12) 100%
+  );
+
+  --font-display: var(--font-fredoka), var(--font-noto-sans), system-ui, sans-serif;
+  --font-body: var(--font-noto-sans), system-ui, sans-serif;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 2rem;
+  --text-4xl: 2.5rem;
+  --text-5xl: 3rem;
+  --text-hero: clamp(2.5rem, 5vw + 1rem, 4.5rem);
+
+  --leading-body: 1.55;
+  --leading-tight: 1.12;
+  --leading-snug: 1.35;
+  --tracking-display: -0.02em;
+  --tracking-label: 0.06em;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  --section-y: var(--space-12);
+  --section-y-lg: var(--space-16);
+  --container-max: 72rem;
+  --container-narrow: 40rem;
+  --container-gutter: var(--space-4);
+
+  --radius-sm: 12px;
+  --radius-md: 20px;
+  --radius-lg: 24px;
+  --radius-xl: 28px;
+  --radius-pill: 9999px;
+
+  --shadow-playful: 0 8px 0 rgba(26, 16, 37, 0.08), 0 12px 32px rgba(255, 45, 138, 0.12);
+  --shadow-btn: 0 6px 0 #e91e7a;
+  --shadow-outline: 4px 4px 0 #1a1025;
+  --elev-flat: none;
+  --focus-ring: 0 0 0 3px rgba(255, 45, 138, 0.35);
+
+  --motion-fast: 150ms;
+  --motion-base: 220ms;
+  --motion-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Legacy aliases (existing components) */
+  --bg-page: var(--bg);
+  --bg-card: var(--surface);
+  --bg-dark: var(--surface-dark);
+  --pink: var(--accent);
+  --orange: var(--accent-mid);
+  --violet: var(--accent-cool);
+  --mint: var(--success);
+  --sun: var(--warn);
+  --text-ink: var(--fg);
+  --text-muted: var(--muted);
+  --color-ink: var(--fg);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-cream: var(--bg);
+  --color-gold: var(--accent);
+  --color-forest: var(--accent-cool);
+  --color-blush: var(--surface-warm);
+  --radius-chunky: var(--radius-md);
+}
+
+@media (min-width: 768px) {
+  :root {
+    --section-y: var(--space-16);
+    --container-gutter: var(--space-6);
+  }
+}

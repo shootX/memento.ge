@@ -4,6 +4,7 @@ export const LOCALES: Locale[] = ["ka", "en", "ru"];
 
 const dict: Record<Locale, Record<string, string>> = {
   ka: {
+    eventLabel: "ღონისძიება",
     uploadTitle: "გაუზიარეთ თქვენი კადრები",
     uploadSubtitle: "ატვირთეთ ფოტოები და მოკლე ვიდეოები ქორწილის ალბომში",
     yourName: "თქვენი სახელი (არასავალდებულო)",
@@ -18,6 +19,7 @@ const dict: Record<Locale, Record<string, string>> = {
     limitReached: "ლიმიტი ამოიწურა",
   },
   en: {
+    eventLabel: "Event",
     uploadTitle: "Share your moments",
     uploadSubtitle: "Upload photos and short videos to the wedding album",
     yourName: "Your name (optional)",
@@ -32,6 +34,7 @@ const dict: Record<Locale, Record<string, string>> = {
     limitReached: "Upload limit reached",
   },
   ru: {
+    eventLabel: "Событие",
     uploadTitle: "Поделитесь моментами",
     uploadSubtitle: "Загрузите фото и короткие видео в свадебный альбом",
     yourName: "Ваше имя (необязательно)",
