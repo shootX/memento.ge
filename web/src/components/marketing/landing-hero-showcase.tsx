@@ -7,23 +7,31 @@ export function LandingHeroShowcase() {
   const reduce = useReducedMotion();
 
   return (
-    <div className="relative mx-auto w-full max-w-[320px] lg:max-w-none lg:justify-self-end">
+    <div className="relative mx-auto w-full max-w-[320px] lg:max-w-none lg:justify-self-end" data-testid="hero-phone-mockup">
       <div className="relative mx-auto aspect-[9/16] w-[min(100%,300px)] rounded-[2.5rem] border-[6px] border-[var(--fg)] bg-[var(--surface-dark)] p-2 shadow-[12px_12px_0_rgba(255,45,138,0.35)]">
-        <div className="relative h-full overflow-hidden rounded-[2rem] bg-[var(--bg)]">
-          {/* Static first paint — guest photo + upload UI */}
-          <div className="relative z-10 flex h-full flex-col p-3" data-testid="hero-phone-static">
-            <div className="relative min-h-0 flex-1 overflow-hidden rounded-2xl border-2 border-white shadow-md">
+        <div className="relative flex h-full flex-col overflow-hidden rounded-[2rem] bg-[var(--bg)]">
+          <div
+            className="relative z-10 min-h-0 flex-1 overflow-hidden p-3 pb-0"
+            data-testid="hero-phone-static"
+          >
+            <div className="relative h-full overflow-hidden rounded-2xl border-2 border-white shadow-md">
               <Image
                 src="/seed-samples/wedding-4.jpg"
                 alt=""
                 fill
-                className="object-cover"
+                className="object-cover opacity-100"
                 sizes="280px"
                 priority
                 data-testid="hero-phone-photo"
               />
             </div>
-            <div className="mt-3 rounded-2xl bg-white p-3 shadow-lg ring-2 ring-[var(--accent)]/30">
+          </div>
+
+          <div className="relative z-10 shrink-0 p-3 pt-2">
+            <div
+              className="rounded-2xl bg-white p-3 shadow-lg ring-2 ring-[var(--accent)]/30"
+              data-testid="hero-phone-upload-ui"
+            >
               <p className="text-center text-[11px] font-bold text-[var(--muted)]">ატვირთვა ალბომში</p>
               <div className="mt-2 flex justify-center">
                 <span className="inline-flex h-12 w-12 items-center justify-center rounded-full btn-gradient text-lg text-white">
@@ -34,7 +42,10 @@ export function LandingHeroShowcase() {
           </div>
 
           {!reduce && (
-            <div className="hero-phone-cycle pointer-events-none absolute inset-0 z-20" aria-hidden>
+            <div
+              className="hero-phone-cycle pointer-events-none absolute inset-x-0 bottom-0 top-[58%] z-20"
+              aria-hidden
+            >
               <div className="hero-phone-scene hero-phone-scene-1 flex flex-col items-center justify-center gap-3 bg-[var(--bg)]/95 p-4">
                 <div className="rounded-2xl bg-white p-3 shadow-lg ring-2 ring-[var(--accent)]">
                   <div className="h-20 w-20 rounded-lg bg-[var(--gradient-signature)]" />
@@ -45,11 +56,11 @@ export function LandingHeroShowcase() {
                 <div className="hero-confetti pointer-events-none absolute inset-0" />
                 <p className="relative z-10 text-lg font-display font-bold text-gradient">გმადლობთ!</p>
               </div>
-              <div className="hero-phone-scene hero-phone-scene-4 bg-[var(--bg)] p-2">
+              <div className="hero-phone-scene hero-phone-scene-4 flex flex-col bg-[var(--bg)] p-2">
                 <div className="rounded-xl bg-[var(--surface-dark)] p-1">
                   <p className="mb-1 text-center text-[9px] font-bold text-pink-300">ლაივ სლაიდშოუ</p>
                   <Image
-                    src="/seed-samples/wedding-1.jpg"
+                    src="/seed-samples/wedding-6.jpg"
                     alt=""
                     width={260}
                     height={180}

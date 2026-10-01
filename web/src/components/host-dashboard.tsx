@@ -234,7 +234,8 @@ export function HostDashboard({
         ) : (
           <div className="absolute inset-0 bg-[var(--gradient-soft)]" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-page)] via-[var(--bg-page)]/85 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-page)] via-[var(--bg-page)]/70 to-black/25" />
+        <div className="absolute inset-0 bg-[var(--bg-page)]/15" />
         <div className="container-page relative py-8 md:py-10">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>

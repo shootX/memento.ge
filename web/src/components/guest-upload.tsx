@@ -75,6 +75,20 @@ export function GuestUpload({
   const [guestKey, setGuestKey] = useState("");
   const [guestbookText, setGuestbookText] = useState("");
   const [tab, setTab] = useState<"photos" | "book">("photos");
+  const [browserOffline, setBrowserOffline] = useState(false);
+  const [uploadDeferred, setUploadDeferred] = useState(false);
+
+  useEffect(() => {
+    const syncOnline = () =>
+      setBrowserOffline(typeof navigator !== "undefined" && !navigator.onLine);
+    syncOnline();
+    window.addEventListener("online", syncOnline);
+    window.addEventListener("offline", syncOnline);
+    return () => {
+      window.removeEventListener("online", syncOnline);
+      window.removeEventListener("offline", syncOnline);
+    };
+  }, []);
 
   useEffect(() => {
     const k = localStorage.getItem(`memento_gk_${slug}`) ?? crypto.randomUUID();
@@ -135,6 +149,7 @@ export function GuestUpload({
       setAllDone(false);
 
       const offline = typeof navigator !== "undefined" && !navigator.onLine;
+      if (offline) setUploadDeferred(true);
 
       for (let i = 0; i < prepared.length; i++) {
         const file = prepared[i];
@@ -172,6 +187,7 @@ export function GuestUpload({
             ),
           );
         } catch {
+          setUploadDeferred(true);
           await enqueueUpload({
             slug,
             guestName,
@@ -215,6 +231,10 @@ export function GuestUpload({
   const closed = !info.canUpload;
   const disposable = info.disposable?.enabled;
   const shotsLeft = info.limits.shotsRemaining;
+  const showWeakConnectionBanner =
+    browserOffline ||
+    uploadDeferred ||
+    queue.some((item) => item.status === "error");
 
   return (
     <div
@@ -434,9 +454,11 @@ export function GuestUpload({
           </>
         )}
 
-        <p className="mt-8 text-center text-xs text-[var(--text-muted)]">
-          {t(locale, "weakWifi")} 📶
-        </p>
+        {showWeakConnectionBanner && (
+          <p className="mt-8 text-center text-xs text-[var(--text-muted)]">
+            {t(locale, "weakWifi")} 📶
+          </p>
+        )}
       </div>
     </div>
   );

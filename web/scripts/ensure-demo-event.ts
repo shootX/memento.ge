@@ -67,20 +67,18 @@ async function seedDemoMedia(eventId: string) {
   });
 }
 
+const DEMO_COVER_FILE = "wedding-4.jpg";
+
 async function ensureCoverPhoto(eventId: string, existingKey: string | null) {
   const key = existingKey ?? buildMediaKey(eventId, "cover", "jpg");
-  if (!(await objectExists(key))) {
-    const coverBuf = await readFile(
-      path.join(process.cwd(), "public/seed-samples/wedding-1.jpg"),
-    );
-    await putObject(key, coverBuf, "image/jpeg");
-  }
-  if (existingKey !== key) {
-    await prisma.event.update({
-      where: { id: eventId },
-      data: { coverPhotoKey: key },
-    });
-  }
+  const coverBuf = await readFile(
+    path.join(process.cwd(), "public/seed-samples", DEMO_COVER_FILE),
+  );
+  await putObject(key, coverBuf, "image/jpeg");
+  await prisma.event.update({
+    where: { id: eventId },
+    data: { coverPhotoKey: key },
+  });
 }
 
 export async function ensureDemoEvent() {
