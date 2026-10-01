@@ -18,7 +18,7 @@ export async function ensureDemoEvent() {
     event = await prisma.event.create({
       data: {
         coupleNames: "ნინო & გიორგი",
-        eventDate: new Date("2026-06-14"),
+        eventDate: new Date(),
         guestSlug: DEMO_GUEST_SLUG,
         hostToken: "demo-host-token-memento-2026",
         slideshowToken: "demo-slideshow-token-memento",

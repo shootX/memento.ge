@@ -4,7 +4,7 @@ const base = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:43123";
 
 test("marketing and guest flow smoke", async ({ page }) => {
   await page.goto(base);
-  await expect(page.locator("h1")).toContainText("ფოტოები");
+  await expect(page.locator("h1")).toContainText("ყველა ფოტო");
 
   const res = await page.request.post(`${base}/api/events`, {
     data: {

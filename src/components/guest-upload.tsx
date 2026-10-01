@@ -3,11 +3,11 @@
 import { useCallback, useEffect, useState } from "react";
 import imageCompression from "browser-image-compression";
 import confetti from "canvas-confetti";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Locale, t } from "@/lib/i18n";
 import { LocaleToggle } from "@/components/locale-toggle";
 import { Button } from "@/components/ui/button";
-import { Camera, CheckCircle2, Loader2, Sparkles } from "lucide-react";
+import { Camera, CheckCircle2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { useMotionSafe } from "@/lib/motion";
 import { enqueueUpload } from "@/lib/offline-upload-queue";
@@ -255,7 +255,7 @@ export function GuestUpload({
           )}
           <div className="p-5">
             <p className="type-label">{t(locale, "eventLabel")}</p>
-            <h1 className="mt-1 font-display text-2xl font-bold leading-snug">{info.coupleNames}</h1>
+            <h1 className="mt-1 font-display text-3xl font-bold leading-snug">{info.coupleNames}</h1>
             <p className="mt-2 text-sm text-[var(--muted)]" suppressHydrationWarning>
               {new Date(info.eventDate).toLocaleDateString(
                 locale === "ka" ? "ka-GE" : locale === "ru" ? "ru-RU" : "en-GB",
@@ -272,14 +272,25 @@ export function GuestUpload({
             transition={{ repeat: Infinity, duration: 2 }}
           >
             <p className="text-center text-xs font-bold uppercase tracking-widest text-pink-300">
-              დარჩენილი კადრები
+              {t(locale, "shotsRemaining")}
             </p>
             <p className="mt-2 text-center font-display text-5xl font-bold">
               {shotsLeft}
             </p>
             <p className="text-center text-sm text-pink-100">კადარი დარჩა</p>
-            <div className="mt-4 aspect-[4/3] rounded-2xl border-2 border-dashed border-white/30 bg-black/40 flex items-center justify-center">
-              <Camera className="h-12 w-12 text-pink-400" />
+            <div className="mt-4 flex justify-center gap-1">
+              {Array.from({ length: info.disposable.shotsPerGuest }).map((_, i) => {
+                const used = info.disposable!.shotsPerGuest - (shotsLeft ?? 0);
+                return (
+                  <div
+                    key={i}
+                    className={cn(
+                      "film-strip-dot h-10 w-8 rounded-sm border-2 border-white/20 bg-black/50",
+                      i < used && "bg-[var(--accent)]/90",
+                    )}
+                  />
+                );
+              })}
             </div>
           </motion.div>
         )}
@@ -295,7 +306,7 @@ export function GuestUpload({
                 tab === id ? "btn-gradient text-white" : "bg-white card-chunky border-0 shadow-none",
               )}
             >
-              {id === "photos" ? "ფოტოები" : "Guestbook"}
+              {id === "photos" ? t(locale, "photosTab") : t(locale, "guestbookTab")}
             </button>
           ))}
         </div>
@@ -365,13 +376,11 @@ export function GuestUpload({
               />
             </label>
 
-            <label
-              className="mt-5 flex min-h-[160px] cursor-pointer flex-col items-center justify-center gap-2 rounded-3xl border-4 border-dashed border-[var(--pink)] bg-white p-6 transition hover:bg-pink-50"
-            >
-              <div className="flex h-16 w-16 items-center justify-center rounded-full btn-gradient">
-                <Sparkles className="h-8 w-8 text-white" />
-              </div>
-              <span className="text-center font-bold">{t(locale, "dropHere")}</span>
+            <label className="mt-8 flex flex-col items-center gap-4">
+              <span className="guest-shutter flex h-32 w-32 cursor-pointer items-center justify-center rounded-full btn-gradient transition active:scale-95">
+                <Camera className="h-14 w-14 text-white" />
+              </span>
+              <span className="text-center text-lg font-bold">{t(locale, "dropHere")}</span>
               <input
                 type="file"
                 accept="image/jpeg,image/png,image/webp,image/heic,video/mp4,video/quicktime,video/webm"
@@ -381,20 +390,28 @@ export function GuestUpload({
               />
             </label>
 
-            <AnimatePresence>
-              {queue.length > 0 && (
-                <motion.ul
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="mt-5 grid grid-cols-3 gap-2"
-                >
+            {queue.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-8"
+              >
+                <p className="type-label mb-3">ალბომში ფრინვა…</p>
+                <ul className="grid grid-cols-3 gap-2">
                   {queue.map((item, i) => (
                     <li
                       key={i}
-                      className="relative aspect-square overflow-hidden rounded-2xl border-2 border-pink-100 bg-white"
+                      className="relative aspect-square overflow-hidden rounded-2xl border-2 border-[var(--accent)]/30 bg-white shadow-md"
                     >
                       {item.preview && (
-                        <img src={item.preview} alt="" className="h-full w-full object-cover" />
+                        <motion.img
+                          src={item.preview}
+                          alt=""
+                          className="h-full w-full object-cover"
+                          initial={reduce ? false : { scale: 1.2, opacity: 0.5 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={spring}
+                        />
                       )}
                       {item.status === "uploading" && (
                         <div className="absolute inset-0 flex items-center justify-center bg-black/40">
@@ -402,21 +419,21 @@ export function GuestUpload({
                         </div>
                       )}
                       {item.status === "done" && (
-                        <span className="absolute right-1 top-1 rounded-full bg-[var(--mint)] px-1.5 text-xs font-bold text-white">
+                        <span className="absolute right-1 top-1 rounded-full bg-[var(--success)] px-1.5 text-xs font-bold text-white">
                           ✓
                         </span>
                       )}
-                      <div className="absolute bottom-0 left-0 right-0 h-1 bg-pink-100">
+                      <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-pink-100">
                         <div
-                          className="h-full btn-gradient"
+                          className="h-full btn-gradient transition-all"
                           style={{ width: `${item.progress}%` }}
                         />
                       </div>
                     </li>
                   ))}
-                </motion.ul>
-              )}
-            </AnimatePresence>
+                </ul>
+              </motion.div>
+            )}
           </>
         )}
 

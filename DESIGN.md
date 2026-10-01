@@ -95,6 +95,13 @@ Hierarchy rule: one hero size per screen → section title (2xl–3xl display) �
 - Do not add decorative glassmorphism stacks on every surface
 - Keep performance: `next/image`, `section-defer`, defer PWA on marketing routes
 
+## Marketing hero & motion
+
+- Landing hero pairs **large Georgian gradient headline** with **CSS phone mockup** (`LandingHeroShowcase`): four scenes (QR → upload → confetti → slideshow). Animation via `.hero-phone-cycle`; static final scene when `prefers-reduced-motion`.
+- Live ticker shows demo upload count — label must say „დემო”.
+- Guest upload uses **shutter button** (`.guest-shutter`), film-strip shot counter, flying thumbnails into grid on upload.
+- Host gallery uses **skeleton → image** transition; never leave framer `opacity:0` stuck on reduced-motion.
+
 ## Agent prompt guide
 
 When implementing UI, read `tokens.css` and map Tailwind to CSS variables. Prefer utility classes defined in `globals.css` (`container-page`, `type-hero`, `eyebrow`, `card-chunky`, `btn-gradient`). All new colors and radii must come from tokens.

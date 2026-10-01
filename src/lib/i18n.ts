@@ -5,6 +5,9 @@ export const LOCALES: Locale[] = ["ka", "en", "ru"];
 const dict: Record<Locale, Record<string, string>> = {
   ka: {
     eventLabel: "ღონისძიება",
+    photosTab: "ფოტოები",
+    guestbookTab: "სტუმრების წიგნი",
+    shotsRemaining: "დარჩენილი კადრები",
     uploadTitle: "გაუზიარეთ თქვენი კადრები",
     uploadSubtitle: "ატვირთეთ ფოტოები და მოკლე ვიდეოები ქორწილის ალბომში",
     yourName: "თქვენი სახელი (არასავალდებულო)",
@@ -19,6 +22,9 @@ const dict: Record<Locale, Record<string, string>> = {
     limitReached: "ლიმიტი ამოიწურა",
   },
   en: {
+    photosTab: "Photos",
+    guestbookTab: "Guestbook",
+    shotsRemaining: "Shots left",
     eventLabel: "Event",
     uploadTitle: "Share your moments",
     uploadSubtitle: "Upload photos and short videos to the wedding album",
@@ -34,6 +40,9 @@ const dict: Record<Locale, Record<string, string>> = {
     limitReached: "Upload limit reached",
   },
   ru: {
+    photosTab: "Фото",
+    guestbookTab: "Гостевая книга",
+    shotsRemaining: "Осталось кадров",
     eventLabel: "Событие",
     uploadTitle: "Поделитесь моментами",
     uploadSubtitle: "Загрузите фото и короткие видео в свадебный альбом",
