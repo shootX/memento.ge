@@ -563,6 +563,9 @@ async function seedPushAndAudit(eventIds: { id: string; seed: EventSeed }[]) {
     });
   }
 
+  await prisma.usageSnapshot.deleteMany({
+    where: { capturedAt: { gte: daysFromNow(-1) } },
+  });
   await prisma.usageSnapshot.create({
     data: {
       totalBytes: BigInt(
@@ -578,11 +581,17 @@ async function seedPushAndAudit(eventIds: { id: string; seed: EventSeed }[]) {
     create: {
       id: `${SEED_TAG}-email`,
       toEmail: "host.nino@memento.demo",
-      template: "event_reminder",
-      payload: JSON.stringify({ seedTag: SEED_TAG, locale: "ka" }),
+      template: "package_expiry",
+      locale: "ka",
+      payload: JSON.stringify({
+        coupleNames: "ნინო & გიორგი",
+        expiresAt: daysFromNow(14).toISOString(),
+        hostUrl: "http://localhost:43123/host/demo-host-token-memento-2026",
+      }),
       sentAt: daysFromNow(-1),
     },
     update: {
+      template: "package_expiry",
       sentAt: daysFromNow(-1),
     },
   });

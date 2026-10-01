@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { hashToken } from "@/lib/user-session";
 import { newToken } from "@/lib/crypto";
 import { queueEmail } from "@/lib/email";
+import { publicAppUrl } from "@/lib/app-url";
 import { clientIp, consumeLogin, jsonError } from "@/lib/api-utils";
 
 const schema = z.object({ email: z.string().email().max(200) });
@@ -28,7 +29,7 @@ export async function POST(req: Request) {
     },
   });
 
-  const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/verify?token=${token}`;
+  const verifyUrl = `${publicAppUrl()}/api/auth/verify?token=${token}`;
   await queueEmail(normalized, "magic_link", { verifyUrl });
 
   return NextResponse.json({

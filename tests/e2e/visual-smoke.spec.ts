@@ -15,7 +15,7 @@ test.beforeAll(async ({ request }) => {
   expect(res.ok()).toBeTruthy();
   const event = await res.json();
   const login = await request.post(`${base}/api/admin/login`, {
-    data: { password: process.env.ADMIN_PASSWORD ?? "admin123" },
+    data: { password: process.env.ADMIN_PASSWORD ?? "dev-admin-change-me" },
   });
   const cookie = login.headers()["set-cookie"] ?? "";
   await request.patch(`${base}/api/admin/events/${event.id}`, {
