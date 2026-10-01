@@ -12,6 +12,7 @@
     "db:push": "prisma db push",
     "seed:demo": "tsx scripts/seed-demo.ts",
     "ensure:demo": "tsx scripts/ensure-demo-event.ts",
+    "seed:full": "tsx scripts/seed-full.ts",
     "screenshots": "node scripts/capture-screenshots.mjs",
     "seed:photos": "tsx scripts/generate-seed-photos.ts",
     "test:e2e": "playwright test",

@@ -1,9 +1,14 @@
 import { AdminPanel } from "@/components/admin-panel";
+import { getAdminDatabaseSnapshot } from "@/lib/admin-database-explorer";
 import { getAdminTokenFromCookies, validateAdminSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { getPlan } from "@/lib/plans";
 
-export default async function AdminPage() {
+type Props = { searchParams: Promise<{ tab?: string }> };
+
+export default async function AdminPage({ searchParams }: Props) {
+  const { tab } = await searchParams;
+  const initialTab = tab === "database" ? "database" : "events";
   const token = await getAdminTokenFromCookies();
   const authed = await validateAdminSession(token);
   let initialEvents: {
@@ -17,7 +22,9 @@ export default async function AdminPage() {
     priceGel: number;
   }[] = [];
 
+  let initialDatabase = null;
   if (authed) {
+    initialDatabase = await getAdminDatabaseSnapshot();
     const events = await prisma.event.findMany({
       orderBy: { createdAt: "desc" },
       take: 200,
@@ -34,5 +41,12 @@ export default async function AdminPage() {
     }));
   }
 
-  return <AdminPanel initialAuthed={authed} initialEvents={initialEvents} />;
+  return (
+    <AdminPanel
+      initialAuthed={authed}
+      initialEvents={initialEvents}
+      initialDatabase={initialDatabase}
+      initialTab={initialTab}
+    />
+  );
 }
