@@ -7,3 +7,4 @@ Seed sample images in `public/seed-samples/` from [Pexels](https://www.pexels.co
 - wedding-4.jpg — Pexels 2253870
 - wedding-5.jpg — Pexels 169198
 - wedding-6.jpg — Pexels 3014856
+- wedding-7.jpg — Pexels 931177
