@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { ColorfulShell } from "@/components/colorful-shell";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -23,37 +24,37 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-b from-[var(--color-cream)] to-white">
+    <ColorfulShell className="flex items-center justify-center px-4">
       <form
         onSubmit={submit}
-        className="w-full max-w-md rounded-3xl border border-[var(--color-border)] bg-white/80 p-8 shadow-sm"
+        className="card-chunky w-full max-w-md p-8"
       >
-        <Link href="/" className="text-sm text-[var(--color-muted)]">← Momenti</Link>
-        <h1 className="font-display text-2xl mt-4">შესვლა</h1>
-        <p className="text-sm text-[var(--color-muted)] mt-1">მაგიკ ლინკი ელფოსტაზე</p>
+        <Link href="/" className="text-sm font-bold text-[var(--pink)]">← Momenti</Link>
+        <h1 className="mt-4 text-3xl font-extrabold">შესვლა ✨</h1>
+        <p className="text-sm text-[var(--text-muted)] mt-1">მაგიკ ლინკი ელფოსტაზე</p>
         <input
           type="email"
           required
-          className="mt-6 w-full rounded-xl border px-4 py-3"
+          className="mt-6 w-full rounded-2xl border-2 border-pink-100 px-4 py-3 outline-none focus:border-[var(--pink)]"
           placeholder="you@example.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
-        <Button type="submit" disabled={loading} className="w-full mt-4">
-          {loading ? "…" : "ლინკის გაგზავნა"}
+        <Button type="submit" disabled={loading} className="btn-gradient w-full mt-4 border-0">
+          {loading ? "…" : "ლინკის გაგზავნა 📬"}
         </Button>
         <a
           href="/api/auth/google"
-          className="mt-3 flex w-full items-center justify-center gap-2 rounded-full border py-2.5 text-sm"
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-full border-2 border-[var(--text-ink)] py-3 text-sm font-bold"
         >
           Google-ით შესვლა
         </a>
         {devLink && (
-          <p className="mt-4 text-xs break-all text-[var(--color-forest)]">
+          <p className="mt-4 text-xs break-all text-[var(--violet)]">
             Dev: <a href={devLink}>{devLink}</a>
           </p>
         )}
       </form>
-    </main>
+    </ColorfulShell>
   );
 }

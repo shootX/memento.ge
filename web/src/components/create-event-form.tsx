@@ -41,7 +41,7 @@ export function CreateEventForm() {
   if (result) return null;
 
   return (
-    <form onSubmit={submit} className="space-y-5 rounded-2xl border border-[var(--color-border)] bg-white/70 p-6 md:p-8">
+    <form onSubmit={submit} className="space-y-5">
       <label className="block text-sm">
         წყვილის სახელები
         <input

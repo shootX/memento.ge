@@ -1,19 +1,23 @@
 const faqs = [
   {
     q: "სტუმარს აპი სჭირდება?",
-    a: "არა. სკანირება ტელეფონის კამერით და ატვირთვა ბრაუზერში.",
+    a: "არა — სკანირება და ატვირთვა ბრაუზერში 📱",
+    emoji: "📲",
   },
   {
-    q: "როგორ ვიღებთ ფოტოებს ქორწილის შემდეგ?",
-    a: "ZIP ჩამოტვირთვა ჰოსტის პანელიდან; ვადა დამოკიდებულია პაკეტზე.",
+    q: "როგორ ვიღებთ ფოტოებს?",
+    a: "ZIP ჰოსტის პანელიდან; ვადა პაკეტის მიხედვით.",
+    emoji: "📦",
   },
   {
-    q: "მუშაობს სუსტ Wi‑Fi-ზე?",
-    a: "ატვირთვა ავტომატურად ცდილობს ხელახლა და აკუმშურებს დიდ ფოტოებს.",
+    q: "სუსტ Wi‑Fi?",
+    a: "ავტომატური retry + კომპრესია დიდ ფოტოებზე.",
+    emoji: "📶",
   },
   {
-    q: "ფოტოგრაფი როგორ გყიდის?",
-    a: "Partner დაფაზე white-label და referral კომისია.",
+    q: "ფოტოგრაფის გაყიდვა?",
+    a: "Partner დაფა · white-label · კომისია.",
+    emoji: "🤝",
   },
 ];
 
@@ -22,12 +26,17 @@ export const metadata = { title: "FAQ — Momenti" };
 export default function FaqPage() {
   return (
     <main className="px-4 py-16 max-w-2xl mx-auto">
-      <h1 className="font-display text-3xl font-semibold text-center">ხშირი კითხვები</h1>
-      <dl className="mt-10 space-y-6">
+      <h1 className="text-center font-display text-5xl font-bold">
+        FAQ <span className="text-gradient">💬</span>
+      </h1>
+      <dl className="mt-10 space-y-4">
         {faqs.map((f) => (
-          <div key={f.q} className="rounded-2xl border border-[var(--color-border)] bg-white/70 p-6">
-            <dt className="font-medium">{f.q}</dt>
-            <dd className="mt-2 text-sm text-[var(--color-muted)]">{f.a}</dd>
+          <div key={f.q} className="card-chunky p-6">
+            <dt className="flex items-start gap-3 font-extrabold text-lg">
+              <span className="text-2xl">{f.emoji}</span>
+              {f.q}
+            </dt>
+            <dd className="mt-2 pl-10 text-[var(--text-muted)]">{f.a}</dd>
           </div>
         ))}
       </dl>

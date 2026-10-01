@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { ColorfulShell } from "@/components/colorful-shell";
 
 type AdminEvent = {
   id: string;
@@ -14,10 +15,16 @@ type AdminEvent = {
   priceGel: number;
 };
 
-export function AdminPanel() {
+export function AdminPanel({
+  initialAuthed = false,
+  initialEvents = [],
+}: {
+  initialAuthed?: boolean;
+  initialEvents?: AdminEvent[];
+}) {
   const [password, setPassword] = useState("");
-  const [authed, setAuthed] = useState(false);
-  const [events, setEvents] = useState<AdminEvent[]>([]);
+  const [authed, setAuthed] = useState(initialAuthed);
+  const [events, setEvents] = useState<AdminEvent[]>(initialEvents);
 
   const login = async () => {
     const res = await fetch("/api/admin/login", {
@@ -49,62 +56,82 @@ export function AdminPanel() {
   };
 
   useEffect(() => {
+    fetch("/api/admin/events")
+      .then((r) => {
+        if (r.ok) {
+          setAuthed(true);
+          return r.json();
+        }
+        return null;
+      })
+      .then((data) => {
+        if (data?.events) setEvents(data.events);
+      });
+  }, []);
+
+  useEffect(() => {
     if (authed) void loadEvents();
   }, [authed]);
 
   if (!authed) {
     return (
-      <div className="mx-auto max-w-sm space-y-4 p-8">
-        <h1 className="font-display text-2xl">Admin</h1>
-        <input
-          type="password"
-          className="w-full rounded-xl border px-4 py-3"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
-        />
-        <Button type="button" className="w-full" onClick={() => void login()}>
-          შესვლა
-        </Button>
-      </div>
+      <ColorfulShell className="flex items-center justify-center px-4">
+        <div className="card-chunky w-full max-w-sm space-y-4 p-8" data-testid="admin-login">
+          <h1 className="text-2xl font-extrabold">Admin 🔐</h1>
+          <input
+            type="password"
+            className="w-full rounded-2xl border-2 border-pink-100 px-4 py-3"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
+          />
+          <Button type="button" className="btn-gradient w-full border-0" onClick={() => void login()}>
+            შესვლა
+          </Button>
+        </div>
+      </ColorfulShell>
     );
   }
 
   return (
-    <div className="mx-auto max-w-4xl p-8">
-      <h1 className="font-display text-2xl mb-6">ღონისძიებები</h1>
-      <div className="overflow-x-auto rounded-xl border">
-        <table className="w-full text-sm">
-          <thead className="bg-[var(--color-blush)]">
-            <tr>
-              <th className="p-3 text-left">წყვილი</th>
-              <th className="p-3">პაკეტი</th>
-              <th className="p-3">ატვირთვა</th>
-              <th className="p-3">გადახდა</th>
-              <th className="p-3" />
-            </tr>
-          </thead>
-          <tbody>
-            {events.map((e) => (
-              <tr key={e.id} className="border-t">
-                <td className="p-3">{e.coupleNames}</td>
-                <td className="p-3 text-center">{e.priceGel} ₾</td>
-                <td className="p-3 text-center">{e.uploadCount}</td>
-                <td className="p-3 text-center">{e.isPaid ? "✓" : "—"}</td>
-                <td className="p-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => void togglePaid(e.id, e.isPaid)}
-                  >
-                    {e.isPaid ? "გაუქმება" : "გააქტიურე"}
-                  </Button>
-                </td>
+    <ColorfulShell>
+      <div className="mx-auto max-w-5xl p-8" data-testid="admin-ready">
+        <h1 className="font-display text-4xl font-bold">
+          ღონისძიებები <span className="text-gradient">📊</span>
+        </h1>
+        <div className="mt-8 overflow-x-auto card-chunky">
+          <table className="w-full text-sm">
+            <thead className="bg-pink-50">
+              <tr>
+                <th className="p-3 text-left font-bold">წყვილი</th>
+                <th className="p-3 text-left font-bold">პაკეტი</th>
+                <th className="p-3 text-left font-bold">ატვირთვები</th>
+                <th className="p-3 text-left font-bold">გადახდა</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {events.map((e) => (
+                <tr key={e.id} className="border-t border-pink-50">
+                  <td className="p-3 font-medium">{e.coupleNames}</td>
+                  <td className="p-3">{e.planTier}</td>
+                  <td className="p-3">{e.uploadCount}</td>
+                  <td className="p-3">
+                    <button
+                      type="button"
+                      onClick={() => void togglePaid(e.id, e.isPaid)}
+                      className={`rounded-full px-3 py-1 text-xs font-bold ${
+                        e.isPaid ? "bg-[var(--mint)] text-white" : "bg-amber-200"
+                      }`}
+                    >
+                      {e.isPaid ? "გადახდილი" : "მონიშვნა"}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    </ColorfulShell>
   );
 }

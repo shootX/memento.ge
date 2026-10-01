@@ -1,21 +1,23 @@
 import { CreateEventForm } from "@/components/create-event-form";
 import Link from "next/link";
+import { ColorfulShell } from "@/components/colorful-shell";
 
 export default function OnboardingPage() {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-[var(--color-cream)] to-white">
+    <ColorfulShell>
       <div className="mx-auto max-w-lg px-4 py-12">
-        <Link href="/" className="text-sm text-[var(--color-muted)] hover:underline">
+        <Link href="/" className="text-sm font-bold text-[var(--pink)]">
           ← Momenti
         </Link>
-        <h1 className="mt-6 font-display text-3xl">ღონისძიება წუთში</h1>
-        <p className="mt-2 text-sm text-[var(--color-muted)]">
-          შექმენით, მიიღეთ QR და ჰოსტის ლინკი. გადახდის შემდეგ სტუმრები ატვირთავენ.
+        <p className="mt-6 text-4xl">🎉</p>
+        <h1 className="mt-2 font-display text-4xl font-bold">ღონისძიება წუთში</h1>
+        <p className="mt-2 text-[var(--text-muted)]">
+          QR, ჰოსტის ლინკი და სლაიდშოუ — გადახდის შემდეგ სტუმრები ატვირთავენ.
         </p>
-        <div className="mt-8">
+        <div className="mt-8 card-chunky p-6">
           <CreateEventForm />
         </div>
       </div>
-    </main>
+    </ColorfulShell>
   );
 }
