@@ -102,6 +102,11 @@ Hierarchy rule: one hero size per screen → section title (2xl–3xl display) �
 - Guest upload uses **shutter button** (`.guest-shutter`), film-strip shot counter, flying thumbnails into grid on upload.
 - Host gallery uses **skeleton → image** transition; never leave framer `opacity:0` stuck on reduced-motion.
 
+## Demo storage
+
+- Local uploads live under `LOCAL_STORAGE_PATH` (see `.env.example`). **`npm run ensure:demo` must use the same path as the running app** (CI: `./data/test-uploads`).
+- `ensure-demo-event.ts` re-seeds DB media when files are missing on disk (ENOENT), not only when row count &lt; 6.
+
 ## Agent prompt guide
 
 When implementing UI, read `tokens.css` and map Tailwind to CSS variables. Prefer utility classes defined in `globals.css` (`container-page`, `type-hero`, `eyebrow`, `card-chunky`, `btn-gradient`). All new colors and radii must come from tokens.

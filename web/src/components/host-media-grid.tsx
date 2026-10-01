@@ -69,12 +69,20 @@ export function HostMediaGrid({
                   <img
                     src={src}
                     alt=""
+                    data-testid="host-media-img"
                     className={cn(
                       "h-full w-full object-cover transition-opacity duration-300",
                       isLoaded ? "opacity-100" : "opacity-0",
                     )}
                     onLoad={() => setLoaded((s) => ({ ...s, [m.id]: true }))}
-                    onError={() => setLoaded((s) => ({ ...s, [m.id]: true }))}
+                    onError={(e) => {
+                      const el = e.currentTarget;
+                      if (el.src !== m.url && m.url) {
+                        el.src = m.url;
+                        return;
+                      }
+                      setLoaded((s) => ({ ...s, [m.id]: true }));
+                    }}
                   />
                 )}
                 {m.guestName && (

@@ -26,13 +26,17 @@ export async function GET(req: Request, { params }: Params) {
   const contentType =
     variant === "thumb" ? "image/jpeg" : media.mimeType;
 
-  const buf = await getObject(key);
-  return new Response(new Uint8Array(buf), {
-    headers: {
-      "Content-Type": contentType,
-      "Cache-Control": "public, max-age=86400",
-      "X-Content-Type-Options": "nosniff",
-      "Content-Disposition": "inline",
-    },
-  });
+  try {
+    const buf = await getObject(key);
+    return new Response(new Uint8Array(buf), {
+      headers: {
+        "Content-Type": contentType,
+        "Cache-Control": "public, max-age=86400",
+        "X-Content-Type-Options": "nosniff",
+        "Content-Disposition": "inline",
+      },
+    });
+  } catch {
+    return jsonError(404, "Not found");
+  }
 }
