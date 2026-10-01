@@ -1,0 +1,119 @@
+# Production deploy
+
+---
+
+## რეკომენდაცია
+
+მცირე ტრაფიკისთვის: **[Fly.io](https://fly.io)** ან **[Railway](https://railway.app)** — ერთი Node პროცესი `npm run build && npm start`.
+
+**Vercel:** შესაძლებელია Next-ისთვის, მაგრამ ZIP download, დიდი upload და **SQLite ფაილი** არ ერგება serverless-ს; media **R2/S3 აუცილებელი**.
+
+---
+
+## Checklist
+
+### 1. აპლიკაცია
+
+```bash
+npm ci --legacy-peer-deps
+npx prisma generate
+npm run build
+npm start   # PORT env
+```
+
+`serverExternalPackages` in `next.config.ts`: sharp, better-sqlite3, archiver, etc.
+
+### 2. Database
+
+**მიმდინარე კოდი:** SQLite ფაილი volume-ზე (`DATABASE_URL=file:/data/dev.db`).
+
+Fly: persistent volume mount. Backup: copy `.db` file.
+
+**Postgres:** საჭიროებს Prisma provider + adapter ცვლილებას (იხ. [SETUP.md](SETUP.md)). `docker-compose.yml` reference only.
+
+### 3. Storage (Cloudflare R2)
+
+```env
+STORAGE_BACKEND=s3
+S3_ENDPOINT=https://<account>.r2.cloudflarestorage.com
+S3_REGION=auto
+S3_BUCKET=memento-media
+S3_ACCESS_KEY_ID=...
+S3_SECRET_ACCESS_KEY=...
+```
+
+Local `./data/uploads` production-ში არ გამოიყენოთ multi-instance გარემოში.
+
+### 4. Secrets
+
+| Secret | |
+|--------|--|
+| `SESSION_SECRET`, `MEDIA_SIGNING_SECRET`, `CSRF_SECRET` | openssl rand |
+| `ADMIN_PASSWORD_HASH` | bcrypt |
+| `STRIPE_*` | if used |
+| `BOG_WEBHOOK_SECRET`, `FLITT_WEBHOOK_SECRET` | webhooks |
+
+### 5. Domain memento.ge
+
+- `NEXT_PUBLIC_APP_URL=https://memento.ge`
+- DNS A/AAAA → host (Fly/Railway/Cloudflare)
+- HTTPS termination at platform or Cloudflare
+- HSTS via middleware (production)
+
+### 6. Web Push (VAPID)
+
+```bash
+npx web-push generate-vapid-keys
+```
+
+```env
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=...
+VAPID_PRIVATE_KEY=...
+VAPID_SUBJECT=mailto:hello@memento.ge
+```
+
+### 7. Google OAuth
+
+Google Cloud Console:
+
+- Authorized redirect: `https://memento.ge/api/auth/google/callback`
+- Env: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
+
+### 8. Email
+
+აპი მხოლოდ `EmailOutbox`-ს წერს. Production-ში:
+
+- Cron/worker რომელიც კითხულობს outbox-ს და აგზავნის (Resend, SendGrid, SMTP)
+- ან magic link-ის ჩანაცვლება external auth-ით
+
+---
+
+## Backups
+
+| Asset | მეთოდი |
+|-------|--------|
+| SQLite | volume snapshot / `cp dev.db` |
+| R2 | R2 lifecycle + second bucket replication (manual/cloud) |
+| Secrets | password manager |
+
+---
+
+## Monitoring
+
+- Platform logs (Fly/Railway)
+- Uptime on `GET /` და `GET /api/auth/me`
+- Stripe dashboard webhooks
+- Optional: Sentry (not in repo)
+
+---
+
+## CI reference
+
+Push to `main` runs tests + build + e2e (`.github/workflows/ci.yml`).
+
+---
+
+## დაკავშირებული
+
+- [SETUP.md](SETUP.md)
+- [SECURITY.md](SECURITY.md)

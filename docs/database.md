@@ -2,6 +2,10 @@
 
 ეს დოკუმენტი აღწერს Prisma სქემაში არსებულ ყველა მოდელს, მათ კავშირებს და ბიზნეს ლოგიკას: მულტი-ტენანტობა, პაკეტები, პარტნიორები, მედია, guestbook, push და ბილინგი.
 
+**სისტემური კონტექსტი:** [ARCHITECTURE.md](ARCHITECTURE.md) · **API:** [API.md](API.md) · **Setup:** [SETUP.md](SETUP.md)
+
+**Runtime:** ამ repo-ში Prisma client იყენებს **SQLite** adapter-ს (`src/lib/prisma.ts`); `schema.prisma`-ში `provider = "sqlite"`.
+
 ---
 
 ## ER დიაგრამა (Mermaid)
