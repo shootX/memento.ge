@@ -1,7 +1,7 @@
 import Image from "next/image";
 
 const couples = [
-  { names: "ნინო & გიორგი", quote: "სტუმრებმა 400+ ფოტო ატვირთეს ერთ საღამოში.", img: "/seed-samples/wedding-1.jpg" },
+  { names: "ნინო & გიორგი", quote: "სტუმრებმა 400+ ფოტო ატვირთეს ერთ საღამოში.", img: "/seed-samples/wedding-4.jpg" },
   { names: "ანა & დავით", quote: "სლაიდშოუმ ცეკვის დარბაზი ააწვივა.", img: "/seed-samples/wedding-4.jpg" },
   { names: "მარიამ & ლუკა", quote: "QR ბარათები ზუსტად ჩვენს ფერებში.", img: "/seed-samples/wedding-6.jpg" },
 ];
