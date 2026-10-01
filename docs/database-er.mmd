@@ -1,0 +1,185 @@
+erDiagram
+  User ||--o{ Session : has
+  User ||--o{ OAuthAccount : links
+  User ||--o{ Event : owns
+  User ||--o{ EventCoHost : cohosts
+  User ||--o{ PartnerMember : member_of
+  User ||--o{ AuditLog : performs
+  User ||--o{ Payment : pays
+
+  PartnerOrg ||--o{ PartnerMember : has
+  PartnerOrg ||--o{ Event : brands
+  PartnerOrg ||--o{ PartnerReferral : earns
+  PartnerOrg ||--o| PartnerSubscription : subscribes
+
+  Event ||--o{ Media : contains
+  Event ||--o{ GuestMessage : guestbook
+  Event ||--o{ EventCoHost : cohosts
+  Event ||--o{ CoHostInvite : invites
+  Event ||--o{ Payment : billed_for
+  Event ||--o| PartnerReferral : referred_by
+  Event ||--o{ GuestShotQuota : quotas
+  Event ||--o{ PushSubscription : notifies
+
+  Media ||--o{ MediaReaction : reactions
+
+  User {
+    string id PK
+    string email UK
+    string role
+    string passwordHash
+  }
+
+  Session {
+    string id PK
+    string userId FK
+    string tokenHash UK
+    datetime expiresAt
+  }
+
+  MagicLinkToken {
+    string id PK
+    string email
+    string tokenHash UK
+    datetime expiresAt
+  }
+
+  OAuthAccount {
+    string id PK
+    string userId FK
+    string provider
+    string providerUserId
+  }
+
+  PartnerOrg {
+    string id PK
+    string slug UK
+    int creditsBalance
+    number commissionRate
+    string whiteLabel
+  }
+
+  PartnerMember {
+    string id PK
+    string partnerId FK
+    string userId FK
+    string role
+  }
+
+  PartnerReferral {
+    string id PK
+    string partnerId FK
+    string eventId FK
+    number commissionGel
+    string status
+  }
+
+  PartnerSubscription {
+    string id PK
+    string partnerId FK
+    string planId
+    string status
+  }
+
+  Event {
+    string id PK
+    string guestSlug UK
+    string hostToken UK
+    string planTier
+    string isPaid
+    datetime expiresAt
+    string partnerOrgId FK
+    string ownerUserId FK
+    string disposableEnabled
+    string galleryPasswordHash
+  }
+
+  PushSubscription {
+    string id PK
+    string eventId FK
+    string endpoint UK
+    string p256dh
+    string auth
+  }
+
+  CoHostInvite {
+    string id PK
+    string eventId FK
+    string email
+    string tokenHash UK
+  }
+
+  EventCoHost {
+    string id PK
+    string eventId FK
+    string userId FK
+  }
+
+  Media {
+    string id PK
+    string eventId FK
+    string storageKey UK
+    string status
+    int size
+  }
+
+  GuestShotQuota {
+    string id PK
+    string eventId FK
+    string guestKey
+    int used
+  }
+
+  GuestMessage {
+    string id PK
+    string eventId FK
+    string type
+    string body
+    string audioKey
+  }
+
+  MediaReaction {
+    string id PK
+    string mediaId FK
+    string guestKey
+    string type
+  }
+
+  Payment {
+    string id PK
+    string userId FK
+    string eventId FK
+    int amountGel
+    string currency
+    string provider
+    string status
+    string metadata
+  }
+
+  AdminSession {
+    string id PK
+    string tokenHash UK
+    datetime expiresAt
+  }
+
+  AuditLog {
+    string id PK
+    string userId FK
+    string action
+    string entity
+    string metadata
+  }
+
+  EmailOutbox {
+    string id PK
+    string toEmail
+    string template
+    string payload
+  }
+
+  UsageSnapshot {
+    string id PK
+    bigint totalBytes
+    int eventCount
+    datetime capturedAt
+  }
