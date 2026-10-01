@@ -273,16 +273,14 @@ export function HostDashboard({
                 </p>
                 <p className="text-2xl font-extrabold">{s.value}</p>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
 
         <div className="mb-6 h-3 overflow-hidden rounded-full bg-pink-100">
-          <motion.div
-            className="h-full rounded-full btn-gradient"
-            initial={{ width: 0 }}
-            animate={{ width: `${pct}%` }}
-            transition={spring}
+          <div
+            className="h-full rounded-full btn-gradient transition-all"
+            style={{ width: `${pct}%` }}
           />
         </div>
 
