@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Event {
+  id            String    @id @default(cuid())
+  guestSlug     String    @unique
+  hostToken     String    @unique
+  coupleNames   String
+  eventDate     DateTime
+  coverPhotoKey String?
+  planTier      String    @default("starter")
+  isPaid        Boolean   @default(false)
+  paidAt        DateTime?
+  expiresAt     DateTime?
+  totalBytes    Int       @default(0)
+  uploadCount   Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  media         Media[]
+}
+
+model Media {
+  id          String   @id @default(cuid())
+  eventId     String
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  storageKey  String   @unique
+  mimeType    String
+  size        Int
+  guestName   String?
+  width       Int?
+  height      Int?
+  durationSec Float?
+  createdAt   DateTime @default(now())
+
+  @@index([eventId, createdAt])
+}
+
+model AdminSession {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
