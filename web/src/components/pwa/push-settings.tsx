@@ -12,6 +12,15 @@ function urlBase64ToUint8Array(base64: string) {
   return out;
 }
 
+function browserSupportsPush(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    "Notification" in window &&
+    "serviceWorker" in navigator &&
+    Boolean(getVapidPublicKey())
+  );
+}
+
 export function PushSettings({
   hostToken,
   csrfToken,
@@ -21,17 +30,12 @@ export function PushSettings({
   csrfToken: string;
   demo?: boolean;
 }) {
-  const [supported, setSupported] = useState(false);
+  const [supported, setSupported] = useState(browserSupportsPush);
   const [enabled, setEnabled] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
 
   useEffect(() => {
-    setSupported(
-      typeof window !== "undefined" &&
-        "Notification" in window &&
-        "serviceWorker" in navigator &&
-        Boolean(getVapidPublicKey()),
-    );
+    setSupported(browserSupportsPush());
   }, []);
 
   const subscribe = async () => {
@@ -71,43 +75,40 @@ export function PushSettings({
     setStatus(res.ok ? "ტესტი გაგზავნილია 📬" : "ვერ გაიგზავნა");
   };
 
-  if (!supported && !demo) {
-    return (
-      <p className="text-sm text-[var(--text-muted)]">
-        Push მხარდაჭერა არ არის (ან VAPID გასაღებები არ არის კონფიგურირებული).
-      </p>
-    );
-  }
-
-  if (demo) {
-    return (
-      <div className="space-y-3" data-testid="push-opt-in">
-        <p className="font-bold">შეტყობინებები 🔔</p>
-        <p className="text-sm text-[var(--text-muted)]">
-          ახალი ფოტოები (ბაჩი), guestbook და ვადის გასვლა.
-        </p>
-        <Button type="button" className="btn-gradient border-0">ჩართვა</Button>
-        <Button type="button" variant="outline">ტესტ შეტყობინება</Button>
-      </div>
-    );
-  }
+  const showControls = demo || supported;
 
   return (
-    <div className="border-t border-pink-100 pt-4 space-y-3" data-testid="push-opt-in">
-      <p className="font-bold">შეტყობინებები 🔔</p>
-      <p className="text-sm text-[var(--text-muted)]">
-        ახალი ფოტოები (ბაჩი), guestbook და ვადის გასვლა.
-      </p>
-      {!enabled ? (
-        <Button type="button" className="btn-gradient border-0" onClick={() => void subscribe()}>
-          ჩართვა
-        </Button>
+    <div
+      className="border-t border-pink-100 pt-4 space-y-3"
+      data-testid="push-opt-in"
+    >
+      {!showControls ? (
+        <p className="break-words text-sm text-[var(--text-muted)]">
+          Push მხარდაჭერა არ არის (ან VAPID გასაღებები არ არის კონფიგურირებული).
+        </p>
       ) : (
-        <Button type="button" variant="outline" onClick={() => void test()}>
-          ტესტ შეტყობინება
-        </Button>
+        <>
+          <p className="font-bold">შეტყობინებები 🔔</p>
+          <p className="break-words text-sm text-[var(--text-muted)]">
+            ახალი ფოტოები (ბაჩი), guestbook და ვადის გასვლა.
+          </p>
+          {demo ? (
+            <>
+              <Button type="button" className="btn-gradient border-0">ჩართვა</Button>
+              <Button type="button" variant="outline">ტესტ შეტყობინება</Button>
+            </>
+          ) : !enabled ? (
+            <Button type="button" className="btn-gradient border-0" onClick={() => void subscribe()}>
+              ჩართვა
+            </Button>
+          ) : (
+            <Button type="button" variant="outline" onClick={() => void test()}>
+              ტესტ შეტყობინება
+            </Button>
+          )}
+          {status && <p className="text-sm font-medium text-[var(--violet)]">{status}</p>}
+        </>
       )}
-      {status && <p className="text-sm font-medium text-[var(--violet)]">{status}</p>}
     </div>
   );
 }

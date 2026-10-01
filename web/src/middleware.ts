@@ -4,7 +4,15 @@ import { buildCsp } from "@/lib/csp";
 
 export function middleware(request: NextRequest) {
   const isDev = process.env.NODE_ENV === "development";
-  const response = NextResponse.next();
+  const requestHeaders = new Headers(request.headers);
+  if (request.nextUrl.searchParams.get("pwa_install_demo") === "1") {
+    requestHeaders.set("x-momenti-pwa-demo", "install");
+  } else if (request.nextUrl.searchParams.get("pwa_ios_demo") === "1") {
+    requestHeaders.set("x-momenti-pwa-demo", "ios");
+  }
+  const response = NextResponse.next({
+    request: { headers: requestHeaders },
+  });
 
   response.headers.set("Content-Security-Policy", buildCsp(isDev));
   response.headers.set("X-Frame-Options", "DENY");
