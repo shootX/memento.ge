@@ -33,7 +33,7 @@ export default function DashboardPage() {
   if (!loaded) {
     return (
       <ColorfulShell className="flex items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-pink-200 border-t-[var(--pink)]" />
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[var(--border)] border-t-[var(--pink)]" />
       </ColorfulShell>
     );
   }
@@ -75,7 +75,7 @@ export default function DashboardPage() {
               {e.hostUrl && (
                 <Link
                   href={e.hostUrl.replace(/^https?:\/\/[^/]+/, "")}
-                  className="rounded-full bg-pink-100 px-4 py-2 text-sm font-bold text-[var(--pink)]"
+                  className="rounded-full bg-[var(--bg-muted)] px-4 py-2 text-sm font-bold text-[var(--pink)]"
                 >
                   პანელი →
                 </Link>

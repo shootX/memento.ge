@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Noto_Sans_Georgian, Fredoka } from "next/font/google";
+import { Noto_Sans_Georgian, Manrope } from "next/font/google";
 import { PwaRoot } from "@/components/pwa/pwa-root";
 import { PwaDemoOverlays } from "@/components/pwa/pwa-demo-overlays";
 import "./globals.css";
@@ -7,18 +7,18 @@ import "./globals.css";
 const notoSans = Noto_Sans_Georgian({
   variable: "--font-noto-sans",
   subsets: ["georgian", "latin"],
-  weight: ["400", "600", "700"],
+  weight: ["400", "600", "700", "800"],
   display: "swap",
   preload: true,
   adjustFontFallback: true,
 });
 
-const fredoka = Fredoka({
-  variable: "--font-fredoka",
-  subsets: ["latin"],
-  weight: ["600", "700"],
+const manrope = Manrope({
+  variable: "--font-manrope",
+  subsets: ["latin", "cyrillic"],
+  weight: ["500", "600", "700", "800"],
   display: "swap",
-  preload: false,
+  preload: true,
   adjustFontFallback: true,
 });
 
@@ -46,15 +46,15 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#ff2d8a",
-  colorScheme: "light",
+  themeColor: "#0b0b0b",
+  colorScheme: "dark",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="ka"
-      className={`${notoSans.variable} ${fredoka.variable} h-full antialiased`}
+      className={`${notoSans.variable} ${manrope.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <PwaDemoOverlays />

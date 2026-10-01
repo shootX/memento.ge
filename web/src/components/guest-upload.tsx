@@ -110,7 +110,7 @@ export function GuestUpload({
       particleCount: 120,
       spread: 70,
       origin: { y: 0.65 },
-      colors: ["#ff2d8a", "#ff6b35", "#a855f7", "#fbbf24"],
+      colors: ["#c4ff0d", "#a8e600", "#c1ff72", "#ffffff"],
     });
   }, [allDone, queue, reduce]);
 
@@ -279,17 +279,17 @@ export function GuestUpload({
 
         {disposable && shotsLeft !== null && (
           <motion.div
-            className="mt-5 rounded-3xl border-4 border-[var(--text-ink)] bg-[#1a1025] p-5 text-white shadow-[6px_6px_0_#ff2d8a]"
+            className="mt-5 rounded-3xl border-2 border-[var(--accent)]/40 bg-black p-5 text-white"
             animate={reduce ? {} : { scale: [1, 1.02, 1] }}
             transition={{ repeat: Infinity, duration: 2 }}
           >
-            <p className="text-center text-xs font-bold uppercase tracking-widest text-pink-300">
+            <p className="text-center text-xs font-bold uppercase tracking-widest text-[var(--accent)]">
               {t(locale, "shotsRemaining")}
             </p>
             <p className="mt-2 text-center font-display text-5xl font-bold">
               {shotsLeft}
             </p>
-            <p className="text-center text-sm text-pink-100">კადარი დარჩა</p>
+            <p className="text-center text-sm text-[var(--fg-2)]">კადარი დარჩა</p>
             <div className="mt-4 flex justify-center gap-1.5">
               {Array.from({ length: info.disposable.shotsPerGuest }).map((_, i) => {
                 const remaining = shotsLeft ?? 0;
@@ -301,7 +301,7 @@ export function GuestUpload({
                     className={cn(
                       "film-strip-dot h-11 w-9 rounded-md border-2 transition",
                       isRemaining
-                        ? "border-white bg-[var(--accent)] shadow-[0_0_12px_rgba(255,45,138,0.6)]"
+                        ? "border-[var(--accent)] bg-[var(--accent)] shadow-[0_0_12px_rgba(196,255,13,0.45)]"
                         : "border-white/10 bg-black/30 opacity-40",
                     )}
                     aria-hidden
@@ -320,7 +320,7 @@ export function GuestUpload({
               onClick={() => setTab(id)}
               className={cn(
                 "flex-1 rounded-full py-2.5 text-sm font-bold transition",
-                tab === id ? "btn-gradient text-white" : "bg-white card-chunky border-0 shadow-none",
+                tab === id ? "btn-gradient" : "card-chunky border border-[var(--border-soft)]",
               )}
             >
               {id === "photos" ? t(locale, "photosTab") : t(locale, "guestbookTab")}
@@ -331,7 +331,7 @@ export function GuestUpload({
         {tab === "book" ? (
           <div className="mt-6 card-chunky space-y-3 p-5">
             <textarea
-              className="w-full rounded-2xl border-2 border-pink-100 px-4 py-3 min-h-[120px] outline-none focus:border-[var(--pink)]"
+              className="w-full rounded-2xl border-2 border-[var(--border)] bg-[var(--surface)] px-4 py-3 min-h-[120px] text-[var(--fg)] outline-none focus:border-[var(--accent)]"
               placeholder="თქვენი სიყვარულის სიტყვა… 💕"
               value={guestbookText}
               onChange={(e) => setGuestbookText(e.target.value)}
@@ -386,7 +386,7 @@ export function GuestUpload({
             <label className="mt-3 block text-sm font-medium">
               {t(locale, "yourName")}
               <input
-                className="mt-1 w-full rounded-2xl border-2 border-pink-100 bg-white px-4 py-3 outline-none focus:border-[var(--pink)]"
+                className="mt-1 w-full rounded-2xl border-2 border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-[var(--fg)] outline-none focus:border-[var(--accent)]"
                 value={guestName}
                 onChange={(e) => setGuestName(e.target.value)}
                 maxLength={80}
@@ -395,7 +395,7 @@ export function GuestUpload({
 
             <label className="mt-8 flex flex-col items-center gap-4">
               <span className="guest-shutter flex h-32 w-32 cursor-pointer items-center justify-center rounded-full btn-gradient transition active:scale-95">
-                <Camera className="h-14 w-14 text-white" />
+                <Camera className="h-14 w-14 text-[var(--accent-on)]" />
               </span>
               <span className="text-center text-lg font-bold">{t(locale, "dropHere")}</span>
               <input
@@ -418,7 +418,7 @@ export function GuestUpload({
                   {queue.map((item, i) => (
                     <li
                       key={i}
-                      className="relative aspect-square overflow-hidden rounded-2xl border-2 border-[var(--accent)]/30 bg-white shadow-md"
+                      className="relative aspect-square overflow-hidden rounded-2xl border-2 border-[var(--accent)]/30 bg-[var(--surface)] shadow-md"
                     >
                       {item.preview && (
                         <motion.img
@@ -440,7 +440,7 @@ export function GuestUpload({
                           ✓
                         </span>
                       )}
-                      <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-pink-100">
+                      <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-[var(--bg-muted)]">
                         <div
                           className="h-full btn-gradient transition-all"
                           style={{ width: `${item.progress}%` }}

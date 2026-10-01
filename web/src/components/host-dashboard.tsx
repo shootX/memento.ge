@@ -240,7 +240,7 @@ export function HostDashboard({
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               {isLive ? (
-                <span className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-3 py-1 text-xs font-bold text-white">
+                <span className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-3 py-1 text-xs font-bold text-[var(--accent-on)]">
                   <span className="h-2 w-2 animate-pulse rounded-full bg-white motion-reduce:animate-none" />
                   ლაივ ახლა
                 </span>
@@ -284,7 +284,7 @@ export function HostDashboard({
         </div>
       </div>
 
-      <header className="sticky top-0 z-30 border-b-2 border-[var(--border-soft)] bg-white/95 backdrop-blur-md">
+      <header className="sticky top-0 z-30 border-b border-[var(--border-soft)] bg-[var(--bg)]/92 backdrop-blur-md">
         <nav className="container-page flex gap-2 overflow-x-auto py-3">
           {tabs.map((t) => (
             <button
@@ -294,8 +294,8 @@ export function HostDashboard({
               className={cn(
                 "flex shrink-0 items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold transition",
                 tab === t.id
-                  ? "btn-gradient text-white"
-                  : "bg-[var(--surface-warm)] text-[var(--fg-2)] hover:bg-pink-100",
+                  ? "btn-gradient text-[var(--accent-on)]"
+                  : "bg-[var(--surface-warm)] text-[var(--fg-2)] hover:bg-[var(--bg-muted)]",
               )}
             >
               <t.icon className="h-4 w-4" />
@@ -335,7 +335,7 @@ export function HostDashboard({
           ))}
         </div>
 
-        <div className="mb-6 h-3 overflow-hidden rounded-full bg-pink-100">
+        <div className="mb-6 h-3 overflow-hidden rounded-full bg-[var(--bg-muted)]">
           <div
             className="h-full rounded-full btn-gradient transition-all"
             style={{ width: `${pct}%` }}

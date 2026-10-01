@@ -1,10 +1,11 @@
-import { SiteHeader } from "@/components/site-header";
 import { ColorfulShell } from "@/components/colorful-shell";
+import { SiteHeaderNav } from "@/components/site-header-nav";
 
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ColorfulShell>
-      <SiteHeader />
+    <ColorfulShell dark blobs={false}>
+      <div className="fixed top-0 left-0 right-0 z-[60] h-[3px] bg-[var(--accent-line)]" aria-hidden />
+      <SiteHeaderNav />
       {children}
     </ColorfulShell>
   );

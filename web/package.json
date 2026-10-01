@@ -22,7 +22,7 @@
     "icons:pwa": "tsx scripts/generate-pwa-icons.ts",
     "lighthouse:pwa": "node scripts/lighthouse-pwa.mjs",
     "screenshots:pwa": "node scripts/capture-pwa-screenshots.mjs",
-    "screenshots:v8": "node scripts/capture-v8-artifacts.mjs"
+    "screenshots:v9": "node scripts/capture-v9-artifacts.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1144.0",

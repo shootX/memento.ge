@@ -35,7 +35,7 @@ export default function LoginPage() {
         <input
           type="email"
           required
-          className="mt-6 w-full rounded-2xl border-2 border-pink-100 px-4 py-3 outline-none focus:border-[var(--pink)]"
+          className="mt-6 w-full rounded-2xl border-2 border-[var(--border)] px-4 py-3 outline-none focus:border-[var(--pink)]"
           placeholder="you@example.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}

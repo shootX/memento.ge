@@ -54,7 +54,7 @@ export function HostMediaGrid({
             <div className="relative aspect-[3/4] w-full">
               {!isLoaded && (
                 <div
-                  className="absolute inset-0 animate-pulse bg-gradient-to-br from-pink-100 to-violet-100 motion-reduce:animate-none"
+                  className="absolute inset-0 animate-pulse bg-gradient-to-br from-[var(--bg-muted)] to-[var(--surface)] motion-reduce:animate-none"
                   aria-hidden
                 />
               )}
