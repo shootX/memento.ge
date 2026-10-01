@@ -9,7 +9,9 @@
     "lint": "eslint",
     "test": "vitest run",
     "postinstall": "prisma generate",
-    "db:push": "prisma db push"
+    "db:push": "prisma db push",
+    "seed:demo": "tsx scripts/seed-demo.ts",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1144.0",
@@ -36,7 +38,9 @@
     "react-dom": "19.2.8",
     "react-dropzone": "^20.1.2",
     "sharp": "^0.35.5",
+    "stripe": "^23.0.0",
     "tailwind-merge": "^3.7.0",
+    "tsx": "^4.23.15",
     "zod": "^4.6.5"
   },
   "devDependencies": {

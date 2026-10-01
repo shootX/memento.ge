@@ -14,6 +14,14 @@ export async function getEventByHostToken(token: string): Promise<Event | null> 
   return prisma.event.findUnique({ where: { hostToken: token } });
 }
 
+export async function getEventBySlideshowToken(
+  token: string,
+): Promise<Event | null> {
+  if (!token || token.length < 24 || token.length > 128) return null;
+  if (!/^[a-zA-Z0-9_-]+$/.test(token)) return null;
+  return prisma.event.findUnique({ where: { slideshowToken: token } });
+}
+
 export function eventIsActive(event: Event): boolean {
   if (!event.isPaid) return false;
   if (event.expiresAt && event.expiresAt < new Date()) return false;

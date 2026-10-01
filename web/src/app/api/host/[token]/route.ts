@@ -41,6 +41,8 @@ export async function GET(req: Request, { params }: Params) {
         priceGel: plan.priceGel,
       },
       guestUrl: `${process.env.NEXT_PUBLIC_APP_URL}/e/${event.guestSlug}`,
+      slideshowToken: event.slideshowToken,
+      slideshowUrl: `${process.env.NEXT_PUBLIC_APP_URL}/slideshow/${event.slideshowToken}`,
       coverUrl,
       csrfToken,
     });

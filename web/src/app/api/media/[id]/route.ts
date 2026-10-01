@@ -8,21 +8,29 @@ type Params = { params: Promise<{ id: string }> };
 export async function GET(req: Request, { params }: Params) {
   const { id } = await params;
   const url = new URL(req.url);
+  const variant = url.searchParams.get("variant");
   const token =
     url.searchParams.get("token") ??
     url.searchParams.get("sig");
-  if (!token || !verifyMediaAccess(id, token)) {
+
+  const mediaIdForToken = variant === "thumb" ? `${id}:thumb` : id;
+  if (!token || !verifyMediaAccess(mediaIdForToken, token)) {
     return jsonError(403, "Forbidden");
   }
 
   const media = await prisma.media.findUnique({ where: { id } });
   if (!media) return jsonError(404, "Not found");
 
-  const buf = await getObject(media.storageKey);
+  const key =
+    variant === "thumb" && media.thumbKey ? media.thumbKey : media.storageKey;
+  const contentType =
+    variant === "thumb" ? "image/jpeg" : media.mimeType;
+
+  const buf = await getObject(key);
   return new Response(new Uint8Array(buf), {
     headers: {
-      "Content-Type": media.mimeType,
-      "Cache-Control": "private, max-age=3600",
+      "Content-Type": contentType,
+      "Cache-Control": "public, max-age=86400",
       "X-Content-Type-Options": "nosniff",
       "Content-Disposition": "inline",
     },

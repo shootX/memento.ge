@@ -5,6 +5,7 @@ import {
   setAdminCookie,
 } from "@/lib/session";
 import { clientIp, consumeLogin, jsonError } from "@/lib/api-utils";
+import { verifyAdminPassword } from "@/lib/admin-auth";
 
 const schema = z.object({ password: z.string().min(1).max(200) });
 
@@ -16,8 +17,7 @@ export async function POST(req: Request) {
   }
 
   const body = schema.parse(await req.json());
-  const expected = process.env.ADMIN_PASSWORD;
-  if (!expected || body.password !== expected) {
+  if (!(await verifyAdminPassword(body.password))) {
     return jsonError(401, "Invalid password");
   }
 

@@ -1,8 +1,15 @@
-import { SlideshowView } from "@/components/slideshow-view";
+import { redirect } from "next/navigation";
+import { getEventByHostToken } from "@/lib/auth";
 
 type Props = { params: Promise<{ token: string }> };
 
-export default async function SlideshowPage({ params }: Props) {
+export default async function HostSlideshowRedirect({ params }: Props) {
   const { token } = await params;
-  return <SlideshowView token={token} />;
+  const event = await getEventByHostToken(token);
+  if (!event) {
+    return (
+      <p className="p-8 text-center text-[var(--color-muted)]">ღონისძიება ვერ მოიძებნა</p>
+    );
+  }
+  redirect(`/slideshow/${event.slideshowToken}`);
 }
