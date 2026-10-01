@@ -1,0 +1,40 @@
+import { NextResponse } from "next/server";
+import { getEventByGuestSlug, eventAllowsUpload, eventIsActive } from "@/lib/auth";
+import { getPlan } from "@/lib/plans";
+import { signMediaAccess } from "@/lib/crypto";
+import { clientIp, consumeApi, handleApiError } from "@/lib/api-utils";
+
+type Params = { params: Promise<{ slug: string }> };
+
+export async function GET(req: Request, { params }: Params) {
+  try {
+    await consumeApi(clientIp(req));
+    const { slug } = await params;
+    const event = await getEventByGuestSlug(slug);
+    if (!event) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    const plan = getPlan(event.planTier);
+    const exp = Date.now() + 3600_000;
+    let coverUrl: string | null = null;
+    if (event.coverPhotoKey) {
+      const token = signMediaAccess(`cover:${event.id}`, exp);
+      coverUrl = `/api/media/cover/${event.id}?token=${encodeURIComponent(token)}`;
+    }
+
+    return NextResponse.json({
+      coupleNames: event.coupleNames,
+      eventDate: event.eventDate,
+      canUpload: eventAllowsUpload(event),
+      isActive: eventIsActive(event),
+      limits: {
+        maxBytesPerFile: plan.maxBytesPerFile,
+        remainingUploads: Math.max(0, plan.maxUploads - event.uploadCount),
+      },
+      coverUrl,
+    });
+  } catch (e) {
+    return handleApiError(e);
+  }
+}
