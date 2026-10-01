@@ -4,20 +4,14 @@ import { prisma } from "../src/lib/prisma";
 import { putObject, buildMediaKey, getObject } from "../src/lib/storage";
 import { processThumbnail } from "../src/lib/jobs/thumbnails";
 import { computeExpiresAt, getPlan } from "../src/lib/plans";
+import {
+  DEMO_MEDIA_FILES,
+  DEMO_MEDIA_REVISION,
+  assertDemoSeedFilesUnique,
+} from "./demo-media-seed";
 
 const DEMO_GUEST_SLUG = "memento-demo-guest-01";
 const MANIFEST = path.join(process.cwd(), "public/demo-manifest.json");
-/** Bump when demo gallery files change so existing installs re-seed. */
-const DEMO_MEDIA_REVISION = 3;
-
-const DEMO_MEDIA_FILES: { file: string; guestName: string }[] = [
-  { file: "wedding-4.jpg", guestName: "მარიამ" },
-  { file: "wedding-2.jpg", guestName: "ლუკა" },
-  { file: "wedding-6.jpg", guestName: "ანა" },
-  { file: "wedding-3.jpg", guestName: "გიორგი" },
-  { file: "wedding-5.jpg", guestName: "ნიკა" },
-  { file: "wedding-3.jpg", guestName: "სოფო" },
-];
 
 const REVISION_FILE = path.join(process.cwd(), "data/demo-media-revision.txt");
 
@@ -44,6 +38,7 @@ async function demoMediaStorageOk(eventId: string): Promise<boolean> {
 }
 
 async function seedDemoMedia(eventId: string) {
+  assertDemoSeedFilesUnique();
   await prisma.media.deleteMany({ where: { eventId } });
   const sampleDir = path.join(process.cwd(), "public/seed-samples");
   let total = 0;
