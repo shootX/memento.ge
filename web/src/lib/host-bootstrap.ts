@@ -29,6 +29,7 @@ export async function getHostBootstrap(token: string) {
       mimeType: m.mimeType,
       guestName: m.guestName,
       status: m.status,
+      highlight: m.highlight,
       url: `/api/media/${m.id}?token=${encodeURIComponent(mediaToken)}`,
       thumbUrl: thumbToken
         ? `/api/media/${m.id}?token=${encodeURIComponent(thumbToken)}&variant=thumb`

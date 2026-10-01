@@ -1,14 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
   Download,
   ExternalLink,
   Loader2,
   Presentation,
-  Trash2,
   QrCode,
   Images,
   Settings2,
@@ -18,7 +16,7 @@ import { PLANS } from "@/lib/plans";
 import { cn } from "@/lib/cn";
 import { HostSettings } from "@/components/host-settings";
 import { PhotoLightbox, type LightboxItem } from "@/components/photo-lightbox";
-import { useMotionSafe } from "@/lib/motion";
+import { HostMediaGrid, type HostGridMedia } from "@/components/host-media-grid";
 
 type Tab = "gallery" | "qr" | "guestbook" | "settings";
 
@@ -45,14 +43,7 @@ type HostEvent = {
   moderateUploads: boolean;
 };
 
-type MediaItem = {
-  id: string;
-  url: string;
-  thumbUrl: string | null;
-  mimeType: string;
-  guestName: string | null;
-  status: string;
-};
+type MediaItem = HostGridMedia;
 
 type GuestMsg = {
   id: string;
@@ -70,7 +61,7 @@ const templates = [
 const tabs: { id: Tab; label: string; icon: typeof Images }[] = [
   { id: "gallery", label: "ფოტოები", icon: Images },
   { id: "qr", label: "QR ბარათი", icon: QrCode },
-  { id: "guestbook", label: "Guestbook", icon: BookHeart },
+  { id: "guestbook", label: "სტუმრების წიგნი", icon: BookHeart },
   { id: "settings", label: "პარამეტრები", icon: Settings2 },
 ];
 
@@ -110,7 +101,6 @@ export function HostDashboard({
   bootstrap?: Bootstrap | null;
   initialTab?: Tab;
 }) {
-  const { spring } = useMotionSafe();
   const [event, setEvent] = useState<HostEvent | null>(
     bootstrap
       ? {
@@ -139,6 +129,7 @@ export function HostDashboard({
   const [activeTemplate, setActiveTemplate] =
     useState<(typeof templates)[number]["id"]>("elegant");
   const [lightbox, setLightbox] = useState<LightboxItem | null>(null);
+  const [newPulse, setNewPulse] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -148,7 +139,16 @@ export function HostDashboard({
         fetch(`/api/host/${token}/guestbook`).then((r) => r.json()),
       ]);
       if (!ev.error) setEvent(ev);
-      if (!med.error) setMedia(med.items ?? []);
+      if (!med.error) {
+        setMedia((prev) => {
+          const items = (med.items ?? []) as MediaItem[];
+          if (items.length > prev.length && prev.length > 0) {
+            setNewPulse(true);
+            setTimeout(() => setNewPulse(false), 4000);
+          }
+          return items;
+        });
+      }
       if (!msg.error) setMessages(msg.items ?? []);
     } finally {
       setLoading(false);
@@ -160,6 +160,19 @@ export function HostDashboard({
     const id = setInterval(() => void load(), 15000);
     return () => clearInterval(id);
   }, [load]);
+
+  const toggleHighlight = async (id: string, highlight: boolean) => {
+    if (!event) return;
+    await fetch(`/api/host/${token}/media/${id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "x-csrf-token": event.csrfToken,
+      },
+      body: JSON.stringify({ highlight }),
+    });
+    setMedia((items) => items.map((m) => (m.id === id ? { ...m, highlight } : m)));
+  };
 
   const deleteMedia = async (id: string) => {
     if (!event) return;
@@ -203,34 +216,64 @@ export function HostDashboard({
     100,
     (event.usage.uploadCount / event.usage.maxUploads) * 100,
   );
+  const eventDay = new Date(event.eventDate);
+  const today = new Date();
+  const isLive =
+    Math.abs(eventDay.getTime() - today.getTime()) < 1000 * 60 * 60 * 24 * 2;
 
   return (
     <div className="min-h-screen bg-[var(--bg-page)]" data-testid="host-ready">
       <PhotoLightbox item={lightbox} onClose={() => setLightbox(null)} />
-      <header className="sticky top-0 z-30 border-b-2 border-[var(--border-soft)] bg-white/92 backdrop-blur-md">
-        <div className="container-page flex flex-wrap items-center justify-between gap-4 py-4">
-          <div className="min-w-0">
-            <p className="type-label">Host · მემენტო</p>
-            <h1 className="font-display text-2xl font-bold leading-tight">{event.coupleNames}</h1>
-            <p className="mt-1 text-sm text-[var(--muted)]" suppressHydrationWarning>
-              {new Date(event.eventDate).toLocaleDateString("ka-GE")} ·{" "}
-              {plan?.nameKa ?? event.planTier}
-              {!event.isPaid && (
-                <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-800">
-                  გადაუხდელი
+
+      <div className="relative overflow-hidden border-b-2 border-[var(--border-soft)]">
+        {event.coverUrl ? (
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url(${event.coverUrl})` }}
+          />
+        ) : (
+          <div className="absolute inset-0 bg-[var(--gradient-soft)]" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-page)] via-[var(--bg-page)]/85 to-transparent" />
+        <div className="container-page relative py-8 md:py-10">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              {isLive ? (
+                <span className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-3 py-1 text-xs font-bold text-white">
+                  <span className="h-2 w-2 animate-pulse rounded-full bg-white motion-reduce:animate-none" />
+                  ლაივ ახლა
                 </span>
+              ) : (
+                <span className="type-label">ღონისძიება</span>
               )}
-            </p>
+              <h1 className="mt-2 font-display text-3xl font-bold md:text-4xl">{event.coupleNames}</h1>
+              <p className="mt-1 text-sm text-[var(--muted)]" suppressHydrationWarning>
+                {eventDay.toLocaleDateString("ka-GE", { dateStyle: "long" })} · {plan?.nameKa}
+                {!event.isPaid && (
+                  <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-800">
+                    გადაუხდელი
+                  </span>
+                )}
+              </p>
+            </div>
+            {newPulse && (
+              <span className="rounded-full bg-white px-4 py-2 text-sm font-bold text-[var(--accent)] shadow-md animate-bounce motion-reduce:animate-none">
+                ახალი ფოტოები ✨
+              </span>
+            )}
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" asChild>
-              <a href={event.guestUrl} target="_blank" rel="noreferrer">
-                <ExternalLink className="mr-1 h-4 w-4" /> სტუმარი
-              </a>
-            </Button>
+          <div className="mt-6 flex flex-wrap gap-2">
             <Button variant="outline" size="sm" asChild>
               <a href={event.slideshowUrl} target="_blank" rel="noreferrer">
                 <Presentation className="mr-1 h-4 w-4" /> სლაიდშოუ
+              </a>
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setTab("qr")}>
+              <QrCode className="mr-1 h-4 w-4" /> QR ბეჭდვა
+            </Button>
+            <Button variant="outline" size="sm" asChild>
+              <a href={event.guestUrl} target="_blank" rel="noreferrer">
+                <ExternalLink className="mr-1 h-4 w-4" /> ლინკის გაზიარება
               </a>
             </Button>
             <Button size="sm" className="btn-gradient border-0" onClick={downloadZip}>
@@ -238,7 +281,10 @@ export function HostDashboard({
             </Button>
           </div>
         </div>
-        <nav className="container-page flex gap-2 overflow-x-auto pb-3">
+      </div>
+
+      <header className="sticky top-0 z-30 border-b-2 border-[var(--border-soft)] bg-white/95 backdrop-blur-md">
+        <nav className="container-page flex gap-2 overflow-x-auto py-3">
           {tabs.map((t) => (
             <button
               key={t.id}
@@ -270,10 +316,20 @@ export function HostDashboard({
           ].map((s) => (
             <div
               key={s.label}
-              className="card-chunky flex flex-col gap-1 p-5"
+              className="card-chunky flex flex-col gap-2 p-5"
             >
               <p className="type-label">{s.label}</p>
               <p className="font-display text-3xl font-bold">{s.value}</p>
+              {s.label === "ატვირთვები" && (
+                <svg viewBox="0 0 80 24" className="h-6 w-full text-[var(--accent)]" aria-hidden>
+                  <polyline
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    points="0,20 15,12 30,16 45,6 60,10 80,4"
+                  />
+                </svg>
+              )}
             </div>
           ))}
         </div>
@@ -287,67 +343,18 @@ export function HostDashboard({
 
         {tab === "gallery" && (
           <section>
-            {media.length === 0 ? (
-              <div className="card-chunky p-12 text-center">
-                <p className="text-4xl mb-4">📷</p>
-                <p className="text-lg font-bold">ჯერ ფოტო არ არის</p>
-                <p className="text-[var(--text-muted)]">
-                  QR ბარათი დაუდე მაგიდაზე და სტუმრები ატვირთავენ ✨
-                </p>
-              </div>
-            ) : (
-              <div className="columns-2 gap-3 md:columns-3 lg:columns-4">
-                {media.map((m, i) => (
-                  <motion.button
-                    type="button"
-                    key={m.id}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ ...spring, delay: i * 0.03 }}
-                    onClick={() =>
-                      setLightbox({
-                        id: m.id,
-                        url: m.url,
-                        guestName: m.guestName,
-                      })
-                    }
-                    className="group relative mb-3 w-full break-inside-avoid overflow-hidden rounded-2xl border-2 border-pink-100 shadow-md text-left"
-                  >
-                    {m.mimeType.startsWith("video/") ? (
-                      <video
-                        src={m.url}
-                        className="w-full object-cover"
-                        muted
-                      />
-                    ) : (
-                      <img
-                        src={m.thumbUrl ?? m.url}
-                        alt=""
-                        className="w-full object-cover"
-                      />
-                    )}
-                    {m.status === "pending" && (
-                      <span className="absolute left-2 top-2 rounded-full bg-amber-400 px-2 py-0.5 text-xs font-bold">
-                        მოდერაცია
-                      </span>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => deleteMedia(m.id)}
-                      className="absolute right-2 top-2 rounded-full bg-white/90 p-2 opacity-0 shadow transition group-hover:opacity-100"
-                      aria-label="წაშლა"
-                    >
-                      <Trash2 className="h-4 w-4 text-red-500" />
-                    </button>
-                    {m.guestName && (
-                      <p className="absolute bottom-0 w-full bg-gradient-to-t from-black/70 to-transparent p-2 text-xs font-medium text-white">
-                        {m.guestName}
-                      </p>
-                    )}
-                  </motion.button>
-                ))}
-              </div>
-            )}
+            <HostMediaGrid
+              media={media}
+              onOpen={(m) =>
+                setLightbox({
+                  id: m.id,
+                  url: m.url,
+                  guestName: m.guestName,
+                })
+              }
+              onDelete={deleteMedia}
+              onToggleHighlight={toggleHighlight}
+            />
           </section>
         )}
 
