@@ -100,18 +100,30 @@ export async function buildQrCardPng(opts: {
   guestUrl: string;
   template: CardTemplate;
   size?: CardSize;
+  brandColor?: string;
+  partnerName?: string;
 }): Promise<Buffer> {
   const size = opts.size ?? "a6";
-  const qr = await qrPngBuffer(opts.guestUrl, opts.template);
+  const palette = { ...palettes[opts.template] };
+  if (opts.brandColor) palette.accent = opts.brandColor;
+  const qr = await QRCode.toBuffer(opts.guestUrl, {
+    type: "png",
+    width: 800,
+    margin: 2,
+    color: { dark: palette.fg, light: palette.bg },
+  });
   const qrDataUrl = `data:image/png;base64,${qr.toString("base64")}`;
   const dateStr = opts.eventDate.toLocaleDateString("ka-GE", {
     year: "numeric",
     month: "long",
     day: "numeric",
   });
+  const coupleLabel = opts.partnerName
+    ? `${opts.coupleNames} · ${opts.partnerName}`
+    : opts.coupleNames;
   const svg = cardSvg({
     template: opts.template,
-    coupleNames: opts.coupleNames,
+    coupleNames: coupleLabel,
     dateStr,
     qrDataUrl,
     size,

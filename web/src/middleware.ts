@@ -22,6 +22,17 @@ export function middleware(request: NextRequest) {
     );
   }
 
+  const hostMatch = request.nextUrl.pathname.match(/^\/host\/([A-Za-z0-9_-]{24,128})(?:\/|$)/);
+  if (hostMatch && !request.nextUrl.pathname.includes("/slideshow")) {
+    response.cookies.set("momenti_host_csrf", hostMatch[1], {
+      httpOnly: true,
+      secure: !isDev,
+      sameSite: "strict",
+      path: "/",
+      maxAge: 24 * 3600,
+    });
+  }
+
   return response;
 }
 

@@ -13,8 +13,10 @@ type EventInfo = {
   eventDate: string;
   canUpload: boolean;
   isActive: boolean;
-  limits: { maxBytesPerFile: number };
+  limits: { maxBytesPerFile: number; shotsRemaining: number | null };
   coverUrl: string | null;
+  disposable?: { enabled: boolean; shotsPerGuest: number };
+  branding?: { primaryColor?: string; logoUrl?: string | null; partnerName?: string };
 };
 
 type FileProgress = {
@@ -37,6 +39,7 @@ async function uploadWithRetry(
       const form = new FormData();
       form.append("file", file);
       if (guestName) form.append("guestName", guestName);
+      form.append("guestKey", guestKey);
       const res = await fetch(`/api/guest/${slug}/upload`, {
         method: "POST",
         body: form,
@@ -63,9 +66,15 @@ export function GuestUpload({ slug }: { slug: string }) {
   const [guestName, setGuestName] = useState("");
   const [queue, setQueue] = useState<FileProgress[]>([]);
   const [allDone, setAllDone] = useState(false);
+  const [guestKey, setGuestKey] = useState("");
+  const [guestbookText, setGuestbookText] = useState("");
+  const [tab, setTab] = useState<"photos" | "book">("photos");
 
   useEffect(() => {
-    fetch(`/api/guest/${slug}`)
+    const k = localStorage.getItem(`momenti_gk_${slug}`) ?? crypto.randomUUID();
+    localStorage.setItem(`momenti_gk_${slug}`, k);
+    setGuestKey(k);
+    fetch(`/api/guest/${slug}?guestKey=${encodeURIComponent(k)}`)
       .then((r) => r.json())
       .then((d) => setInfo(d))
       .finally(() => setLoading(false));
@@ -129,7 +138,7 @@ export function GuestUpload({ slug }: { slug: string }) {
       }
       setAllDone(true);
     },
-    [guestName, info?.canUpload, slug],
+    [guestName, guestKey, info?.canUpload, slug],
   );
 
   if (loading) {
@@ -178,6 +187,59 @@ export function GuestUpload({ slug }: { slug: string }) {
         )}
       </p>
 
+      {info.disposable?.enabled && info.limits.shotsRemaining !== null && (
+        <p className="mt-4 rounded-full bg-[var(--color-blush)] px-4 py-2 text-center text-sm">
+          📷 Disposable: {info.limits.shotsRemaining} კადარი დარჩა
+        </p>
+      )}
+
+      <div className="mt-4 flex gap-2">
+        <button
+          type="button"
+          onClick={() => setTab("photos")}
+          className={cn(
+            "flex-1 rounded-full py-2 text-sm",
+            tab === "photos" ? "bg-[var(--color-forest)] text-white" : "bg-white/60",
+          )}
+        >
+          ფოტოები
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab("book")}
+          className={cn(
+            "flex-1 rounded-full py-2 text-sm",
+            tab === "book" ? "bg-[var(--color-forest)] text-white" : "bg-white/60",
+          )}
+        >
+          Guestbook
+        </button>
+      </div>
+
+      {tab === "book" ? (
+        <div className="mt-6 space-y-3">
+          <textarea
+            className="w-full rounded-xl border px-4 py-3 min-h-[120px]"
+            placeholder="თქვენი სიყვარულის სიტყვა…"
+            value={guestbookText}
+            onChange={(e) => setGuestbookText(e.target.value)}
+          />
+          <Button
+            type="button"
+            onClick={async () => {
+              await fetch(`/api/guest/${slug}/guestbook`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ body: guestbookText, guestName }),
+              });
+              setGuestbookText("");
+            }}
+          >
+            გაგზავნა
+          </Button>
+        </div>
+      ) : (
+        <>
       <p className="mt-4 text-[var(--color-ink)]">{t(locale, "uploadTitle")}</p>
       <p className="text-sm text-[var(--color-muted)]">{t(locale, "uploadSubtitle")}</p>
 
@@ -252,6 +314,8 @@ export function GuestUpload({ slug }: { slug: string }) {
               ))}
             </ul>
           )}
+        </>
+      )}
         </>
       )}
 

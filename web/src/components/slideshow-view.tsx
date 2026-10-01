@@ -122,7 +122,7 @@ export function SlideshowView({ slideshowToken }: { slideshowToken: string }) {
               key={current.id}
               src={current.url}
               alt=""
-              className="slideshow-ken-burns h-full w-full object-cover"
+              className="slideshow-ken-burns max-h-full max-w-full object-contain mx-auto"
             />
           </div>
         )}

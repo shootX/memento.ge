@@ -20,4 +20,10 @@ jobs:
       - run: DATABASE_URL="file:./test.db" npx prisma db push
       - run: npm test
       - run: npm run build
+      - run: npx playwright install chromium --with-deps
+      - run: npm run seed:photos
+      - run: DATABASE_URL="file:./dev.db" npx prisma db push
+      - run: npm run dev &
+      - run: npx wait-on http://localhost:43123 -t 60000
+      - run: npm run test:e2e
       - run: npm audit --audit-level=high || true

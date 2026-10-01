@@ -33,12 +33,19 @@ export async function GET(req: Request, { params }: Params) {
   if (!cardSizes.has(size)) return jsonError(400, "Invalid size");
 
   const guestUrl = `${process.env.NEXT_PUBLIC_APP_URL}/e/${event.guestSlug}`;
+  const partner = event.partnerOrgId
+    ? await (await import("@/lib/prisma")).prisma.partnerOrg.findUnique({
+        where: { id: event.partnerOrgId },
+      })
+    : null;
   const opts = {
     coupleNames: event.coupleNames,
     eventDate: event.eventDate,
     guestUrl,
     template,
     size,
+    brandColor: partner?.whiteLabel ? partner.primaryColor : undefined,
+    partnerName: partner?.whiteLabel ? partner.name : undefined,
   };
 
   if (format === "png") {
