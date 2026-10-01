@@ -1,12 +1,10 @@
 import { HostDashboard } from "@/components/host-dashboard";
+import { getHostBootstrap } from "@/lib/host-bootstrap";
 
 type Props = { params: Promise<{ token: string }> };
 
 export default async function HostPage({ params }: Props) {
   const { token } = await params;
-  return (
-    <main className="min-h-screen bg-gradient-to-b from-[var(--color-cream)] to-white">
-      <HostDashboard token={token} />
-    </main>
-  );
+  const bootstrap = await getHostBootstrap(token);
+  return <HostDashboard token={token} bootstrap={bootstrap} />;
 }

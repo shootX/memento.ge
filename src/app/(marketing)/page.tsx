@@ -15,11 +15,7 @@ const photos = [
 
 export default function HomePage() {
   return (
-    <main className="bg-mesh overflow-hidden">
-      <div className="blob blob-1" />
-      <div className="blob blob-2" />
-      <div className="blob blob-3" />
-
+    <main className="overflow-hidden">
       <section className="relative px-4 pb-16 pt-12 md:pt-20">
         <div className="mx-auto max-w-6xl">
           <div className="grid items-center gap-12 lg:grid-cols-2">

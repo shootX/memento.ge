@@ -17,6 +17,7 @@ import {
 import { PLANS } from "@/lib/plans";
 import { cn } from "@/lib/cn";
 import { HostSettings } from "@/components/host-settings";
+import { PhotoLightbox, type LightboxItem } from "@/components/photo-lightbox";
 import { useMotionSafe } from "@/lib/motion";
 
 type Tab = "gallery" | "qr" | "guestbook" | "settings";
@@ -73,26 +74,76 @@ const tabs: { id: Tab; label: string; icon: typeof Images }[] = [
   { id: "settings", label: "პარამეტრები", icon: Settings2 },
 ];
 
-export function HostDashboard({ token }: { token: string }) {
+type Bootstrap = {
+  coupleNames: string;
+  eventDate: string;
+  guestUrl: string;
+  slideshowUrl: string;
+  isPaid: boolean;
+  planTier: string;
+  usage: HostEvent["usage"];
+  coverUrl: string | null;
+  csrfToken: string;
+  customSlug: string | null;
+  publicGallery: boolean;
+  disposableEnabled: boolean;
+  shotsPerGuest: number;
+  revealAt: string | null;
+  moderateUploads: boolean;
+  media: MediaItem[];
+  messages: GuestMsg[];
+};
+
+export function HostDashboard({
+  token,
+  bootstrap = null,
+}: {
+  token: string;
+  bootstrap?: Bootstrap | null;
+}) {
   const { spring } = useMotionSafe();
-  const [event, setEvent] = useState<HostEvent | null>(null);
-  const [media, setMedia] = useState<MediaItem[]>([]);
-  const [messages, setMessages] = useState<GuestMsg[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [event, setEvent] = useState<HostEvent | null>(
+    bootstrap
+      ? {
+          coupleNames: bootstrap.coupleNames,
+          eventDate: bootstrap.eventDate,
+          guestUrl: bootstrap.guestUrl,
+          slideshowUrl: bootstrap.slideshowUrl,
+          isPaid: bootstrap.isPaid,
+          planTier: bootstrap.planTier,
+          usage: bootstrap.usage,
+          coverUrl: bootstrap.coverUrl,
+          csrfToken: bootstrap.csrfToken,
+          customSlug: bootstrap.customSlug,
+          publicGallery: bootstrap.publicGallery,
+          disposableEnabled: bootstrap.disposableEnabled,
+          shotsPerGuest: bootstrap.shotsPerGuest,
+          revealAt: bootstrap.revealAt,
+          moderateUploads: bootstrap.moderateUploads,
+        }
+      : null,
+  );
+  const [media, setMedia] = useState<MediaItem[]>(bootstrap?.media ?? []);
+  const [messages, setMessages] = useState<GuestMsg[]>(bootstrap?.messages ?? []);
+  const [loading, setLoading] = useState(!bootstrap);
   const [tab, setTab] = useState<Tab>("gallery");
   const [activeTemplate, setActiveTemplate] =
     useState<(typeof templates)[number]["id"]>("elegant");
+  const [lightbox, setLightbox] = useState<LightboxItem | null>(null);
 
   const load = useCallback(async () => {
-    const [ev, med, msg] = await Promise.all([
-      fetch(`/api/host/${token}`).then((r) => r.json()),
-      fetch(`/api/host/${token}/media`).then((r) => r.json()),
-      fetch(`/api/host/${token}/guestbook`).then((r) => r.json()),
-    ]);
-    if (!ev.error) setEvent(ev);
-    if (!med.error) setMedia(med.items ?? []);
-    if (!msg.error) setMessages(msg.items ?? []);
-    setLoading(false);
+    try {
+      const [ev, med, msg] = await Promise.all([
+        fetch(`/api/host/${token}`).then((r) => r.json()),
+        fetch(`/api/host/${token}/media`).then((r) => r.json()),
+        fetch(`/api/host/${token}/guestbook`).then((r) => r.json()),
+      ]);
+      if (!ev.error) setEvent(ev);
+      if (!med.error) setMedia(med.items ?? []);
+      if (!msg.error) setMessages(msg.items ?? []);
+    } finally {
+      setLoading(false);
+    }
   }, [token]);
 
   useEffect(() => {
@@ -145,7 +196,8 @@ export function HostDashboard({ token }: { token: string }) {
   );
 
   return (
-    <div className="min-h-screen bg-[var(--bg-page)]">
+    <div className="min-h-screen bg-[var(--bg-page)]" data-testid="host-ready">
+      <PhotoLightbox item={lightbox} onClose={() => setLightbox(null)} />
       <header className="border-b-2 border-pink-100 bg-white/90 backdrop-blur-md sticky top-0 z-30">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-4">
           <div>
@@ -153,7 +205,7 @@ export function HostDashboard({ token }: { token: string }) {
               Momenti
             </p>
             <h1 className="text-xl font-extrabold">{event.coupleNames}</h1>
-            <p className="text-sm text-[var(--text-muted)]">
+            <p className="text-sm text-[var(--text-muted)]" suppressHydrationWarning>
               {new Date(event.eventDate).toLocaleDateString("ka-GE")} ·{" "}
               {plan?.nameKa ?? event.planTier}
               {!event.isPaid && (
@@ -209,12 +261,9 @@ export function HostDashboard({ token }: { token: string }) {
               emoji: "🎯",
             },
             { label: "ფასი", value: `${event.usage.priceGel} ₾`, emoji: "💜" },
-          ].map((s, i) => (
-            <motion.div
+          ].map((s) => (
+            <div
               key={s.label}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ ...spring, delay: i * 0.05 }}
               className="card-chunky flex items-center gap-4 p-5"
             >
               <span className="text-3xl">{s.emoji}</span>
@@ -248,26 +297,34 @@ export function HostDashboard({ token }: { token: string }) {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+              <div className="columns-2 gap-3 md:columns-3 lg:columns-4">
                 {media.map((m, i) => (
-                  <motion.div
+                  <motion.button
+                    type="button"
                     key={m.id}
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ ...spring, delay: i * 0.03 }}
-                    className="group relative aspect-square overflow-hidden rounded-2xl border-2 border-pink-100 shadow-md"
+                    onClick={() =>
+                      setLightbox({
+                        id: m.id,
+                        url: m.url,
+                        guestName: m.guestName,
+                      })
+                    }
+                    className="group relative mb-3 w-full break-inside-avoid overflow-hidden rounded-2xl border-2 border-pink-100 shadow-md text-left"
                   >
                     {m.mimeType.startsWith("video/") ? (
                       <video
                         src={m.url}
-                        className="h-full w-full object-cover"
+                        className="w-full object-cover"
                         muted
                       />
                     ) : (
                       <img
                         src={m.thumbUrl ?? m.url}
                         alt=""
-                        className="h-full w-full object-cover"
+                        className="w-full object-cover"
                       />
                     )}
                     {m.status === "pending" && (
@@ -288,7 +345,7 @@ export function HostDashboard({ token }: { token: string }) {
                         {m.guestName}
                       </p>
                     )}
-                  </motion.div>
+                  </motion.button>
                 ))}
               </div>
             )}

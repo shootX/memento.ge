@@ -10,17 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Camera, CheckCircle2, Loader2, Sparkles } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { useMotionSafe } from "@/lib/motion";
+import type { GuestEventPayload } from "@/lib/guest-event-payload";
 
-type EventInfo = {
-  coupleNames: string;
-  eventDate: string;
-  canUpload: boolean;
-  isActive: boolean;
-  limits: { maxBytesPerFile: number; shotsRemaining: number | null };
-  coverUrl: string | null;
-  disposable?: { enabled: boolean; shotsPerGuest: number };
-  branding?: { primaryColor?: string; logoUrl?: string | null; partnerName?: string };
-};
+type EventInfo = GuestEventPayload;
 
 type FileProgress = {
   file: File;
@@ -64,11 +56,17 @@ async function uploadWithRetry(
   }
 }
 
-export function GuestUpload({ slug }: { slug: string }) {
+export function GuestUpload({
+  slug,
+  initialInfo = null,
+}: {
+  slug: string;
+  initialInfo?: EventInfo | null;
+}) {
   const { spring, reduce } = useMotionSafe();
   const [locale, setLocale] = useState<Locale>("ka");
-  const [info, setInfo] = useState<EventInfo | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [info, setInfo] = useState<EventInfo | null>(initialInfo);
+  const [loading, setLoading] = useState(!initialInfo);
   const [guestName, setGuestName] = useState("");
   const [queue, setQueue] = useState<FileProgress[]>([]);
   const [allDone, setAllDone] = useState(false);
@@ -82,7 +80,9 @@ export function GuestUpload({ slug }: { slug: string }) {
     setGuestKey(k);
     fetch(`/api/guest/${slug}?guestKey=${encodeURIComponent(k)}`)
       .then((r) => r.json())
-      .then((d) => setInfo(d))
+      .then((d) => {
+        if (!d.error) setInfo(d);
+      })
       .finally(() => setLoading(false));
   }, [slug]);
 
@@ -164,7 +164,10 @@ export function GuestUpload({ slug }: { slug: string }) {
 
   if (loading) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
+      <div
+        className="flex min-h-[60vh] items-center justify-center"
+        data-testid="guest-loading"
+      >
         <Loader2 className="h-10 w-10 animate-spin text-[var(--pink)]" />
       </div>
     );
@@ -172,7 +175,9 @@ export function GuestUpload({ slug }: { slug: string }) {
 
   if (!info) {
     return (
-      <p className="text-center p-8 font-bold">ღონისძიება ვერ მოიძებნა 😢</p>
+      <p className="text-center p-8 font-bold" data-testid="guest-error">
+        ღონისძიება ვერ მოიძებნა 😢
+      </p>
     );
   }
 
@@ -181,7 +186,10 @@ export function GuestUpload({ slug }: { slug: string }) {
   const shotsLeft = info.limits.shotsRemaining;
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[var(--bg-page)]">
+    <div
+      className="relative min-h-screen overflow-hidden bg-[var(--bg-page)]"
+      data-testid="guest-ready"
+    >
       <div className="blob blob-1" aria-hidden />
       <div className="blob blob-2" aria-hidden />
 
@@ -221,7 +229,7 @@ export function GuestUpload({ slug }: { slug: string }) {
             <h1 className="text-2xl font-extrabold leading-tight">
               {info.coupleNames}
             </h1>
-            <p className="mt-1 text-sm text-[var(--text-muted)]">
+            <p className="mt-1 text-sm text-[var(--text-muted)]" suppressHydrationWarning>
               {new Date(info.eventDate).toLocaleDateString(
                 locale === "ka" ? "ka-GE" : locale === "ru" ? "ru-RU" : "en-GB",
                 { dateStyle: "long" },

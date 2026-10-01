@@ -17,9 +17,15 @@ type Bootstrap = {
   items: Slide[];
 };
 
-export function SlideshowView({ slideshowToken }: { slideshowToken: string }) {
-  const [boot, setBoot] = useState<Bootstrap | null>(null);
-  const [slides, setSlides] = useState<Slide[]>([]);
+export function SlideshowView({
+  slideshowToken,
+  initialBoot = null,
+}: {
+  slideshowToken: string;
+  initialBoot?: Bootstrap | null;
+}) {
+  const [boot, setBoot] = useState<Bootstrap | null>(initialBoot);
+  const [slides, setSlides] = useState<Slide[]>(initialBoot?.items ?? []);
   const [index, setIndex] = useState(0);
   const [fade, setFade] = useState(true);
   const [newPulse, setNewPulse] = useState(false);
@@ -37,8 +43,11 @@ export function SlideshowView({ slideshowToken }: { slideshowToken: string }) {
   }, [slideshowToken]);
 
   useEffect(() => {
-    void loadBootstrap();
-  }, [loadBootstrap]);
+    if (!initialBoot) void loadBootstrap();
+    else {
+      initialBoot.items.forEach((i) => seenRef.current.add(i.id));
+    }
+  }, [loadBootstrap, initialBoot]);
 
   useEffect(() => {
     if (slides.length < 2) return;
@@ -71,7 +80,10 @@ export function SlideshowView({ slideshowToken }: { slideshowToken: string }) {
   }, [slideshowToken, slides.length]);
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-[var(--bg-dark)] text-white">
+    <div
+      className="fixed inset-0 overflow-hidden bg-[var(--bg-dark)] text-white"
+      data-testid={slides.length > 0 ? "slideshow-ready" : "slideshow-waiting"}
+    >
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/70 z-10" />
 
       <header className="absolute left-0 right-0 top-0 z-20 flex items-start justify-between p-6 md:p-10">
@@ -81,7 +93,7 @@ export function SlideshowView({ slideshowToken }: { slideshowToken: string }) {
             {boot?.coupleNames ?? "…"}
           </h1>
           {boot?.eventDate && (
-            <p className="text-sm text-white/60 mt-1">
+            <p className="text-sm text-white/60 mt-1" suppressHydrationWarning>
               {new Date(boot.eventDate).toLocaleDateString("ka-GE", { dateStyle: "long" })}
             </p>
           )}
