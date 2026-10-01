@@ -8,9 +8,10 @@ import { Locale, t } from "@/lib/i18n";
 import { LocaleToggle } from "@/components/locale-toggle";
 import { Button } from "@/components/ui/button";
 import { Camera, CheckCircle2, Loader2 } from "lucide-react";
-import { cn } from "@/lib/cn";
+import { EventCover } from "@/components/event-cover";
 import { useMotionSafe } from "@/lib/motion";
 import { enqueueUpload } from "@/lib/offline-upload-queue";
+import { cn } from "@/lib/cn";
 import type { GuestEventPayload } from "@/lib/guest-event-payload";
 
 type EventInfo = GuestEventPayload;
@@ -243,16 +244,7 @@ export function GuestUpload({
           transition={spring}
           className="card-chunky overflow-hidden"
         >
-          {info.coverUrl && (
-            <div
-              className="h-44 w-full bg-pink-100"
-              style={{
-                backgroundImage: `url(${info.coverUrl})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }}
-            />
-          )}
+          <EventCover coverUrl={info.coverUrl} coupleNames={info.coupleNames} />
           <div className="p-5">
             <p className="type-label">{t(locale, "eventLabel")}</p>
             <h1 className="mt-1 font-display text-3xl font-bold leading-snug">{info.coupleNames}</h1>
@@ -278,16 +270,21 @@ export function GuestUpload({
               {shotsLeft}
             </p>
             <p className="text-center text-sm text-pink-100">კადარი დარჩა</p>
-            <div className="mt-4 flex justify-center gap-1">
+            <div className="mt-4 flex justify-center gap-1.5">
               {Array.from({ length: info.disposable.shotsPerGuest }).map((_, i) => {
-                const used = info.disposable!.shotsPerGuest - (shotsLeft ?? 0);
+                const remaining = shotsLeft ?? 0;
+                const used = info.disposable!.shotsPerGuest - remaining;
+                const isRemaining = i >= used;
                 return (
                   <div
                     key={i}
                     className={cn(
-                      "film-strip-dot h-10 w-8 rounded-sm border-2 border-white/20 bg-black/50",
-                      i < used && "bg-[var(--accent)]/90",
+                      "film-strip-dot h-11 w-9 rounded-md border-2 transition",
+                      isRemaining
+                        ? "border-white bg-[var(--accent)] shadow-[0_0_12px_rgba(255,45,138,0.6)]"
+                        : "border-white/10 bg-black/30 opacity-40",
                     )}
+                    aria-hidden
                   />
                 );
               })}

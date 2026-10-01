@@ -45,6 +45,7 @@ jobs:
       - run: npx playwright install chromium --with-deps
       - run: npm run seed:photos
       - run: npx prisma migrate deploy
+      - run: npm run ensure:demo
       - run: npm run dev &
       - run: npx wait-on http://localhost:43123 -t 60000
       - run: npm run test:e2e

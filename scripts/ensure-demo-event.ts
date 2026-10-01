@@ -1,14 +1,93 @@
 import { readFile, readdir, writeFile } from "fs/promises";
 import path from "path";
 import { prisma } from "../src/lib/prisma";
-import { putObject, buildMediaKey } from "../src/lib/storage";
+import { putObject, buildMediaKey, getObject } from "../src/lib/storage";
 import { processThumbnail } from "../src/lib/jobs/thumbnails";
 import { computeExpiresAt, getPlan } from "../src/lib/plans";
 
 const DEMO_GUEST_SLUG = "memento-demo-guest-01";
 const MANIFEST = path.join(process.cwd(), "public/demo-manifest.json");
 
+async function objectExists(key: string): Promise<boolean> {
+  try {
+    await getObject(key);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function demoMediaStorageOk(eventId: string): Promise<boolean> {
+  const rows = await prisma.media.findMany({
+    where: { eventId },
+    select: { storageKey: true, thumbKey: true },
+  });
+  if (rows.length < 6) return false;
+  for (const row of rows) {
+    if (!(await objectExists(row.storageKey))) return false;
+    if (row.thumbKey && !(await objectExists(row.thumbKey))) return false;
+  }
+  return true;
+}
+
+async function seedDemoMedia(eventId: string) {
+  await prisma.media.deleteMany({ where: { eventId } });
+  const sampleDir = path.join(process.cwd(), "public/seed-samples");
+  const files = (await readdir(sampleDir)).filter((f) => f.endsWith(".jpg"));
+  const names = ["მარიამ", "ლუკა", "ანა", "გიორგი", "ნიკა", "სოფო"];
+  let total = 0;
+  let count = 0;
+  for (let i = 0; i < files.length; i++) {
+    const buf = await readFile(path.join(sampleDir, files[i]));
+    const mediaId = crypto.randomUUID();
+    const key = buildMediaKey(eventId, mediaId, "jpg");
+    const thumbKey = `${key.replace(/\.jpg$/, "")}_thumb.jpg`;
+    await putObject(key, buf, "image/jpeg");
+    await putObject(thumbKey, await processThumbnail(buf), "image/jpeg");
+    await prisma.media.create({
+      data: {
+        id: mediaId,
+        eventId,
+        storageKey: key,
+        thumbKey,
+        mimeType: "image/jpeg",
+        size: buf.length,
+        guestName: names[i % names.length],
+        width: 1200,
+        height: 1600,
+        status: "approved",
+      },
+    });
+    total += buf.length;
+    count += 1;
+  }
+  await prisma.event.update({
+    where: { id: eventId },
+    data: { totalBytes: total, uploadCount: count },
+  });
+}
+
+async function ensureCoverPhoto(eventId: string, existingKey: string | null) {
+  const key = existingKey ?? buildMediaKey(eventId, "cover", "jpg");
+  if (!(await objectExists(key))) {
+    const coverBuf = await readFile(
+      path.join(process.cwd(), "public/seed-samples/wedding-1.jpg"),
+    );
+    await putObject(key, coverBuf, "image/jpeg");
+  }
+  if (existingKey !== key) {
+    await prisma.event.update({
+      where: { id: eventId },
+      data: { coverPhotoKey: key },
+    });
+  }
+}
+
 export async function ensureDemoEvent() {
+  const storageRoot =
+    process.env.LOCAL_STORAGE_PATH?.replace(/^\.\//, "") ?? "data/uploads";
+  console.log("ensure:demo storage root:", path.resolve(process.cwd(), storageRoot));
+
   const plan = getPlan("classic");
   let event =
     (await prisma.event.findUnique({ where: { guestSlug: DEMO_GUEST_SLUG } })) ??
@@ -55,43 +134,13 @@ export async function ensureDemoEvent() {
   }
 
   const force = process.env.FORCE_SEED === "1";
-  const mediaCount = await prisma.media.count({ where: { eventId: event.id } });
-  if (force || mediaCount < 6) {
-    await prisma.media.deleteMany({ where: { eventId: event.id } });
-    const sampleDir = path.join(process.cwd(), "public/seed-samples");
-    const files = (await readdir(sampleDir)).filter((f) => f.endsWith(".jpg"));
-    const names = ["მარიამ", "ლუკა", "ანა", "გიორგი", "ნიკა", "სოფო"];
-    let total = 0;
-    let count = 0;
-    for (let i = 0; i < files.length; i++) {
-      const buf = await readFile(path.join(sampleDir, files[i]));
-      const mediaId = crypto.randomUUID();
-      const key = buildMediaKey(event.id, mediaId, "jpg");
-      const thumbKey = `${key.replace(/\.jpg$/, "")}_thumb.jpg`;
-      await putObject(key, buf, "image/jpeg");
-      await putObject(thumbKey, await processThumbnail(buf), "image/jpeg");
-      await prisma.media.create({
-        data: {
-          id: mediaId,
-          eventId: event.id,
-          storageKey: key,
-          thumbKey,
-          mimeType: "image/jpeg",
-          size: buf.length,
-          guestName: names[i % names.length],
-          width: 1200,
-          height: 1600,
-          status: "approved",
-        },
-      });
-      total += buf.length;
-      count += 1;
-    }
-    await prisma.event.update({
-      where: { id: event.id },
-      data: { totalBytes: total, uploadCount: count },
-    });
+  const storageOk = await demoMediaStorageOk(event.id);
+  if (force || !storageOk) {
+    await seedDemoMedia(event.id);
   }
+
+  await ensureCoverPhoto(event.id, event.coverPhotoKey);
+  event = (await prisma.event.findUnique({ where: { id: event.id } }))!;
 
   const msgCount = await prisma.guestMessage.count({ where: { eventId: event.id } });
   if (msgCount < 2) {
@@ -113,19 +162,6 @@ export async function ensureDemoEvent() {
           status: "approved",
         },
       ],
-    });
-  }
-
-  const coverKey = event.coverPhotoKey;
-  if (!coverKey) {
-    const coverBuf = await readFile(
-      path.join(process.cwd(), "public/seed-samples/wedding-1.jpg"),
-    );
-    const key = buildMediaKey(event.id, "cover", "jpg");
-    await putObject(key, coverBuf, "image/jpeg");
-    await prisma.event.update({
-      where: { id: event.id },
-      data: { coverPhotoKey: key },
     });
   }
 
