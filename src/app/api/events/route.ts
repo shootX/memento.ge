@@ -4,6 +4,8 @@ import { nanoid } from "nanoid";
 import { prisma } from "@/lib/prisma";
 import { getPlan, computeExpiresAt, type PlanTier } from "@/lib/plans";
 import { clientIp, consumeApi, handleApiError, jsonError } from "@/lib/api-utils";
+import { getUserFromSession } from "@/lib/user-session";
+import { auditLog } from "@/lib/audit";
 import { putObject, buildMediaKey } from "@/lib/storage";
 import { validateAndProcessUpload } from "@/lib/upload-validation";
 
@@ -51,8 +53,10 @@ export async function POST(req: Request) {
       return jsonError(400, "Invalid input");
     }
 
+    const user = await getUserFromSession();
     const guestSlug = nanoid(21);
     const hostToken = nanoid(32);
+    const slideshowToken = nanoid(32);
     const plan = getPlan(planTier);
     const date = new Date(eventDate);
 
@@ -62,10 +66,19 @@ export async function POST(req: Request) {
         eventDate: date,
         guestSlug,
         hostToken,
+        slideshowToken,
         planTier,
         isPaid: false,
         expiresAt: null,
+        ownerUserId: user?.id ?? null,
       },
+    });
+
+    await auditLog({
+      userId: user?.id,
+      action: "event.create",
+      entity: "Event",
+      entityId: event.id,
     });
 
     if (coverBuffer) {

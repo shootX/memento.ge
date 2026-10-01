@@ -22,7 +22,7 @@ export default function HomePage() {
             ფოტოგრაფებისა და საქორწინო დარბაზებისთვის.
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-            <Link href="/create">
+            <Link href="/onboarding">
               <Button className="text-base px-8 py-3">ღონისძიების შექმნა</Button>
             </Link>
             <a

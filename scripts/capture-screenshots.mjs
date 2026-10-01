@@ -2,43 +2,53 @@ import { chromium, devices } from "playwright";
 import { mkdir } from "fs/promises";
 
 const base = process.env.BASE_URL ?? "http://localhost:43123";
-const guest = process.env.GUEST_SLUG ?? "A8m__4geAw41Wd17eKMrc";
-const host = process.env.HOST_TOKEN ?? "leHqSWwO5PGNOqYct0kH3HFIVfqij0Y_";
 const out = "/opt/cursor/artifacts/screenshots";
-
 await mkdir(out, { recursive: true });
+
+const tokens = process.env.DEMO_JSON
+  ? JSON.parse(process.env.DEMO_JSON)
+  : {
+      guest: "A8m__4geAw41Wd17eKMrc",
+      host: "leHqSWwO5PGNOqYct0kH3HFIVfqij0Y_",
+      slideshow: "SP47MAfWum_av8aVLGoQYgi-8_Xevozq",
+    };
+
 const browser = await chromium.launch();
 
-const mobile = await browser.newContext({
-  ...devices["iPhone 13"],
-});
-const page = await mobile.newPage();
-await page.goto(`${base}/e/${guest}`, { waitUntil: "networkidle" });
-await page.screenshot({ path: `${out}/guest-upload-mobile.png`, fullPage: true });
+const mobile = await browser.newContext({ ...devices["iPhone 13"] });
+const guestPage = await mobile.newPage();
+await guestPage.goto(`${base}/e/${tokens.guest}`, { waitUntil: "networkidle" });
+await guestPage.screenshot({ path: `${out}/guest-upload-mobile.png`, fullPage: true });
 
-const desktop = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+const desktop = await browser.newContext({ viewport: { width: 1400, height: 900 } });
+const landing = await desktop.newPage();
+await landing.goto(`${base}/`, { waitUntil: "networkidle" });
+await landing.screenshot({ path: `${out}/landing.png`, fullPage: true });
+
+await landing.goto(`${base}/pricing`, { waitUntil: "networkidle" });
+await landing.screenshot({ path: `${out}/pricing.png`, fullPage: true });
+
 const hostPage = await desktop.newPage();
-await hostPage.goto(`${base}/host/${host}`, { waitUntil: "networkidle" });
+await hostPage.goto(`${base}/host/${tokens.host}`, { waitUntil: "networkidle", timeout: 60000 });
+await hostPage.waitForTimeout(1500);
 await hostPage.screenshot({ path: `${out}/host-gallery.png`, fullPage: true });
 
+for (const tpl of ["elegant", "botanical", "minimal"]) {
+  await hostPage.goto(
+    `${base}/api/host/${tokens.host}/qr?template=${tpl}&format=png&size=a6`,
+    { waitUntil: "networkidle" },
+  );
+  await hostPage.screenshot({ path: `${out}/qr-card-${tpl}.png` });
+}
+
 const slidePage = await desktop.newPage();
-await slidePage.goto(`${base}/host/${host}/slideshow`, { waitUntil: "networkidle" });
-await slidePage.waitForTimeout(3500);
+await slidePage.goto(`${base}/slideshow/${tokens.slideshow}`, { waitUntil: "networkidle" });
+await slidePage.waitForTimeout(4000);
 await slidePage.screenshot({ path: `${out}/slideshow.png` });
 
-const qrBuf = await fetch(`${base}/api/host/${host}/qr?template=elegant`).then((r) =>
-  r.arrayBuffer(),
-);
-await import("fs/promises").then((fs) =>
-  fs.writeFile(`${out}/qr-table-card.pdf`, Buffer.from(qrBuf)),
-);
-
-// Render first page of PDF as PNG using host page - simpler: screenshot a opened pdf link won't work
-// Use guest page with QR section - instead open create and show - For QR use playwright to embed - 
-// Take screenshot of host QR download card section
-await hostPage
-  .locator('a[href*="qr?template=elegant"]')
-  .screenshot({ path: `${out}/qr-table-card.png` });
+const admin = await desktop.newPage();
+await admin.goto(`${base}/admin`, { waitUntil: "networkidle" });
+await admin.screenshot({ path: `${out}/admin.png`, fullPage: true });
 
 await browser.close();
-console.log("Screenshots saved to", out);
+console.log("done", out);

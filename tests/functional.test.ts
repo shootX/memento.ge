@@ -7,17 +7,20 @@ import fs from "fs/promises";
 describe("event lifecycle", () => {
   let guestSlug: string;
   let hostToken: string;
+  let slideshowToken: string;
   let eventId: string;
 
   beforeAll(async () => {
     guestSlug = "testguestslug123456";
     hostToken = "testhosttoken123456789012345678";
+    slideshowToken = "testslideshowtoken12345678901234";
     const event = await prisma.event.create({
       data: {
         coupleNames: "Test & Test",
         eventDate: new Date(),
         guestSlug,
         hostToken,
+        slideshowToken,
         planTier: "starter",
         isPaid: true,
         paidAt: new Date(),

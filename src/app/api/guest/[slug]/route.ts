@@ -23,11 +23,29 @@ export async function GET(req: Request, { params }: Params) {
       coverUrl = `/api/media/cover/${event.id}?token=${encodeURIComponent(token)}`;
     }
 
+    const partner = event.partnerOrgId
+      ? await (await import("@/lib/prisma")).prisma.partnerOrg.findUnique({
+          where: { id: event.partnerOrgId },
+        })
+      : null;
+
     return NextResponse.json({
       coupleNames: event.coupleNames,
       eventDate: event.eventDate,
       canUpload: eventAllowsUpload(event),
       isActive: eventIsActive(event),
+      disposable: {
+        enabled: event.disposableEnabled,
+        shotsPerGuest: event.shotsPerGuest,
+        revealAt: event.revealAt,
+      },
+      branding: partner?.whiteLabel
+        ? {
+            logoUrl: partner.logoUrl ?? event.brandingLogoUrl,
+            primaryColor: partner.primaryColor ?? event.brandingPrimary,
+            partnerName: partner.name,
+          }
+        : null,
       limits: {
         maxBytesPerFile: plan.maxBytesPerFile,
         remainingUploads: Math.max(0, plan.maxUploads - event.uploadCount),

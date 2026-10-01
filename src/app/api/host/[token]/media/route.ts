@@ -22,12 +22,18 @@ export async function GET(req: Request, { params }: Params) {
     const exp = Date.now() + 3600_000;
     const mapped = items.map((m) => {
       const mediaToken = signMediaAccess(m.id, exp);
+      const thumbToken = m.thumbKey ? signMediaAccess(`${m.id}:thumb`, exp) : null;
       return {
         id: m.id,
         mimeType: m.mimeType,
         guestName: m.guestName,
+        status: m.status,
+        highlight: m.highlight,
         createdAt: m.createdAt,
         url: `/api/media/${m.id}?token=${encodeURIComponent(mediaToken)}`,
+        thumbUrl: thumbToken
+          ? `/api/media/${m.id}?token=${encodeURIComponent(thumbToken)}&variant=thumb`
+          : null,
       };
     });
 

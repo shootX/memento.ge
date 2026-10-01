@@ -17,6 +17,12 @@ export const metadata: Metadata = {
   title: "Momenti — ქორწილის ფოტოალბომი QR-ით",
   description:
     "სტუმრები სკანირებით ატვირთავენ ფოტოებს. ფოტოგრაფებისა და საქორწინო დარბაზებისთვის საქართველოში.",
+  openGraph: {
+    title: "Momenti",
+    description: "QR ფოტოალბომი ქორწილისთვის · საქართველო",
+    locale: "ka_GE",
+    type: "website",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
