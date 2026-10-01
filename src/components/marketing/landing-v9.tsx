@@ -31,7 +31,7 @@ function SectionHead({
 
 const features = [
   "ლაივ სლაიდშოუ ეკრანზე",
-  "Disposable camera რეჟიმი",
+  "ერთჯერადი კამერის რეჟიმი",
   "სტუმრების წიგნი + ხმოვანი შეტყობინება",
   "QR ბარათები PDF/PNG",
   "ZIP ჩამოტვირთვა ჰოსტისგან",
@@ -62,7 +62,7 @@ const gallery = [
 const faqs = [
   { q: "სტუმარს აპი სჭირდება?", a: "არა — QR-ით ბრაუზერში ატვირთავს." },
   { q: "როგორ ვიღებთ ფოტოებს?", a: "ZIP ჰოსტის პანელიდან; ვადა პაკეტის მიხედვით." },
-  { q: "სუსტ Wi‑Fi?", a: "Retry + კომპრესია დიდ ფაილებზე." },
+  { q: "სუსტ Wi‑Fi?", a: "ხელახალი ცდა + კომპრესია დიდ ფაილებზე." },
 ];
 
 export function LandingV9() {
@@ -78,36 +78,40 @@ export function LandingV9() {
           className="object-cover"
           data-testid="hero-phone-photo"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-black/30" />
-        <div className="relative flex min-h-[90vh] flex-col justify-end pb-12 pt-24 md:min-h-screen md:pb-16">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-black/10" />
+        <div className="relative flex min-h-[90vh] flex-col justify-end pb-10 md:min-h-screen md:pb-14">
           <div className="container-page">
-            <h1 className="font-display text-[var(--text-hero)] font-extrabold leading-none tracking-tight text-white">
-              მემენტო<span className="text-[var(--accent)]">.</span>
-            </h1>
-            <div className="mt-8 flex max-w-xl items-start gap-3">
-              <span className="text-2xl text-[var(--accent)]" aria-hidden>
-                ✱
-              </span>
-              <p className="text-lg leading-snug text-[var(--fg-2)] md:text-xl">
-                <span className="text-[var(--accent)]">ქორწილის ყველა ფოტო</span> — ერთ ალბომში,{" "}
-                <span className="text-[var(--accent)]">QR-ით</span>
-              </p>
-            </div>
-            <div className="mt-10 flex flex-wrap items-center gap-4">
-              <Link href="/onboarding" className="pill-cta">
-                <span>დაიწყე</span>
-                <span className="pill-cta-icon" aria-hidden>
-                  <ArrowUpRight className="h-5 w-5" />
-                </span>
-              </Link>
-              <a
-                href={`https://wa.me/${wa}?text=${encodeURIComponent("გამარჯობა, მემენტოს შესახებ")}`}
-                target="_blank"
-                rel="noreferrer"
-                className="btn-outline-chunky border-[var(--border)] bg-transparent text-white hover:bg-white/5"
-              >
-                WhatsApp
-              </a>
+            <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between lg:gap-12">
+              <h1 className="hero-wordmark shrink-0" data-testid="hero-wordmark">
+                მემენტო<span className="text-[var(--accent)]">.</span>
+              </h1>
+              <div className="flex max-w-xl flex-col gap-8 lg:pb-2">
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl text-[var(--accent)] md:text-3xl" aria-hidden>
+                    ✱
+                  </span>
+                  <p className="text-lg leading-snug text-[var(--fg-2)] md:text-xl">
+                    <span className="font-semibold text-[var(--accent)]">ქორწილის ყველა ფოტო</span> — ერთ ალბომში,{" "}
+                    <span className="font-semibold text-[var(--accent)]">QR-ით</span>
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-4">
+                  <Link href="/onboarding" className="pill-cta">
+                    <span>დაიწყე</span>
+                    <span className="pill-cta-icon" aria-hidden>
+                      <ArrowUpRight className="h-5 w-5" />
+                    </span>
+                  </Link>
+                  <a
+                    href={`https://wa.me/${wa}?text=${encodeURIComponent("გამარჯობა, მემენტოს შესახებ")}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn-outline-chunky border-white/25 bg-black/20 text-white backdrop-blur-sm hover:bg-white/10"
+                  >
+                    WhatsApp
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -152,7 +156,7 @@ export function LandingV9() {
 
       <section className="section-y">
         <div className="container-page">
-          <SectionHead num="02" label="გალერეა" title="Featured events" />
+          <SectionHead num="02" label="გალერეა" title="არჩეული ღონისძიებები" />
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {gallery.map((g) => (
               <figure key={g.src} className="group relative aspect-[4/5] overflow-hidden rounded-[var(--radius-md)]">
@@ -173,7 +177,7 @@ export function LandingV9() {
 
       <section className="section-y bg-[var(--bg-elevated)]">
         <div className="container-page">
-          <SectionHead num="03" label="ფუნქციები" title="What we do" />
+          <SectionHead num="03" label="ფუნქციები" title="რას გთავაზობთ" />
           <ul className="divide-y divide-[var(--border-soft)] border-y border-[var(--border-soft)]">
             {features.map((f) => (
               <li key={f} className="flex items-center justify-between py-6 text-lg font-semibold md:text-xl">
@@ -187,7 +191,7 @@ export function LandingV9() {
 
       <section className="section-y">
         <div className="container-page">
-          <SectionHead num="04" label="რატომ მემენტო" title="Why choose us" />
+          <SectionHead num="04" label="რატომ მემენტო" title="რატომ ჩვენ" />
           <div className="grid gap-10 md:grid-cols-3">
             {[
               { n: "98%", l: "სტუმრები ატვირთავენ QR-ით", d: "დემო UX მეტრიკა" },
@@ -226,7 +230,7 @@ export function LandingV9() {
 
       <section className="section-y" id="pricing" data-testid="landing-pricing">
         <div className="container-page">
-          <SectionHead num="06" label="ფასები" title="Pricing" />
+          <SectionHead num="06" label="ფასები" title="ფასები" />
           <div className="grid gap-6 md:grid-cols-3 md:items-stretch">
             {(["starter", "classic", "premium"] as const).map((tier) => {
               const p = PLANS[tier];
@@ -278,10 +282,10 @@ export function LandingV9() {
         <div className="container-page">
           <SectionHead num="07" label="პარტნიორები" title="ფოტოგრაფებისთვის" />
           <p className="max-w-2xl text-[var(--muted)]">
-            White-label QR ალბომი თქვენი კლიენტებისთვის — კომისია და partner დაფა.
+            თქვენი ბრენდით QR ალბომი კლიენტებისთვის — კომისია და პარტნიორის პანელი.
           </p>
           <Link href="/for-partners" className="pill-cta mt-8 inline-flex">
-            <span>Partner პროგრამა</span>
+            <span>პარტნიორის პროგრამა</span>
             <span className="pill-cta-icon">
               <ArrowUpRight className="h-5 w-5" />
             </span>
@@ -291,7 +295,7 @@ export function LandingV9() {
 
       <section className="section-y">
         <div className="container-page max-w-3xl">
-          <SectionHead num="08" label="FAQ" title="ხშირი კითხვები" />
+          <SectionHead num="08" label="კითხვები" title="ხშირი კითხვები" />
           <div className="space-y-3">
             {faqs.map((f) => (
               <details key={f.q} className="group rounded-[var(--radius-md)] border border-[var(--border-soft)] bg-[var(--surface)] px-6 py-4">
@@ -309,7 +313,7 @@ export function LandingV9() {
         <div className="container-page flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--muted)]">09 · კონტაქტი</p>
-            <h2 className="mt-2 font-display text-3xl font-extrabold">Get in touch</h2>
+            <h2 className="mt-2 font-display text-3xl font-extrabold">დაგვიკავშირდით</h2>
             <p className="mt-2 text-[var(--muted)]">hello@memento.ge · WhatsApp</p>
           </div>
           <Link href="/onboarding" className="pill-cta">

@@ -95,6 +95,21 @@ body {
   line-height: var(--leading-tight);
 }
 
+.hero-wordmark {
+  font-family: var(--font-noto-sans), var(--font-manrope), system-ui, sans-serif;
+  font-size: clamp(5rem, 16vw, 12.5rem);
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: -0.04em;
+  color: #ffffff;
+}
+
+@media (min-width: 768px) {
+  .hero-wordmark {
+    font-size: clamp(10rem, 11vw, 12.5rem);
+  }
+}
+
 .type-section-title {
   font-family: var(--font-display);
   font-size: var(--text-3xl);
