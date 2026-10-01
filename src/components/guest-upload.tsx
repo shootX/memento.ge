@@ -2,11 +2,14 @@
 
 import { useCallback, useEffect, useState } from "react";
 import imageCompression from "browser-image-compression";
+import confetti from "canvas-confetti";
+import { motion, AnimatePresence } from "framer-motion";
 import { Locale, t } from "@/lib/i18n";
 import { LocaleToggle } from "@/components/locale-toggle";
 import { Button } from "@/components/ui/button";
-import { Camera, CheckCircle2, Loader2, Upload } from "lucide-react";
+import { Camera, CheckCircle2, Loader2, Sparkles } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { useMotionSafe } from "@/lib/motion";
 
 type EventInfo = {
   coupleNames: string;
@@ -23,12 +26,14 @@ type FileProgress = {
   file: File;
   status: "pending" | "uploading" | "done" | "error";
   progress: number;
+  preview?: string;
 };
 
 async function uploadWithRetry(
   slug: string,
   file: File,
   guestName: string,
+  guestKey: string,
   onProgress: (p: number) => void,
   maxRetries = 4,
 ) {
@@ -60,6 +65,7 @@ async function uploadWithRetry(
 }
 
 export function GuestUpload({ slug }: { slug: string }) {
+  const { spring, reduce } = useMotionSafe();
   const [locale, setLocale] = useState<Locale>("ka");
   const [info, setInfo] = useState<EventInfo | null>(null);
   const [loading, setLoading] = useState(true);
@@ -79,6 +85,18 @@ export function GuestUpload({ slug }: { slug: string }) {
       .then((d) => setInfo(d))
       .finally(() => setLoading(false));
   }, [slug]);
+
+  useEffect(() => {
+    if (!allDone || reduce) return;
+    const done = queue.length > 0 && queue.every((q) => q.status === "done");
+    if (!done) return;
+    confetti({
+      particleCount: 120,
+      spread: 70,
+      origin: { y: 0.65 },
+      colors: ["#ff2d8a", "#ff6b35", "#a855f7", "#fbbf24"],
+    });
+  }, [allDone, queue, reduce]);
 
   const processFiles = useCallback(
     async (files: FileList | File[]) => {
@@ -107,6 +125,9 @@ export function GuestUpload({ slug }: { slug: string }) {
         file,
         status: "pending",
         progress: 0,
+        preview: file.type.startsWith("image/")
+          ? URL.createObjectURL(file)
+          : undefined,
       }));
       setQueue(initial);
       setAllDone(false);
@@ -118,7 +139,7 @@ export function GuestUpload({ slug }: { slug: string }) {
           ),
         );
         try {
-          await uploadWithRetry(slug, prepared[i], guestName, (p) => {
+          await uploadWithRetry(slug, prepared[i], guestName, guestKey, (p) => {
             setQueue((q) =>
               q.map((item, idx) => (idx === i ? { ...item, progress: p } : item)),
             );
@@ -144,185 +165,230 @@ export function GuestUpload({ slug }: { slug: string }) {
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-[var(--color-gold)]" />
+        <Loader2 className="h-10 w-10 animate-spin text-[var(--pink)]" />
       </div>
     );
   }
 
   if (!info) {
     return (
-      <p className="text-center text-[var(--color-muted)] p-8">ღონისძიება ვერ მოიძებნა</p>
+      <p className="text-center p-8 font-bold">ღონისძიება ვერ მოიძებნა 😢</p>
     );
   }
 
   const closed = !info.canUpload;
+  const disposable = info.disposable?.enabled;
+  const shotsLeft = info.limits.shotsRemaining;
 
   return (
-    <div className="mx-auto max-w-lg px-4 pb-12 pt-6 animate-fade-up">
-      <div className="mb-6 flex items-center justify-between">
-        <span className="text-xs tracking-widest uppercase text-[var(--color-muted)]">
-          Momenti
-        </span>
-        <LocaleToggle value={locale} onChange={setLocale} />
-      </div>
+    <div className="relative min-h-screen overflow-hidden bg-[var(--bg-page)]">
+      <div className="blob blob-1" aria-hidden />
+      <div className="blob blob-2" aria-hidden />
 
-      {info.coverUrl && (
-        <div
-          className="mb-6 h-40 w-full overflow-hidden rounded-2xl bg-[var(--color-blush)] shadow-inner"
-          style={{
-            backgroundImage: `url(${info.coverUrl})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
-        />
-      )}
+      <div className="relative mx-auto max-w-lg px-4 pb-14 pt-6">
+        <div className="mb-5 flex items-center justify-between">
+          <span className="font-display text-xl font-bold text-gradient">
+            Momenti ✨
+          </span>
+          <LocaleToggle value={locale} onChange={setLocale} />
+        </div>
 
-      <h1 className="font-display text-2xl font-semibold text-[var(--color-ink)]">
-        {info.coupleNames}
-      </h1>
-      <p className="mt-1 text-sm text-[var(--color-muted)]">
-        {new Date(info.eventDate).toLocaleDateString(
-          locale === "ka" ? "ka-GE" : locale === "ru" ? "ru-RU" : "en-GB",
-          { dateStyle: "long" },
-        )}
-      </p>
-
-      {info.disposable?.enabled && info.limits.shotsRemaining !== null && (
-        <p className="mt-4 rounded-full bg-[var(--color-blush)] px-4 py-2 text-center text-sm">
-          📷 Disposable: {info.limits.shotsRemaining} კადარი დარჩა
-        </p>
-      )}
-
-      <div className="mt-4 flex gap-2">
-        <button
-          type="button"
-          onClick={() => setTab("photos")}
-          className={cn(
-            "flex-1 rounded-full py-2 text-sm",
-            tab === "photos" ? "bg-[var(--color-forest)] text-white" : "bg-white/60",
-          )}
-        >
-          ფოტოები
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab("book")}
-          className={cn(
-            "flex-1 rounded-full py-2 text-sm",
-            tab === "book" ? "bg-[var(--color-forest)] text-white" : "bg-white/60",
-          )}
-        >
-          Guestbook
-        </button>
-      </div>
-
-      {tab === "book" ? (
-        <div className="mt-6 space-y-3">
-          <textarea
-            className="w-full rounded-xl border px-4 py-3 min-h-[120px]"
-            placeholder="თქვენი სიყვარულის სიტყვა…"
-            value={guestbookText}
-            onChange={(e) => setGuestbookText(e.target.value)}
+        {info.branding?.logoUrl && (
+          <img
+            src={info.branding.logoUrl}
+            alt=""
+            className="mb-3 h-10 object-contain"
           />
-          <Button
-            type="button"
-            onClick={async () => {
-              await fetch(`/api/guest/${slug}/guestbook`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ body: guestbookText, guestName }),
-              });
-              setGuestbookText("");
-            }}
-          >
-            გაგზავნა
-          </Button>
-        </div>
-      ) : (
-        <>
-      <p className="mt-4 text-[var(--color-ink)]">{t(locale, "uploadTitle")}</p>
-      <p className="text-sm text-[var(--color-muted)]">{t(locale, "uploadSubtitle")}</p>
+        )}
 
-      {closed ? (
-        <div className="mt-8 rounded-2xl border border-[var(--color-border)] bg-white/60 p-6 text-center">
-          <p className="font-medium">
-            {!info.isActive ? t(locale, "eventClosed") : t(locale, "limitReached")}
-          </p>
-        </div>
-      ) : allDone && queue.every((q) => q.status === "done") ? (
-        <div className="mt-8 flex flex-col items-center gap-3 rounded-2xl bg-white/70 p-8 text-center border border-[var(--color-border)]">
-          <CheckCircle2 className="h-12 w-12 text-[var(--color-forest)]" />
-          <p className="font-display text-xl">{t(locale, "thanks")}</p>
-          <p className="text-sm text-[var(--color-muted)]">{t(locale, "thanksSub")}</p>
-          <Button type="button" variant="outline" onClick={() => { setQueue([]); setAllDone(false); }}>
-            {t(locale, "uploadMore")}
-          </Button>
-        </div>
-      ) : (
-        <>
-          <label className="mt-6 block text-sm text-[var(--color-muted)]">
-            {t(locale, "yourName")}
-            <input
-              className="mt-1 w-full rounded-xl border border-[var(--color-border)] bg-white/80 px-4 py-3 text-[var(--color-ink)] outline-none focus:ring-2 focus:ring-[var(--color-gold)]/40"
-              value={guestName}
-              onChange={(e) => setGuestName(e.target.value)}
-              maxLength={80}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={spring}
+          className="card-chunky overflow-hidden"
+        >
+          {info.coverUrl && (
+            <div
+              className="h-44 w-full bg-pink-100"
+              style={{
+                backgroundImage: `url(${info.coverUrl})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }}
             />
-          </label>
-
-          <label
-            className={cn(
-              "mt-6 flex min-h-[140px] cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-[var(--color-gold)]/50 bg-white/50 p-6 transition hover:border-[var(--color-gold)] hover:bg-white/80",
-            )}
-          >
-            <Camera className="h-8 w-8 text-[var(--color-gold)]" />
-            <span className="text-center text-sm text-[var(--color-muted)]">
-              {t(locale, "dropHere")}
-            </span>
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp,image/heic,video/mp4,video/quicktime,video/webm"
-              multiple
-              className="hidden"
-              onChange={(e) => e.target.files && processFiles(e.target.files)}
-            />
-          </label>
-
-          {queue.length > 0 && (
-            <ul className="mt-6 space-y-3">
-              {queue.map((item, i) => (
-                <li
-                  key={i}
-                  className="rounded-xl border border-[var(--color-border)] bg-white/60 px-4 py-3 text-sm"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="truncate">{item.file.name}</span>
-                    {item.status === "uploading" && (
-                      <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
-                    )}
-                    {item.status === "error" && (
-                      <span className="text-red-600 text-xs">{t(locale, "retry")}</span>
-                    )}
-                  </div>
-                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--color-blush)]">
-                    <div
-                      className="h-full bg-[var(--color-gold)] transition-all"
-                      style={{ width: `${item.progress}%` }}
-                    />
-                  </div>
-                </li>
-              ))}
-            </ul>
           )}
-        </>
-      )}
-        </>
-      )}
+          <div className="p-5">
+            <h1 className="text-2xl font-extrabold leading-tight">
+              {info.coupleNames}
+            </h1>
+            <p className="mt-1 text-sm text-[var(--text-muted)]">
+              {new Date(info.eventDate).toLocaleDateString(
+                locale === "ka" ? "ka-GE" : locale === "ru" ? "ru-RU" : "en-GB",
+                { dateStyle: "long" },
+              )}
+            </p>
+          </div>
+        </motion.div>
 
-      <p className="mt-8 flex items-center justify-center gap-1 text-xs text-[var(--color-muted)]">
-        <Upload className="h-3 w-3" />
-        {t(locale, "weakWifi")}
-      </p>
+        {disposable && shotsLeft !== null && (
+          <motion.div
+            className="mt-5 rounded-3xl border-4 border-[var(--text-ink)] bg-[#1a1025] p-5 text-white shadow-[6px_6px_0_#ff2d8a]"
+            animate={reduce ? {} : { scale: [1, 1.02, 1] }}
+            transition={{ repeat: Infinity, duration: 2 }}
+          >
+            <p className="text-center text-xs font-bold uppercase tracking-widest text-pink-300">
+              📷 Disposable
+            </p>
+            <p className="mt-2 text-center font-display text-5xl font-bold">
+              {shotsLeft}
+            </p>
+            <p className="text-center text-sm text-pink-100">კადარი დარჩა</p>
+            <div className="mt-4 aspect-[4/3] rounded-2xl border-2 border-dashed border-white/30 bg-black/40 flex items-center justify-center">
+              <Camera className="h-12 w-12 text-pink-400" />
+            </div>
+          </motion.div>
+        )}
+
+        <div className="mt-5 flex gap-2">
+          {(["photos", "book"] as const).map((id) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setTab(id)}
+              className={cn(
+                "flex-1 rounded-full py-2.5 text-sm font-bold transition",
+                tab === id ? "btn-gradient text-white" : "bg-white card-chunky border-0 shadow-none",
+              )}
+            >
+              {id === "photos" ? "ფოტოები 📸" : "Guestbook 💌"}
+            </button>
+          ))}
+        </div>
+
+        {tab === "book" ? (
+          <div className="mt-6 card-chunky space-y-3 p-5">
+            <textarea
+              className="w-full rounded-2xl border-2 border-pink-100 px-4 py-3 min-h-[120px] outline-none focus:border-[var(--pink)]"
+              placeholder="თქვენი სიყვარულის სიტყვა… 💕"
+              value={guestbookText}
+              onChange={(e) => setGuestbookText(e.target.value)}
+            />
+            <Button
+              type="button"
+              className="btn-gradient w-full border-0"
+              onClick={async () => {
+                await fetch(`/api/guest/${slug}/guestbook`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ body: guestbookText, guestName }),
+                });
+                setGuestbookText("");
+              }}
+            >
+              გაგზავნა ✨
+            </Button>
+          </div>
+        ) : closed ? (
+          <div className="mt-6 card-chunky p-8 text-center">
+            <p className="font-bold text-lg">
+              {!info.isActive ? t(locale, "eventClosed") : t(locale, "limitReached")}
+            </p>
+          </div>
+        ) : allDone && queue.every((q) => q.status === "done") ? (
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={spring}
+            className="mt-6 card-chunky flex flex-col items-center gap-3 p-8 text-center"
+          >
+            <CheckCircle2 className="h-14 w-14 text-[var(--mint)]" />
+            <p className="text-xl font-extrabold">{t(locale, "thanks")}</p>
+            <p className="text-sm text-[var(--text-muted)]">{t(locale, "thanksSub")}</p>
+            <Button
+              type="button"
+              className="btn-gradient border-0"
+              onClick={() => {
+                setQueue([]);
+                setAllDone(false);
+              }}
+            >
+              {t(locale, "uploadMore")}
+            </Button>
+          </motion.div>
+        ) : (
+          <>
+            <p className="mt-5 font-bold">{t(locale, "uploadTitle")}</p>
+            <p className="text-sm text-[var(--text-muted)]">{t(locale, "uploadSubtitle")}</p>
+
+            <label className="mt-3 block text-sm font-medium">
+              {t(locale, "yourName")}
+              <input
+                className="mt-1 w-full rounded-2xl border-2 border-pink-100 bg-white px-4 py-3 outline-none focus:border-[var(--pink)]"
+                value={guestName}
+                onChange={(e) => setGuestName(e.target.value)}
+                maxLength={80}
+              />
+            </label>
+
+            <label
+              className="mt-5 flex min-h-[160px] cursor-pointer flex-col items-center justify-center gap-2 rounded-3xl border-4 border-dashed border-[var(--pink)] bg-white p-6 transition hover:bg-pink-50"
+            >
+              <div className="flex h-16 w-16 items-center justify-center rounded-full btn-gradient">
+                <Sparkles className="h-8 w-8 text-white" />
+              </div>
+              <span className="text-center font-bold">{t(locale, "dropHere")}</span>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/heic,video/mp4,video/quicktime,video/webm"
+                multiple={!disposable}
+                className="hidden"
+                onChange={(e) => e.target.files && processFiles(e.target.files)}
+              />
+            </label>
+
+            <AnimatePresence>
+              {queue.length > 0 && (
+                <motion.ul
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="mt-5 grid grid-cols-3 gap-2"
+                >
+                  {queue.map((item, i) => (
+                    <li
+                      key={i}
+                      className="relative aspect-square overflow-hidden rounded-2xl border-2 border-pink-100 bg-white"
+                    >
+                      {item.preview && (
+                        <img src={item.preview} alt="" className="h-full w-full object-cover" />
+                      )}
+                      {item.status === "uploading" && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                          <Loader2 className="h-6 w-6 animate-spin text-white" />
+                        </div>
+                      )}
+                      {item.status === "done" && (
+                        <span className="absolute right-1 top-1 rounded-full bg-[var(--mint)] px-1.5 text-xs font-bold text-white">
+                          ✓
+                        </span>
+                      )}
+                      <div className="absolute bottom-0 left-0 right-0 h-1 bg-pink-100">
+                        <div
+                          className="h-full btn-gradient"
+                          style={{ width: `${item.progress}%` }}
+                        />
+                      </div>
+                    </li>
+                  ))}
+                </motion.ul>
+              )}
+            </AnimatePresence>
+          </>
+        )}
+
+        <p className="mt-8 text-center text-xs text-[var(--text-muted)]">
+          {t(locale, "weakWifi")} 📶
+        </p>
+      </div>
     </div>
   );
 }

@@ -64,8 +64,8 @@ export function HostSettings({
   };
 
   return (
-    <section className="mt-10 rounded-2xl border border-[var(--color-border)] bg-white/70 p-6 space-y-6">
-      <h2 className="font-display text-xl">პარამეტრები</h2>
+    <section className="card-chunky space-y-6 p-6">
+      <h2 className="text-xl font-extrabold">პარამეტრები ⚙️</h2>
 
       <label className="flex items-center gap-3 text-sm">
         <input type="checkbox" checked={disposable} onChange={(e) => setDisposable(e.target.checked)} />

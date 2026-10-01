@@ -45,5 +45,7 @@ next-env.d.ts
 
 *.db
 /data/
+/test-results/
+/playwright-report/
 /prisma/dev.db
 /prisma/test.db

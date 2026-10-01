@@ -71,7 +71,7 @@ export function SlideshowView({ slideshowToken }: { slideshowToken: string }) {
   }, [slideshowToken, slides.length]);
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-[#0a0908] text-white">
+    <div className="fixed inset-0 overflow-hidden bg-[var(--bg-dark)] text-white">
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/70 z-10" />
 
       <header className="absolute left-0 right-0 top-0 z-20 flex items-start justify-between p-6 md:p-10">
@@ -87,8 +87,8 @@ export function SlideshowView({ slideshowToken }: { slideshowToken: string }) {
           )}
         </div>
         {newPulse && (
-          <span className="animate-fade-up rounded-full bg-[var(--color-gold)] px-4 py-2 text-sm font-medium text-[var(--color-ink)] shadow-lg">
-            ✦ ახალი ფოტო
+          <span className="animate-fade-up rounded-full btn-gradient px-5 py-2 text-sm font-bold shadow-lg">
+            ✨ ახალი ფოტო!
           </span>
         )}
       </header>

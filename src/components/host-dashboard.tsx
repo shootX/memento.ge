@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
   Download,
@@ -8,11 +9,17 @@ import {
   Loader2,
   Presentation,
   Trash2,
-  Sparkles,
+  QrCode,
+  Images,
+  Settings2,
+  BookHeart,
 } from "lucide-react";
-import { PLANS, type PlanTier } from "@/lib/plans";
+import { PLANS } from "@/lib/plans";
 import { cn } from "@/lib/cn";
 import { HostSettings } from "@/components/host-settings";
+import { useMotionSafe } from "@/lib/motion";
+
+type Tab = "gallery" | "qr" | "guestbook" | "settings";
 
 type HostEvent = {
   coupleNames: string;
@@ -20,7 +27,7 @@ type HostEvent = {
   guestUrl: string;
   slideshowUrl: string;
   isPaid: boolean;
-  planTier: PlanTier;
+  planTier: string;
   usage: {
     uploadCount: number;
     totalBytes: number;
@@ -46,26 +53,45 @@ type MediaItem = {
   status: string;
 };
 
+type GuestMsg = {
+  id: string;
+  guestName: string | null;
+  body: string;
+  createdAt: string;
+};
+
 const templates = [
-  { id: "elegant", label: "Elegant", desc: "კლასიკური ოქრო" },
-  { id: "botanical", label: "Botanical", desc: "მწვანე ბოტანიკა" },
-  { id: "minimal", label: "Minimal", desc: "მინიმალიზმი" },
+  { id: "elegant", label: "გრადიენტი", emoji: "🌈" },
+  { id: "botanical", label: "სტიკერი", emoji: "✨" },
+  { id: "minimal", label: "ფოტო", emoji: "📷" },
 ] as const;
 
+const tabs: { id: Tab; label: string; icon: typeof Images }[] = [
+  { id: "gallery", label: "ფოტოები", icon: Images },
+  { id: "qr", label: "QR ბარათი", icon: QrCode },
+  { id: "guestbook", label: "Guestbook", icon: BookHeart },
+  { id: "settings", label: "პარამეტრები", icon: Settings2 },
+];
+
 export function HostDashboard({ token }: { token: string }) {
+  const { spring } = useMotionSafe();
   const [event, setEvent] = useState<HostEvent | null>(null);
   const [media, setMedia] = useState<MediaItem[]>([]);
+  const [messages, setMessages] = useState<GuestMsg[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<Tab>("gallery");
   const [activeTemplate, setActiveTemplate] =
     useState<(typeof templates)[number]["id"]>("elegant");
 
   const load = useCallback(async () => {
-    const [ev, med] = await Promise.all([
+    const [ev, med, msg] = await Promise.all([
       fetch(`/api/host/${token}`).then((r) => r.json()),
       fetch(`/api/host/${token}/media`).then((r) => r.json()),
+      fetch(`/api/host/${token}/guestbook`).then((r) => r.json()),
     ]);
     if (!ev.error) setEvent(ev);
     if (!med.error) setMedia(med.items ?? []);
+    if (!msg.error) setMessages(msg.items ?? []);
     setLoading(false);
   }, [token]);
 
@@ -98,185 +124,258 @@ export function HostDashboard({ token }: { token: string }) {
 
   if (loading) {
     return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-[var(--color-gold)]" />
+      <div className="flex min-h-screen items-center justify-center bg-[var(--bg-page)]">
+        <Loader2 className="h-10 w-10 animate-spin text-[var(--pink)]" />
       </div>
     );
   }
 
   if (!event) {
-    return <p className="p-8 text-center">წვდომა უარყოფილია</p>;
+    return (
+      <div className="flex min-h-screen items-center justify-center p-6 text-center">
+        <p className="text-lg font-bold">ლინკი არ მოიძებნა 🔒</p>
+      </div>
+    );
   }
 
-  const plan = PLANS[event.planTier];
-  const previewUrl = `/api/host/${token}/qr?template=${activeTemplate}&format=png&size=a6`;
+  const plan = PLANS[event.planTier as keyof typeof PLANS] ?? PLANS.starter;
+  const pct = Math.min(
+    100,
+    (event.usage.uploadCount / event.usage.maxUploads) * 100,
+  );
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 md:py-14 animate-fade-up">
-      <header className="rounded-3xl border border-[var(--color-border)] bg-white/75 p-6 md:p-10 shadow-sm">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+    <div className="min-h-screen bg-[var(--bg-page)]">
+      <header className="border-b-2 border-pink-100 bg-white/90 backdrop-blur-md sticky top-0 z-30">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-4">
           <div>
-            <p className="text-xs uppercase tracking-[0.35em] text-[var(--color-muted)]">
-              Host Studio
+            <p className="font-display text-2xl font-bold text-gradient">
+              Momenti
             </p>
-            <h1 className="font-display text-3xl md:text-4xl font-semibold mt-2">
-              {event.coupleNames}
-            </h1>
-            <p className="text-[var(--color-muted)] mt-1">
-              {new Date(event.eventDate).toLocaleDateString("ka-GE", { dateStyle: "long" })}
+            <h1 className="text-xl font-extrabold">{event.coupleNames}</h1>
+            <p className="text-sm text-[var(--text-muted)]">
+              {new Date(event.eventDate).toLocaleDateString("ka-GE")} ·{" "}
+              {plan?.nameKa ?? event.planTier}
+              {!event.isPaid && (
+                <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-800">
+                  გადაუხდელი
+                </span>
+              )}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <a
-              href={event.guestUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-white px-5 py-2.5 text-sm font-medium"
-            >
-              <ExternalLink className="h-4 w-4" />
-              სტუმარი
-            </a>
-            <a
-              href={event.slideshowUrl}
-              className="inline-flex items-center gap-2 rounded-full bg-[var(--color-forest)] px-5 py-2.5 text-sm font-medium text-white"
-            >
-              <Presentation className="h-4 w-4" />
-              სლაიდშოუ
-            </a>
-            <Button type="button" onClick={() => void downloadZip()}>
-              <Download className="h-4 w-4" />
-              ZIP
+            <Button variant="outline" size="sm" asChild>
+              <a href={event.guestUrl} target="_blank" rel="noreferrer">
+                <ExternalLink className="mr-1 h-4 w-4" /> სტუმარი
+              </a>
+            </Button>
+            <Button variant="outline" size="sm" asChild>
+              <a href={event.slideshowUrl} target="_blank" rel="noreferrer">
+                <Presentation className="mr-1 h-4 w-4" /> სლაიდშოუ
+              </a>
+            </Button>
+            <Button size="sm" className="btn-gradient border-0" onClick={downloadZip}>
+              <Download className="mr-1 h-4 w-4" /> ZIP
             </Button>
           </div>
         </div>
-
-        {!event.isPaid && (
-          <div className="mt-6 rounded-2xl border border-amber-200/80 bg-amber-50/90 p-4 text-sm flex gap-3">
-            <Sparkles className="h-5 w-5 text-amber-700 shrink-0" />
-            <span>
-              ალბომი ელოდება გადახდას ({event.usage.priceGel} ₾ · {plan.nameKa}). ადმინი ან
-              გადახდის webhook აქტივირებს ატვირთვას.
-            </span>
-          </div>
-        )}
+        <nav className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-4 pb-3">
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setTab(t.id)}
+              className={cn(
+                "flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition",
+                tab === t.id
+                  ? "btn-gradient text-white"
+                  : "bg-pink-50 text-[var(--text-muted)] hover:bg-pink-100",
+              )}
+            >
+              <t.icon className="h-4 w-4" />
+              {t.label}
+            </button>
+          ))}
+        </nav>
       </header>
 
-      <section className="mt-10">
-        <h2 className="font-display text-xl md:text-2xl">QR ბარათები მაგიდისთვის</h2>
-        <p className="text-sm text-[var(--color-muted)] mt-1">
-          აირჩიეთ შაბლონი, გადახედეთ და ჩამოტვირთეთ PDF ან PNG (A6).
-        </p>
-
-        <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_320px]">
-          <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-blush)]/30 p-4 flex items-center justify-center min-h-[420px]">
-            <img
-              src={previewUrl}
-              alt="QR card preview"
-              className="max-h-[480px] w-auto rounded-lg shadow-lg"
-            />
-          </div>
-          <div className="space-y-3">
-            {templates.map((tpl) => (
-              <button
-                key={tpl.id}
-                type="button"
-                onClick={() => setActiveTemplate(tpl.id)}
-                className={cn(
-                  "w-full rounded-2xl border p-4 text-left transition",
-                  activeTemplate === tpl.id
-                    ? "border-[var(--color-gold)] bg-white shadow-sm"
-                    : "border-[var(--color-border)] bg-white/60 hover:bg-white",
-                )}
-              >
-                <p className="font-medium">{tpl.label}</p>
-                <p className="text-xs text-[var(--color-muted)]">{tpl.desc}</p>
-              </button>
-            ))}
-            <div className="flex flex-col gap-2 pt-2">
-              <a
-                href={`/api/host/${token}/qr?template=${activeTemplate}&format=pdf&size=a6&download=1`}
-                className="text-center rounded-full bg-[var(--color-ink)] text-white py-2.5 text-sm font-medium"
-              >
-                PDF ჩამოტვირთვა
-              </a>
-              <a
-                href={`/api/host/${token}/qr?template=${activeTemplate}&format=png&size=a6&download=1`}
-                className="text-center rounded-full border border-[var(--color-border)] py-2.5 text-sm font-medium"
-              >
-                PNG ჩამოტვირთვა
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <p className="mt-10 text-sm text-[var(--color-muted)]">
-        {event.usage.uploadCount} / {event.usage.maxUploads} ატვირთვა ·{" "}
-        {(event.usage.totalBytes / (1024 * 1024)).toFixed(1)} MB
-      </p>
-
-      <HostSettings
-        token={token}
-        csrfToken={event.csrfToken}
-        initial={{
-          disposableEnabled: event.disposableEnabled,
-          shotsPerGuest: event.shotsPerGuest,
-          revealAt: event.revealAt,
-          publicGallery: event.publicGallery,
-          customSlug: event.customSlug,
-        }}
-      />
-
-      {event.customSlug && event.publicGallery && (
-        <p className="mt-4 text-sm">
-          საჯარე გალერეა:{" "}
-          <a className="underline" href={`/gallery/${event.customSlug}`}>
-            /gallery/{event.customSlug}
-          </a>
-        </p>
-      )}
-
-      {media.length === 0 ? (
-        <div className="mt-8 rounded-2xl border border-dashed border-[var(--color-border)] bg-white/40 p-12 text-center">
-          <p className="font-display text-lg">ჯერ ცარიელია</p>
-          <p className="mt-2 text-sm text-[var(--color-muted)]">
-            დაბეჭდეთ QR ბარათები — ფოტოები აქ გამოჩნდება
-          </p>
-        </div>
-      ) : (
-        <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-          {media.map((m) => (
-            <div
-              key={m.id}
-              className="group relative aspect-square overflow-hidden rounded-xl bg-[var(--color-blush)] shadow-sm"
+      <main className="mx-auto max-w-6xl px-4 py-8">
+        <div className="mb-8 grid gap-4 sm:grid-cols-3">
+          {[
+            { label: "ატვირთვები", value: event.usage.uploadCount, emoji: "📸" },
+            {
+              label: "ლიმიტი",
+              value: `${event.usage.uploadCount}/${event.usage.maxUploads}`,
+              emoji: "🎯",
+            },
+            { label: "ფასი", value: `${event.usage.priceGel} ₾`, emoji: "💜" },
+          ].map((s, i) => (
+            <motion.div
+              key={s.label}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ ...spring, delay: i * 0.05 }}
+              className="card-chunky flex items-center gap-4 p-5"
             >
-              <img
-                src={m.thumbUrl ?? m.url}
-                alt=""
-                className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-              />
-              {m.status === "pending" && (
-                <span className="absolute left-2 top-2 rounded-full bg-amber-500/90 px-2 py-0.5 text-[10px] text-white">
-                  მოდერაცია
-                </span>
-              )}
-              <button
-                type="button"
-                onClick={() => void deleteMedia(m.id)}
-                className="absolute right-2 top-2 rounded-full bg-black/50 p-2 text-white opacity-0 transition group-hover:opacity-100"
-                aria-label="Delete"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-              {m.guestName && (
-                <span className="absolute bottom-2 left-2 rounded-full bg-white/90 px-2 py-0.5 text-xs">
-                  {m.guestName}
-                </span>
-              )}
-            </div>
+              <span className="text-3xl">{s.emoji}</span>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-[var(--text-muted)]">
+                  {s.label}
+                </p>
+                <p className="text-2xl font-extrabold">{s.value}</p>
+              </div>
+            </motion.div>
           ))}
         </div>
-      )}
+
+        <div className="mb-6 h-3 overflow-hidden rounded-full bg-pink-100">
+          <motion.div
+            className="h-full rounded-full btn-gradient"
+            initial={{ width: 0 }}
+            animate={{ width: `${pct}%` }}
+            transition={spring}
+          />
+        </div>
+
+        {tab === "gallery" && (
+          <section>
+            {media.length === 0 ? (
+              <div className="card-chunky p-12 text-center">
+                <p className="text-4xl mb-4">📷</p>
+                <p className="text-lg font-bold">ჯერ ფოტო არ არის</p>
+                <p className="text-[var(--text-muted)]">
+                  QR ბარათი დაუდე მაგიდაზე და სტუმრები ატვირთავენ ✨
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+                {media.map((m, i) => (
+                  <motion.div
+                    key={m.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ ...spring, delay: i * 0.03 }}
+                    className="group relative aspect-square overflow-hidden rounded-2xl border-2 border-pink-100 shadow-md"
+                  >
+                    {m.mimeType.startsWith("video/") ? (
+                      <video
+                        src={m.url}
+                        className="h-full w-full object-cover"
+                        muted
+                      />
+                    ) : (
+                      <img
+                        src={m.thumbUrl ?? m.url}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
+                    )}
+                    {m.status === "pending" && (
+                      <span className="absolute left-2 top-2 rounded-full bg-amber-400 px-2 py-0.5 text-xs font-bold">
+                        მოდერაცია
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => deleteMedia(m.id)}
+                      className="absolute right-2 top-2 rounded-full bg-white/90 p-2 opacity-0 shadow transition group-hover:opacity-100"
+                      aria-label="წაშლა"
+                    >
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </button>
+                    {m.guestName && (
+                      <p className="absolute bottom-0 w-full bg-gradient-to-t from-black/70 to-transparent p-2 text-xs font-medium text-white">
+                        {m.guestName}
+                      </p>
+                    )}
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {tab === "qr" && (
+          <section className="grid gap-8 lg:grid-cols-2">
+            <div className="card-chunky p-6">
+              <h2 className="mb-4 text-lg font-extrabold">აირჩიე სტილი 🎨</h2>
+              <div className="grid gap-3">
+                {templates.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setActiveTemplate(t.id)}
+                    className={cn(
+                      "flex items-center gap-3 rounded-2xl border-2 p-4 text-left font-bold transition",
+                      activeTemplate === t.id
+                        ? "border-[var(--pink)] bg-pink-50"
+                        : "border-transparent bg-gray-50",
+                    )}
+                  >
+                    <span className="text-2xl">{t.emoji}</span>
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+              <div className="mt-6 flex flex-wrap gap-2">
+                <Button className="btn-gradient border-0" asChild>
+                  <a
+                    href={`/api/host/${token}/qr?template=${activeTemplate}&format=pdf&download=1`}
+                  >
+                    PDF
+                  </a>
+                </Button>
+                <Button variant="outline" asChild>
+                  <a
+                    href={`/api/host/${token}/qr?template=${activeTemplate}&format=png&download=1`}
+                  >
+                    PNG
+                  </a>
+                </Button>
+              </div>
+            </div>
+            <div className="card-chunky overflow-hidden p-4">
+              <img
+                src={`/api/host/${token}/qr?template=${activeTemplate}&format=png`}
+                alt="QR preview"
+                className="mx-auto max-h-[520px] rounded-xl object-contain"
+              />
+            </div>
+          </section>
+        )}
+
+        {tab === "guestbook" && (
+          <section className="space-y-4">
+            {messages.length === 0 ? (
+              <div className="card-chunky p-10 text-center">
+                <p className="text-4xl">💌</p>
+                <p className="mt-2 font-bold">ჯერ შეტყობინება არ არის</p>
+              </div>
+            ) : (
+              messages.map((m) => (
+                <div key={m.id} className="card-chunky p-5">
+                  <p className="font-bold">{m.guestName ?? "სტუმარი"}</p>
+                  <p className="mt-2 text-[var(--text-muted)]">{m.body}</p>
+                </div>
+              ))
+            )}
+          </section>
+        )}
+
+        {tab === "settings" && (
+          <HostSettings
+            token={token}
+            csrfToken={event.csrfToken}
+            initial={{
+              customSlug: event.customSlug,
+              publicGallery: event.publicGallery,
+              disposableEnabled: event.disposableEnabled,
+              shotsPerGuest: event.shotsPerGuest,
+              revealAt: event.revealAt,
+            }}
+          />
+        )}
+      </main>
     </div>
   );
 }
