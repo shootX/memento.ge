@@ -1,6 +1,6 @@
 "use client";
 
-const DB_NAME = "momenti-offline-v1";
+const DB_NAME = "memento-offline-v1";
 const STORE = "uploads";
 const DB_VERSION = 1;
 
@@ -111,7 +111,7 @@ export async function registerBackgroundSync() {
     const reg = await navigator.serviceWorker.ready;
     if ("sync" in reg) {
       await (reg as ServiceWorkerRegistration & { sync: { register: (t: string) => Promise<void> } }).sync.register(
-        "momenti-upload-sync",
+        "memento-upload-sync",
       );
     }
   } catch {

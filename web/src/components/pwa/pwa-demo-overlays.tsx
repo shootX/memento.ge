@@ -3,7 +3,7 @@ import { pwaT } from "@/lib/pwa-i18n";
 
 export async function PwaDemoOverlays() {
   const h = await headers();
-  const mode = h.get("x-momenti-pwa-demo");
+  const mode = h.get("x-memento-pwa-demo");
   if (!mode) return null;
 
   const locale = "ka" as const;

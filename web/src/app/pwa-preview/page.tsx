@@ -5,7 +5,7 @@ import path from "path";
 import { signCsrfToken } from "@/lib/crypto";
 
 export default async function PwaPreviewPage() {
-  let hostToken = "demo-host-token-momenti-2026";
+  let hostToken = "demo-host-token-memento-2026";
   try {
     const manifest = JSON.parse(
       await readFile(path.join(process.cwd(), "public/demo-manifest.json"), "utf8"),
@@ -25,10 +25,10 @@ export default async function PwaPreviewPage() {
             <div className="flex flex-col items-center gap-1">
               <img
                 src="/icons/icon-192.png"
-                alt="Momenti"
+                alt="Memento"
                 className="h-16 w-16 rounded-2xl shadow-lg"
               />
-              <span className="text-[10px] font-semibold">Momenti</span>
+              <span className="text-[10px] font-semibold">Memento</span>
             </div>
             {["ფოტო", "კამერა", "ჩატი", "მუსიკა"].map((label) => (
               <div key={label} className="flex flex-col items-center gap-1 opacity-40">

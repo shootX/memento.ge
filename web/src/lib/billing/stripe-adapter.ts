@@ -30,7 +30,7 @@ export const stripeAdapter: BillingAdapter = {
           price_data: {
             currency: "gel",
             unit_amount: req.amountGel * 100,
-            product_data: { name: `Momenti ${req.planTier}` },
+            product_data: { name: `Memento ${req.planTier}` },
           },
           quantity: 1,
         },

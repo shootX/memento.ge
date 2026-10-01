@@ -1,7 +1,7 @@
 import { prisma } from "../src/lib/prisma";
 import { createUserSession } from "../src/lib/user-session";
 
-const PARTNER_EMAIL = "partner@momenti.demo";
+const PARTNER_EMAIL = "partner@memento.demo";
 
 async function main() {
   let user = await prisma.user.findUnique({ where: { email: PARTNER_EMAIL } });

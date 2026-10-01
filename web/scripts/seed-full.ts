@@ -18,7 +18,7 @@ const PARTNERS = [
     slug: "lens-tbilisi",
     name: "Lens Studio Tbilisi",
     city: "თბილისი",
-    email: "partner.lens@momenti.demo",
+    email: "partner.lens@memento.demo",
     userName: "თამარ ლენსი",
     primaryColor: "#ff2d8a",
     secondaryColor: "#a855f7",
@@ -29,7 +29,7 @@ const PARTNERS = [
     slug: "batumi-waves-photo",
     name: "Batumi Waves Photo",
     city: "ბათუმი",
-    email: "partner.batumi@momenti.demo",
+    email: "partner.batumi@memento.demo",
     userName: "ნიკა ზღვისპირა",
     primaryColor: "#0ea5e9",
     secondaryColor: "#34d399",
@@ -40,7 +40,7 @@ const PARTNERS = [
     slug: "vake-banquet-hall",
     name: "ვაკის ბანკეტური დარბაზი",
     city: "თბილისი",
-    email: "partner.banquet@momenti.demo",
+    email: "partner.banquet@memento.demo",
     userName: "მარიამ ვაკე",
     primaryColor: "#5c7a62",
     secondaryColor: "#c4a574",
@@ -81,10 +81,10 @@ function daysFromNow(n: number) {
 
 const EVENTS: EventSeed[] = [
   {
-    guestSlug: "momenti-demo-guest-01",
+    guestSlug: "memento-demo-guest-01",
     customSlug: "nino-giorgi-demo",
-    hostToken: "demo-host-token-momenti-2026",
-    slideshowToken: "demo-slideshow-token-momenti",
+    hostToken: "demo-host-token-memento-2026",
+    slideshowToken: "demo-slideshow-token-memento",
     coupleNames: "ნინო & გიორგი",
     eventDate: daysFromNow(14),
     planTier: "classic",
@@ -175,7 +175,7 @@ const EVENTS: EventSeed[] = [
     paidAt: daysFromNow(-10),
     expiresAt: computeExpiresAt(getPlan("premium"), daysFromNow(-10)),
     publicGallery: true,
-    galleryPassword: "momenti2026",
+    galleryPassword: "memento2026",
     mediaCount: 10,
     stateLabel: "password-gallery",
   },
@@ -247,7 +247,7 @@ const GUESTBOOK_TEXT = [
   "გილოცავთ! ყველაზე ლამაზი წყვილი ხართ 💕",
   "საუკუთრეს ბედნიერებას გისურვებთ ✨",
   "მადლობა ულამაზეს საღამოსთვის!",
-  "ღვთის ნამტვრები ხართ — Momenti forever 📸",
+  "ღვთის ნამტვრები ხართ — მემენტო forever 📸",
   "ვაუჰ, რა ემოციები იყო!",
 ];
 
@@ -310,8 +310,8 @@ async function seedPartners() {
 
 async function seedEvents(orgBySlug: Map<string, string>) {
   const owners = await Promise.all([
-    upsertUser("host.nino@momenti.demo", "ნინო მ.", "user"),
-    upsertUser("cohost.demo@momenti.demo", "თენგიზი თ.", "user"),
+    upsertUser("host.nino@memento.demo", "ნინო მ.", "user"),
+    upsertUser("cohost.demo@memento.demo", "თენგიზი თ.", "user"),
   ]);
 
   const eventIds: { id: string; seed: EventSeed }[] = [];
@@ -473,7 +473,7 @@ async function seedPaymentsAndReferrals(
   eventIds: { id: string; seed: EventSeed }[],
   orgBySlug: Map<string, string>,
 ) {
-  const payer = await upsertUser("billing@momenti.demo", "ბილინგი", "user");
+  const payer = await upsertUser("billing@memento.demo", "ბილინგი", "user");
   let inv = 1000;
 
   for (const { id: eventId, seed } of eventIds) {
@@ -522,7 +522,7 @@ async function seedPaymentsAndReferrals(
 }
 
 async function seedPushAndAudit(eventIds: { id: string; seed: EventSeed }[]) {
-  const host = await upsertUser("host.nino@momenti.demo", "ნინო მ.", "user");
+  const host = await upsertUser("host.nino@memento.demo", "ნინო მ.", "user");
   const live = eventIds.find((e) => e.seed.stateLabel === "live");
   if (live) {
     await prisma.pushSubscription.upsert({
@@ -577,7 +577,7 @@ async function seedPushAndAudit(eventIds: { id: string; seed: EventSeed }[]) {
     where: { id: `${SEED_TAG}-email` },
     create: {
       id: `${SEED_TAG}-email`,
-      toEmail: "host.nino@momenti.demo",
+      toEmail: "host.nino@memento.demo",
       template: "event_reminder",
       payload: JSON.stringify({ seedTag: SEED_TAG, locale: "ka" }),
       sentAt: daysFromNow(-1),

@@ -5,7 +5,7 @@ import { putObject, buildMediaKey } from "../src/lib/storage";
 import { processThumbnail } from "../src/lib/jobs/thumbnails";
 import { computeExpiresAt, getPlan } from "../src/lib/plans";
 
-const DEMO_GUEST_SLUG = "momenti-demo-guest-01";
+const DEMO_GUEST_SLUG = "memento-demo-guest-01";
 const MANIFEST = path.join(process.cwd(), "public/demo-manifest.json");
 
 export async function ensureDemoEvent() {
@@ -20,8 +20,8 @@ export async function ensureDemoEvent() {
         coupleNames: "ნინო & გიორგი",
         eventDate: new Date("2026-06-14"),
         guestSlug: DEMO_GUEST_SLUG,
-        hostToken: "demo-host-token-momenti-2026",
-        slideshowToken: "demo-slideshow-token-momenti",
+        hostToken: "demo-host-token-memento-2026",
+        slideshowToken: "demo-slideshow-token-memento",
         planTier: "classic",
         isPaid: true,
         paidAt: new Date(),
@@ -41,8 +41,8 @@ export async function ensureDemoEvent() {
       data: {
         coupleNames: "ნინო & გიორგი",
         guestSlug: DEMO_GUEST_SLUG,
-        hostToken: "demo-host-token-momenti-2026",
-        slideshowToken: "demo-slideshow-token-momenti",
+        hostToken: "demo-host-token-memento-2026",
+        slideshowToken: "demo-slideshow-token-memento",
         isPaid: true,
         paidAt: new Date(),
         publicGallery: true,

@@ -78,7 +78,7 @@ function cardSvg(opts: {
   ${bgFill}
   ${stickers}
   <rect x="40" y="40" width="${w - 80}" height="${h - 80}" rx="48" fill="none" stroke="${p.accent}" stroke-width="6" opacity="0.5"/>
-  <text x="50%" y="14%" text-anchor="middle" font-family="sans-serif" font-size="${w * 0.04}" font-weight="800" fill="${p.accent}">MOMENTI</text>
+  <text x="50%" y="14%" text-anchor="middle" font-family="sans-serif" font-size="${w * 0.04}" font-weight="800" fill="${p.accent}">MEMENTO</text>
   <text x="50%" y="22%" text-anchor="middle" font-family="sans-serif" font-size="${w * 0.055}" font-weight="800" fill="${p.fg}">${escapeXml(couple)}</text>
   <text x="50%" y="28%" text-anchor="middle" font-family="sans-serif" font-size="${w * 0.028}" fill="${p.accent}">${escapeXml(opts.dateStr)}</text>
   <rect x="${qrX - 16}" y="${qrY - 16}" width="${qrSize + 32}" height="${qrSize + 32}" rx="24" fill="white"/>

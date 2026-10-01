@@ -32,7 +32,7 @@ const serwist = new Serwist({
         url.pathname.startsWith("/api/media/") &&
         url.searchParams.get("variant") === "thumb",
       handler: new NetworkFirst({
-        cacheName: "momenti-thumbs",
+        cacheName: "memento-thumbs",
         networkTimeoutSeconds: 8,
         plugins: [
           new ExpirationPlugin({
@@ -60,7 +60,7 @@ serwist.addEventListeners();
 
 self.addEventListener("sync", (event: Event) => {
   const sync = event as Event & { tag?: string; waitUntil: (p: Promise<void>) => void };
-  if (sync.tag === "momenti-upload-sync") {
+  if (sync.tag === "memento-upload-sync") {
     sync.waitUntil(
       self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(
         (clients: readonly Client[]) => {

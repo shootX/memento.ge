@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 
 export const metadata = {
-  title: "ფასები — Momenti",
+  title: "ფასები — Memento",
   description: "ქორწილის ფოტოალბომის პაკეტები საქართველოში",
 };
 

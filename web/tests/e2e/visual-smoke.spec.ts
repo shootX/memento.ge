@@ -99,5 +99,5 @@ test("visual smoke: slideshow", async ({ page }) => {
 test("host CSRF cookie via middleware", async ({ page, context }) => {
   await page.goto(`${base}/host/${demo.host}`, { waitUntil: "networkidle" });
   const cookies = await context.cookies();
-  expect(cookies.find((c) => c.name === "momenti_host_csrf")?.value).toBe(demo.host);
+  expect(cookies.find((c) => c.name === "memento_host_csrf")?.value).toBe(demo.host);
 });

@@ -3,7 +3,7 @@ import { createHash } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { newToken } from "@/lib/crypto";
 
-const USER_COOKIE = "momenti_user";
+const USER_COOKIE = "memento_user";
 
 export function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");

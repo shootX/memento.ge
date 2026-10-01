@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST() {
   const jar = await cookies();
-  const raw = jar.get("momenti_user")?.value;
+  const raw = jar.get("memento_user")?.value;
   if (raw) {
     await prisma.session.deleteMany({ where: { tokenHash: hashToken(raw) } });
   }

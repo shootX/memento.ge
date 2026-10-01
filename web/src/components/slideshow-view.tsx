@@ -88,7 +88,7 @@ export function SlideshowView({
 
       <header className="absolute left-0 right-0 top-0 z-20 flex items-start justify-between p-6 md:p-10">
         <div>
-          <p className="text-xs uppercase tracking-[0.35em] text-white/50">Momenti Live</p>
+          <p className="text-xs uppercase tracking-[0.35em] text-white/50">Memento Live</p>
           <h1 className="font-display text-2xl md:text-4xl font-semibold mt-1">
             {boot?.coupleNames ?? "…"}
           </h1>

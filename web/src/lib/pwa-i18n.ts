@@ -2,9 +2,9 @@ export type PwaLocale = "ka" | "en" | "ru";
 
 const copy = {
   installTitle: {
-    ka: "დაამატე Momenti ეკრანზე ✨",
-    en: "Add Momenti to your home screen ✨",
-    ru: "Добавьте Momenti на главный экран ✨",
+    ka: "დაამატე მემენტო ეკრანზე ✨",
+    en: "Add Memento to your home screen ✨",
+    ru: "Добавьте Memento на главный экран ✨",
   },
   installBody: {
     ka: "სწრაფი წვდომა ჰოსტის პანელზე და ნოტიფიკაციები",
@@ -37,8 +37,8 @@ const copy = {
     ru: "2. Выберите «На экран Домой»",
   },
   iosStep3: {
-    ka: "3. დაადასტურე — Momenti გამოჩნდება აპების ვიტრინაში",
-    en: "3. Confirm — Momenti appears on your home screen",
+    ka: "3. დაადასტურე — მემენტო გამოჩნდება აპების ვიტრინაში",
+    en: "3. Confirm — Memento appears on your home screen",
     ru: "3. Подтвердите — иконка появится на экране",
   },
   queueBanner: {

@@ -13,7 +13,7 @@ export async function GET() {
   });
 
   if (!membership) {
-    return jsonError(403, "Partner access required. Contact Momenti to join.");
+    return jsonError(403, "Partner access required. Contact Memento to join.");
   }
 
   const events = await prisma.event.findMany({

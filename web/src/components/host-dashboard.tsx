@@ -211,7 +211,7 @@ export function HostDashboard({
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-4">
           <div>
             <p className="font-display text-2xl font-bold text-gradient">
-              Momenti
+              მემენტო
             </p>
             <h1 className="text-xl font-extrabold">{event.coupleNames}</h1>
             <p className="text-sm text-[var(--text-muted)]" suppressHydrationWarning>

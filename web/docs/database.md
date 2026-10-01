@@ -1,4 +1,4 @@
-# Momenti — მონაცემთა ბაზის არქიტექტურა
+# Memento — მონაცემთა ბაზის არქიტექტურა
 
 ეს დოკუმენტი აღწერს Prisma სქემაში არსებულ ყველა მოდელს, მათ კავშირებს და ბიზნეს ლოგიკას: მულტი-ტენანტობა, პაკეტები, პარტნიორები, მედია, guestbook, push და ბილინგი.
 
@@ -219,7 +219,7 @@ erDiagram
 |------|------|-------------|
 | id | PK | სესია |
 | userId | FK → User | მფლობელი |
-| tokenHash | UK | cookie `momenti_user` ჰეში |
+| tokenHash | UK | cookie `memento_user` ჰეში |
 | expiresAt | DateTime | ვადა |
 
 ### MagicLinkToken

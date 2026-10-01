@@ -14,10 +14,10 @@ export function OfflineQueueBanner() {
 
   useEffect(() => {
     refresh();
-    window.addEventListener("momenti-queue-flush", refresh);
+    window.addEventListener("memento-queue-flush", refresh);
     const id = setInterval(refresh, 4000);
     return () => {
-      window.removeEventListener("momenti-queue-flush", refresh);
+      window.removeEventListener("memento-queue-flush", refresh);
       clearInterval(id);
     };
   }, []);

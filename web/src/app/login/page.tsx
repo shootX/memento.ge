@@ -29,7 +29,7 @@ export default function LoginPage() {
         onSubmit={submit}
         className="card-chunky w-full max-w-md p-8"
       >
-        <Link href="/" className="text-sm font-bold text-[var(--pink)]">← Momenti</Link>
+        <Link href="/" className="text-sm font-bold text-[var(--pink)]">← Memento</Link>
         <h1 className="mt-4 text-3xl font-extrabold">შესვლა ✨</h1>
         <p className="text-sm text-[var(--text-muted)] mt-1">მაგიკ ლინკი ელფოსტაზე</p>
         <input

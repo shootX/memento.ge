@@ -21,7 +21,7 @@ const faqs = [
   },
 ];
 
-export const metadata = { title: "FAQ — Momenti" };
+export const metadata = { title: "FAQ — Memento" };
 
 export default function FaqPage() {
   return (

@@ -105,7 +105,7 @@ export function PublicGallery({
         <div className="mx-auto max-w-5xl text-center">
           <p className="text-4xl">💕</p>
           <h1 className="mt-2 font-display text-4xl font-bold">{coupleNames}</h1>
-          <p className="text-sm text-[var(--text-muted)] mt-1">საჯარე ალბომი · Momenti</p>
+          <p className="text-sm text-[var(--text-muted)] mt-1">საჯარე ალბომი · მემენტო</p>
         </div>
         <div className="mx-auto max-w-5xl mt-10 columns-2 gap-3 md:columns-3 lg:columns-4">
           {items.map((m, i) => (
