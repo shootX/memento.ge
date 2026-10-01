@@ -11,11 +11,11 @@ type Variant = "primary" | "secondary" | "ghost" | "outline";
 type Size = "sm" | "md";
 
 const variants: Record<Variant, string> = {
-  primary: "btn-gradient border-0 text-white font-bold",
-  secondary: "bg-violet-100 text-[var(--text-ink)] hover:bg-violet-200 font-bold",
-  ghost: "bg-transparent hover:bg-pink-50 text-[var(--text-muted)]",
+  primary: "btn-gradient border-0 font-bold",
+  secondary: "bg-[var(--surface-warm)] text-[var(--fg)] hover:bg-[var(--bg-elevated)] font-bold",
+  ghost: "bg-transparent hover:bg-white/5 text-[var(--muted)]",
   outline:
-    "border-2 border-pink-200 bg-white hover:bg-pink-50 text-[var(--text-ink)] font-bold",
+    "border border-[var(--border)] bg-transparent hover:bg-white/5 text-[var(--fg)] font-bold",
 };
 
 const sizes: Record<Size, string> = {

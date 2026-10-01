@@ -17,7 +17,7 @@ export function LandingFinalCta() {
           </p>
           <div className="relative mt-8 flex flex-wrap items-center justify-center gap-4">
             <Link href="/onboarding">
-              <Button className="border-0 bg-white px-10 py-6 text-lg font-bold text-[var(--accent)] hover:bg-pink-50">
+              <Button className="border-0 bg-white px-10 py-6 text-lg font-bold text-[var(--accent)] hover:bg-[var(--surface-warm)]">
                 უფასო დაწყება
               </Button>
             </Link>

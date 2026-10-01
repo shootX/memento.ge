@@ -39,7 +39,7 @@ export function PartnerDashboard({
   if (!data) {
     return (
       <ColorfulShell className="flex items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-pink-200 border-t-[var(--pink)]" />
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[var(--border)] border-t-[var(--pink)]" />
       </ColorfulShell>
     );
   }

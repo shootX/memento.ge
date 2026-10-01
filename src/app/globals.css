@@ -3,7 +3,7 @@
 
 @theme inline {
   --font-sans: var(--font-noto-sans);
-  --font-display: var(--font-fredoka);
+  --font-display: var(--font-manrope);
   --color-bg-page: var(--bg);
   --color-ink: var(--fg);
   --color-muted: var(--muted);
@@ -58,7 +58,34 @@ body {
   font-size: var(--text-sm);
   font-weight: 700;
   color: var(--fg-2);
-  box-shadow: var(--shadow-playful);
+  border: 1px solid var(--border-soft);
+}
+
+.pill-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--accent-on);
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-6);
+  font-weight: 800;
+  font-size: var(--text-sm);
+  transition: background var(--motion-fast);
+}
+
+.pill-cta:hover {
+  background: var(--accent-hover);
+}
+
+.pill-cta-icon {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 9999px;
+  background: #ffffff;
+  color: #000000;
 }
 
 .type-hero {
@@ -106,12 +133,11 @@ body {
   align-items: center;
   gap: var(--space-2);
   border-radius: var(--radius-pill);
-  border: 2px solid var(--fg);
-  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  background: transparent;
   padding: var(--space-3) var(--space-6);
   font-weight: 700;
-  box-shadow: var(--shadow-outline);
-  transition: transform var(--motion-fast) var(--ease-standard);
+  transition: transform var(--motion-fast) var(--ease-standard), background var(--motion-fast);
 }
 
 .btn-outline-chunky:hover {
@@ -173,35 +199,32 @@ body {
 }
 
 .btn-gradient {
-  background: var(--gradient-signature);
+  background: var(--accent);
   color: var(--accent-on);
   font-weight: 700;
   border-radius: var(--radius-pill);
-  box-shadow: var(--shadow-btn);
-  transition: transform var(--motion-base) var(--motion-spring);
+  transition: transform var(--motion-base) var(--motion-spring), background var(--motion-fast);
 }
 
 .btn-gradient:hover {
-  transform: translateY(-2px) scale(1.02);
+  background: var(--accent-hover);
+  transform: translateY(-1px);
 }
 
 .btn-gradient:active {
-  transform: translateY(2px);
-  box-shadow: 0 2px 0 #e91e7a;
+  transform: translateY(0);
+  background: var(--accent-active);
 }
 
 .card-chunky {
   background: var(--surface);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-playful);
-  border: 2px solid var(--border-soft);
+  border: 1px solid var(--border-soft);
 }
 
 .text-gradient {
-  background: var(--gradient-signature);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--accent);
 }
 
 @keyframes fade-up {
@@ -332,10 +355,10 @@ body {
 
 .hero-confetti {
   background-image:
-    radial-gradient(circle, #ff2d8a 2px, transparent 2px),
-    radial-gradient(circle, #ff6b35 2px, transparent 2px),
-    radial-gradient(circle, #a855f7 2px, transparent 2px),
-    radial-gradient(circle, #fbbf24 2px, transparent 2px);
+    radial-gradient(circle, #c4ff0d 2px, transparent 2px),
+    radial-gradient(circle, #a8e600 2px, transparent 2px),
+    radial-gradient(circle, #c1ff72 2px, transparent 2px),
+    radial-gradient(circle, #ffffff 2px, transparent 2px);
   background-size: 40px 40px, 55px 55px, 48px 48px, 60px 60px;
   background-position: 0 0, 20px 30px, 40px 10px, 10px 50px;
   animation: confetti-shift 3s linear infinite;
@@ -354,7 +377,7 @@ body {
 
 .guest-shutter {
   box-shadow:
-    0 0 0 6px rgba(255, 45, 138, 0.25),
-    0 12px 40px rgba(255, 45, 138, 0.35);
+    0 0 0 6px rgba(196, 255, 13, 0.35),
+    0 12px 40px rgba(0, 0, 0, 0.55);
 }
 

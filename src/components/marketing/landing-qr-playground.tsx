@@ -13,7 +13,7 @@ const templates: {
   label: string;
   preview: "gradient" | "sticker" | "photo";
 }[] = [
-  { id: "elegant", label: "გრადიენტი", preview: "gradient" },
+  { id: "elegant", label: "Dark+lime", preview: "gradient" },
   { id: "botanical", label: "სტიკერი", preview: "sticker" },
   { id: "minimal", label: "ფოტო", preview: "photo" },
 ];
@@ -34,7 +34,7 @@ export function LandingQrPlayground() {
     QRCode.toDataURL(guestUrl, {
       width: 280,
       margin: 1,
-      color: { dark: active === "minimal" ? "#ffffff" : "#1a1025", light: "#ffffff" },
+      color: { dark: active === "minimal" ? "#ffffff" : "#0b0b0b", light: "#ffffff" },
     })
       .then((url) => {
         if (!cancelled) setQrSrc(url);
@@ -65,7 +65,7 @@ export function LandingQrPlayground() {
               onClick={() => setActive(t.id)}
               className={cn(
                 "rounded-full px-5 py-2.5 text-sm font-bold transition",
-                active === t.id ? "btn-gradient text-white" : "card-chunky",
+                active === t.id ? "btn-gradient" : "card-chunky border border-[var(--border-soft)]",
               )}
             >
               {t.label}
@@ -76,18 +76,15 @@ export function LandingQrPlayground() {
 
       {tpl.preview === "gradient" && (
         <div
-          className="card-chunky relative mx-auto aspect-[3/4] w-full max-w-sm overflow-hidden p-6 transition-[background] duration-500"
-          style={{
-            background: "linear-gradient(145deg, #ff2d8a 0%, #ff6b35 45%, #a855f7 100%)",
-          }}
+          className="card-chunky relative mx-auto aspect-[3/4] w-full max-w-sm overflow-hidden border border-[var(--accent)]/30 bg-[#0b0b0b] p-6"
           data-testid="qr-card-preview"
         >
-          <div className="flex h-full flex-col items-center justify-between rounded-2xl bg-white/95 p-6 text-center shadow-inner">
-            <p className="font-display text-xl font-bold text-[var(--fg)]">ნინო &amp; გიორგი</p>
-            <p className="text-sm text-[var(--muted)]">14 ივნისი, 2026</p>
-            <QrImage src={qrSrc} />
+          <div className="flex h-full flex-col items-center justify-between rounded-2xl border border-[var(--accent)]/25 bg-[#111] p-6 text-center">
+            <p className="font-display text-xl font-bold text-white">ნინო &amp; გიორგი</p>
+            <p className="text-sm text-[var(--accent)]">14 ივნისი, 2026</p>
+            <QrImage src={qrSrc} ringClass="border-[var(--accent)]" />
             <p className="text-xs font-bold text-[var(--muted)]">QR · ატვირთე ფოტო</p>
-            <p className="font-display text-sm font-bold text-gradient">memento.ge</p>
+            <p className="font-display text-sm font-bold text-[var(--accent)]">memento.ge</p>
           </div>
         </div>
       )}

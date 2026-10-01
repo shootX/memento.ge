@@ -79,7 +79,7 @@ export function PushSettings({
 
   return (
     <div
-      className="border-t border-pink-100 pt-4 space-y-3"
+      className="border-t border-[var(--border)] pt-4 space-y-3"
       data-testid="push-opt-in"
     >
       {!showControls ? (

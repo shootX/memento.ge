@@ -102,7 +102,7 @@ export function AdminPanel({
           <h1 className="text-2xl font-extrabold">Admin 🔐</h1>
           <input
             type="password"
-            className="w-full rounded-2xl border-2 border-pink-100 px-4 py-3"
+            className="w-full rounded-2xl border-2 border-[var(--border)] px-4 py-3"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
@@ -148,7 +148,7 @@ export function AdminPanel({
         {tab === "events" && (
           <div className="mt-8 overflow-x-auto card-chunky">
             <table className="w-full text-sm">
-              <thead className="bg-pink-50">
+              <thead className="bg-[var(--surface-warm)]">
                 <tr>
                   <th className="p-3 text-left font-bold">წყვილი</th>
                   <th className="p-3 text-left font-bold">პაკეტი</th>
@@ -158,7 +158,7 @@ export function AdminPanel({
               </thead>
               <tbody>
                 {events.map((e) => (
-                  <tr key={e.id} className="border-t border-pink-50">
+                  <tr key={e.id} className="border-t border-[var(--border-soft)]">
                     <td className="p-3 font-medium">{e.coupleNames}</td>
                     <td className="p-3">{e.planTier}</td>
                     <td className="p-3">{e.uploadCount}</td>

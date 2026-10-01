@@ -23,7 +23,7 @@ export function AdminDatabaseExplorer({ snapshot }: { snapshot: AdminDatabaseSna
       </p>
       {snapshot.tables.map((table) => (
         <section key={table.key} className="card-chunky overflow-hidden">
-          <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-pink-100 bg-pink-50/80 px-4 py-3">
+          <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-[var(--border)] bg-[var(--surface-warm)]/80 px-4 py-3">
             <h2 className="font-extrabold">{table.label}</h2>
             <span className="rounded-full bg-white px-3 py-1 text-sm font-bold text-[var(--pink)]">
               {table.count} ჩანაწერი
@@ -39,7 +39,7 @@ export function AdminDatabaseExplorer({ snapshot }: { snapshot: AdminDatabaseSna
             <div className="overflow-x-auto">
               <table className="w-full min-w-[640px] text-left text-xs">
                 <thead>
-                  <tr className="border-b border-pink-50">
+                  <tr className="border-b border-[var(--border-soft)]">
                     {Object.keys(table.rows[0]).map((col) => (
                       <th key={col} className="p-2 font-bold text-[var(--text-muted)]">
                         {col}
@@ -49,7 +49,7 @@ export function AdminDatabaseExplorer({ snapshot }: { snapshot: AdminDatabaseSna
                 </thead>
                 <tbody>
                   {table.rows.map((row, i) => (
-                    <tr key={i} className="border-t border-pink-50/80 align-top">
+                    <tr key={i} className="border-t border-[var(--border-soft)]/80 align-top">
                       {Object.keys(table.rows[0]).map((col) => (
                         <td key={col} className="max-w-[14rem] break-words p-2 font-mono">
                           {formatCell(row[col])}

@@ -69,7 +69,7 @@ export function PublicGallery({
   if (!ready) {
     return (
       <ColorfulShell className="flex items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-pink-200 border-t-[var(--pink)]" />
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[var(--border)] border-t-[var(--pink)]" />
       </ColorfulShell>
     );
   }
@@ -82,7 +82,7 @@ export function PublicGallery({
           <p className="text-sm text-[var(--text-muted)] mt-1">🔒 პაროლი საჭიროა</p>
           <input
             type="password"
-            className="mt-4 w-full rounded-2xl border-2 border-pink-100 px-4 py-3"
+            className="mt-4 w-full rounded-2xl border-2 border-[var(--border)] px-4 py-3"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
@@ -116,7 +116,7 @@ export function PublicGallery({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.04 }}
               onClick={() => setLightbox({ id: m.id, url: m.url, guestName: m.guestName })}
-              className="mb-3 w-full break-inside-avoid overflow-hidden rounded-2xl border-2 border-pink-100 shadow-md"
+              className="mb-3 w-full break-inside-avoid overflow-hidden rounded-2xl border-2 border-[var(--border)] shadow-md"
             >
               <img src={m.thumbUrl ?? m.url} alt="" className="w-full object-cover" />
             </motion.button>

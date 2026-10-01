@@ -11,13 +11,12 @@ const svg = (size: number, maskable: boolean) => {
   return `<svg width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ff2d8a"/>
-      <stop offset="50%" stop-color="#ff6b35"/>
-      <stop offset="100%" stop-color="#a855f7"/>
+      <stop offset="0%" stop-color="#c4ff0d"/>
+      <stop offset="100%" stop-color="#0b0b0b"/>
     </linearGradient>
   </defs>
   <rect width="${size}" height="${size}" rx="${maskable ? 0 : size * 0.22}" fill="url(#g)"/>
-  <text x="50%" y="54%" text-anchor="middle" font-family="Arial,sans-serif" font-size="${inner * 0.42}" font-weight="bold" fill="white">M</text>
+  <text x="50%" y="54%" text-anchor="middle" font-family="Arial,sans-serif" font-size="${inner * 0.42}" font-weight="bold" fill="#c4ff0d">M</text>
 </svg>`;
 };
 

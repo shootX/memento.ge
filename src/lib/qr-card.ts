@@ -18,10 +18,10 @@ type Palette = {
 
 const palettes: Record<CardTemplate, Palette> = {
   elegant: {
-    bg: "#fff0f8",
-    fg: "#1a1025",
-    accent: "#ff2d8a",
-    gradient: "linear-gradient(135deg,#ff2d8a,#ff6b35,#a855f7)",
+    bg: "#0b0b0b",
+    fg: "#ffffff",
+    accent: "#c4ff0d",
+    dark: true,
   },
   botanical: {
     bg: "#fff8e7",
@@ -61,9 +61,7 @@ function cardSvg(opts: {
   const qrY = h * 0.4;
 
   const bgFill = opts.template === "elegant"
-    ? `<defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stop-color="#ff2d8a"/><stop offset="50%" stop-color="#ff6b35"/><stop offset="100%" stop-color="#a855f7"/>
-      </linearGradient></defs><rect width="100%" height="100%" fill="url(#g)" opacity="0.15"/><rect width="100%" height="100%" fill="${p.bg}"/>`
+    ? `<rect width="100%" height="100%" fill="${p.bg}"/><rect x="40" y="40" width="${w - 80}" height="${h - 80}" rx="48" fill="none" stroke="${p.accent}" stroke-width="4" opacity="0.55"/>`
     : `<rect width="100%" height="100%" fill="${p.bg}"/>`;
 
   const stickers = p.sticker
@@ -103,7 +101,7 @@ export async function buildQrCardPng(opts: {
     type: "png",
     width: 800,
     margin: 2,
-    color: { dark: palette.dark ? "#ffffff" : "#1a1025", light: "#ffffff" },
+    color: { dark: palette.dark ? "#0b0b0b" : "#0b0b0b", light: "#ffffff" },
   });
   const qrDataUrl = `data:image/png;base64,${qr.toString("base64")}`;
   const dateStr = opts.eventDate.toLocaleDateString("ka-GE", {
