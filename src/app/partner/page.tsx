@@ -32,12 +32,28 @@ export default function PartnerPage() {
     );
   }
 
+  const buyCredits = async () => {
+    await fetch("/api/partner/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ credits: 5, provider: "manual" }),
+    });
+    window.location.reload();
+  };
+
   if (!data) return <p className="p-12 text-center animate-pulse">იტვირთება…</p>;
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-12">
       <h1 className="font-display text-3xl">{data.name}</h1>
       <p className="text-[var(--color-muted)] mt-1">Partner Studio</p>
+      <button
+        type="button"
+        onClick={() => void buyCredits()}
+        className="mt-6 rounded-full bg-[var(--color-forest)] text-white px-6 py-2.5 text-sm"
+      >
+        +5 კრედიტის შეძენა (stub)
+      </button>
       <div className="mt-8 grid gap-4 sm:grid-cols-3">
         <div className="rounded-2xl border bg-white/70 p-6">
           <p className="text-xs uppercase text-[var(--color-muted)]">კრედიტები</p>

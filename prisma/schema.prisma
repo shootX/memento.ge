@@ -148,9 +148,21 @@ model Event {
   media         Media[]
   guestMessages GuestMessage[]
   coHosts       EventCoHost[]
+  coHostInvites CoHostInvite[]
   payments      Payment[]
   referral      PartnerReferral?
   guestQuotas   GuestShotQuota[]
+}
+
+model CoHostInvite {
+  id         String    @id @default(cuid())
+  eventId    String
+  event      Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  email      String
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  acceptedAt DateTime?
+  createdAt  DateTime  @default(now())
 }
 
 model EventCoHost {

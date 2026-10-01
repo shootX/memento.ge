@@ -42,6 +42,12 @@ export default function LoginPage() {
         <Button type="submit" disabled={loading} className="w-full mt-4">
           {loading ? "…" : "ლინკის გაგზავნა"}
         </Button>
+        <a
+          href="/api/auth/google"
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-full border py-2.5 text-sm"
+        >
+          Google-ით შესვლა
+        </a>
         {devLink && (
           <p className="mt-4 text-xs break-all text-[var(--color-forest)]">
             Dev: <a href={devLink}>{devLink}</a>

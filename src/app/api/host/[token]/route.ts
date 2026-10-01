@@ -45,6 +45,12 @@ export async function GET(req: Request, { params }: Params) {
       slideshowUrl: `${process.env.NEXT_PUBLIC_APP_URL}/slideshow/${event.slideshowToken}`,
       coverUrl,
       csrfToken,
+      customSlug: event.customSlug,
+      publicGallery: event.publicGallery,
+      disposableEnabled: event.disposableEnabled,
+      shotsPerGuest: event.shotsPerGuest,
+      revealAt: event.revealAt,
+      moderateUploads: event.moderateUploads,
     });
   } catch (e) {
     return handleApiError(e);

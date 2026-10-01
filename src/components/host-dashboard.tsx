@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { PLANS, type PlanTier } from "@/lib/plans";
 import { cn } from "@/lib/cn";
+import { HostSettings } from "@/components/host-settings";
 
 type HostEvent = {
   coupleNames: string;
@@ -28,6 +29,12 @@ type HostEvent = {
   };
   coverUrl: string | null;
   csrfToken: string;
+  customSlug: string | null;
+  publicGallery: boolean;
+  disposableEnabled: boolean;
+  shotsPerGuest: number;
+  revealAt: string | null;
+  moderateUploads: boolean;
 };
 
 type MediaItem = {
@@ -207,6 +214,27 @@ export function HostDashboard({ token }: { token: string }) {
         {event.usage.uploadCount} / {event.usage.maxUploads} ატვირთვა ·{" "}
         {(event.usage.totalBytes / (1024 * 1024)).toFixed(1)} MB
       </p>
+
+      <HostSettings
+        token={token}
+        csrfToken={event.csrfToken}
+        initial={{
+          disposableEnabled: event.disposableEnabled,
+          shotsPerGuest: event.shotsPerGuest,
+          revealAt: event.revealAt,
+          publicGallery: event.publicGallery,
+          customSlug: event.customSlug,
+        }}
+      />
+
+      {event.customSlug && event.publicGallery && (
+        <p className="mt-4 text-sm">
+          საჯარე გალერეა:{" "}
+          <a className="underline" href={`/gallery/${event.customSlug}`}>
+            /gallery/{event.customSlug}
+          </a>
+        </p>
+      )}
 
       {media.length === 0 ? (
         <div className="mt-8 rounded-2xl border border-dashed border-[var(--color-border)] bg-white/40 p-12 text-center">

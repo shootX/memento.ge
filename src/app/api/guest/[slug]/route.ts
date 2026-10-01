@@ -16,6 +16,14 @@ export async function GET(req: Request, { params }: Params) {
     }
 
     const plan = getPlan(event.planTier);
+    const guestKey = new URL(req.url).searchParams.get("guestKey");
+    let shotsRemaining: number | null = null;
+    if (event.disposableEnabled && event.shotsPerGuest > 0 && guestKey) {
+      const q = await (await import("@/lib/prisma")).prisma.guestShotQuota.findUnique({
+        where: { eventId_guestKey: { eventId: event.id, guestKey } },
+      });
+      shotsRemaining = event.shotsPerGuest - (q?.used ?? 0);
+    }
     const exp = Date.now() + 3600_000;
     let coverUrl: string | null = null;
     if (event.coverPhotoKey) {
@@ -49,6 +57,7 @@ export async function GET(req: Request, { params }: Params) {
       limits: {
         maxBytesPerFile: plan.maxBytesPerFile,
         remainingUploads: Math.max(0, plan.maxUploads - event.uploadCount),
+        shotsRemaining,
       },
       coverUrl,
     });

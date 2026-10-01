@@ -95,8 +95,10 @@ export async function POST(req: Request) {
       id: event.id,
       guestSlug,
       hostToken,
+      slideshowToken,
       guestUrl: `${appUrl}/e/${guestSlug}`,
       hostUrl: `${appUrl}/host/${hostToken}`,
+      slideshowUrl: `${appUrl}/slideshow/${slideshowToken}`,
       plan: { tier: planTier, priceGel: plan.priceGel },
       paymentNote:
         "გადახდის შემდეგ ალბომი აქტიურდება. დაგვიკავშირდით WhatsApp-ზე ან დაელოდეთ ადმინის დადასტურებას.",
