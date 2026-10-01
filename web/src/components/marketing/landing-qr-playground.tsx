@@ -13,7 +13,7 @@ const templates: {
   label: string;
   preview: "gradient" | "sticker" | "photo";
 }[] = [
-  { id: "elegant", label: "Dark+lime", preview: "gradient" },
+  { id: "elegant", label: "მუქი · ნეონი", preview: "gradient" },
   { id: "botanical", label: "სტიკერი", preview: "sticker" },
   { id: "minimal", label: "ფოტო", preview: "photo" },
 ];

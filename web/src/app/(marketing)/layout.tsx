@@ -5,8 +5,10 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
   return (
     <ColorfulShell dark blobs={false}>
       <div className="fixed top-0 left-0 right-0 z-[60] h-[3px] bg-[var(--accent-line)]" aria-hidden />
-      <SiteHeaderNav />
-      {children}
+      <div className="relative">
+        <SiteHeaderNav />
+        {children}
+      </div>
     </ColorfulShell>
   );
 }
