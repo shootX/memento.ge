@@ -8,7 +8,7 @@ export function useUploadQueueSync() {
     const onMessage = (ev: MessageEvent) => {
       if (ev.data?.type === "FLUSH_UPLOAD_QUEUE") {
         void flushUploadQueue().then(() => {
-          window.dispatchEvent(new CustomEvent("momenti-queue-flush"));
+          window.dispatchEvent(new CustomEvent("memento-queue-flush"));
         });
       }
     };
@@ -16,7 +16,7 @@ export function useUploadQueueSync() {
 
     const onOnline = () => {
       void flushUploadQueue().then(() => {
-        window.dispatchEvent(new CustomEvent("momenti-queue-flush"));
+        window.dispatchEvent(new CustomEvent("memento-queue-flush"));
       });
     };
     window.addEventListener("online", onOnline);

@@ -4,7 +4,7 @@ export const LOCALES: Locale[] = ["ka", "en", "ru"];
 
 const dict: Record<Locale, Record<string, string>> = {
   ka: {
-    uploadTitle: "გაუზიარეთ თქვენი მომენტები",
+    uploadTitle: "გაუზიარეთ თქვენი კადრები",
     uploadSubtitle: "ატვირთეთ ფოტოები და მოკლე ვიდეოები ქორწილის ალბომში",
     yourName: "თქვენი სახელი (არასავალდებულო)",
     dropHere: "შეეხეთ ან გადაიტანეთ ფაილები",

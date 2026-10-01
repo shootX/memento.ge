@@ -35,7 +35,7 @@ export function PwaInstallUi() {
     const demoIos = params.get("pwa_ios_demo") === "1";
     if (demoAndroid || demoIos) return;
 
-    const dismissed = localStorage.getItem("momenti_pwa_install_dismiss");
+    const dismissed = localStorage.getItem("memento_pwa_install_dismiss");
 
     if (isStandalone() || dismissed) return;
 
@@ -54,7 +54,7 @@ export function PwaInstallUi() {
   }, []);
 
   const dismiss = () => {
-    localStorage.setItem("momenti_pwa_install_dismiss", "1");
+    localStorage.setItem("memento_pwa_install_dismiss", "1");
     setShowAndroid(false);
     setShowIos(false);
   };

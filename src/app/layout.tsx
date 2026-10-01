@@ -17,19 +17,26 @@ const fredoka = Fredoka({
 });
 
 export const metadata: Metadata = {
-  title: "Momenti — ქორწილის ფოტოალბომი",
-  description: "QR-ით სტუმრები ატვირთავენ · ფერადი ალბომი ერთ კლიკში ✨",
-  applicationName: "Momenti",
+  metadataBase: new URL("https://memento.ge"),
+  title: "მემენტო — ქორწილის ფოტოალბომი",
+  description: "QR-ით სტუმრები ატვირთავენ · ფერადი ალბომი ერთ კლიკში ✨ · memento.ge",
+  applicationName: "მემენტო",
   appleWebApp: {
     capable: true,
-    title: "Momenti",
+    title: "მემენტო",
     statusBarStyle: "black-translucent",
   },
   icons: {
     icon: "/icons/icon-192.png",
     apple: "/icons/apple-touch-icon.png",
   },
-  openGraph: { title: "Momenti", locale: "ka_GE", type: "website" },
+  openGraph: {
+    title: "მემენტო — Memento",
+    description: "QR ფოტოალბომი ქორწილებისთვის · memento.ge",
+    url: "https://memento.ge",
+    locale: "ka_GE",
+    type: "website",
+  },
 };
 
 export const viewport: Viewport = {

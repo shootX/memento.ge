@@ -3,8 +3,8 @@ import { createHash } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { newToken } from "@/lib/crypto";
 
-const ADMIN_COOKIE = "momenti_admin";
-const HOST_CSRF_COOKIE = "momenti_host_csrf";
+const ADMIN_COOKIE = "memento_admin";
+const HOST_CSRF_COOKIE = "memento_host_csrf";
 
 export function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");

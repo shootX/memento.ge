@@ -6,7 +6,7 @@ test("web app manifest", async ({ request }) => {
   const res = await request.get(`${base}/manifest.webmanifest`);
   expect(res.ok()).toBeTruthy();
   const manifest = await res.json();
-  expect(manifest.name).toContain("Momenti");
+  expect(manifest.name).toContain("მემენტო");
   expect(manifest.theme_color).toBe("#ff2d8a");
   expect(manifest.icons?.length).toBeGreaterThan(5);
   const maskable = manifest.icons.some(

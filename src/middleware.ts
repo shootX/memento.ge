@@ -6,9 +6,9 @@ export function middleware(request: NextRequest) {
   const isDev = process.env.NODE_ENV === "development";
   const requestHeaders = new Headers(request.headers);
   if (request.nextUrl.searchParams.get("pwa_install_demo") === "1") {
-    requestHeaders.set("x-momenti-pwa-demo", "install");
+    requestHeaders.set("x-memento-pwa-demo", "install");
   } else if (request.nextUrl.searchParams.get("pwa_ios_demo") === "1") {
-    requestHeaders.set("x-momenti-pwa-demo", "ios");
+    requestHeaders.set("x-memento-pwa-demo", "ios");
   }
   const response = NextResponse.next({
     request: { headers: requestHeaders },
@@ -32,7 +32,7 @@ export function middleware(request: NextRequest) {
 
   const hostMatch = request.nextUrl.pathname.match(/^\/host\/([A-Za-z0-9_-]{24,128})(?:\/|$)/);
   if (hostMatch && !request.nextUrl.pathname.includes("/slideshow")) {
-    response.cookies.set("momenti_host_csrf", hostMatch[1], {
+    response.cookies.set("memento_host_csrf", hostMatch[1], {
       httpOnly: true,
       secure: !isDev,
       sameSite: "strict",

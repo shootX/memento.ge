@@ -27,8 +27,8 @@ export default function manifest(): MetadataRoute.Manifest {
 
   return {
     id: "/",
-    name: "Momenti — ქორწილის ფოტოალბომი",
-    short_name: "Momenti",
+    name: "მემენტო — ქორწილის ფოტოალბომი",
+    short_name: "მემენტო",
     description:
       "QR-ით სტუმრები ატვირთავენ ფოტოებს · ლაივ ალბომი ღონისძიებისთვის ✨",
     lang: "ka",

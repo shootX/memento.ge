@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 
 const wa = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "995555123456";
 
-export const metadata = { title: "პარტნიორებისთვის — Momenti" };
+export const metadata = { title: "პარტნიორებისთვის — Memento" };
 
 export default function ForPartnersPage() {
   return (

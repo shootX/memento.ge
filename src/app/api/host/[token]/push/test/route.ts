@@ -19,7 +19,7 @@ export async function POST(req: Request, { params }: Params) {
     if (!csrf || !verifyCsrfToken(token, csrf)) return jsonError(403, "CSRF");
 
     const result = await sendPushToEvent(event.id, {
-      title: "Momenti ✨",
+      title: "Memento ✨",
       body: "ტესტ შეტყობინება — ყველაფერი მუშაობს!",
       url: `/host/${token}`,
     });

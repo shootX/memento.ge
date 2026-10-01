@@ -1,7 +1,7 @@
 import { prisma } from "../src/lib/prisma";
 
 async function main() {
-  const email = "partner@momenti.demo";
+  const email = "partner@memento.demo";
   let user = await prisma.user.findUnique({ where: { email } });
   if (!user) {
     user = await prisma.user.create({

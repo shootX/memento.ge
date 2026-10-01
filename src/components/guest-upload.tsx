@@ -76,8 +76,8 @@ export function GuestUpload({
   const [tab, setTab] = useState<"photos" | "book">("photos");
 
   useEffect(() => {
-    const k = localStorage.getItem(`momenti_gk_${slug}`) ?? crypto.randomUUID();
-    localStorage.setItem(`momenti_gk_${slug}`, k);
+    const k = localStorage.getItem(`memento_gk_${slug}`) ?? crypto.randomUUID();
+    localStorage.setItem(`memento_gk_${slug}`, k);
     setGuestKey(k);
     fetch(`/api/guest/${slug}?guestKey=${encodeURIComponent(k)}`)
       .then((r) => r.json())
@@ -187,7 +187,7 @@ export function GuestUpload({
         }
       }
       setAllDone(true);
-      window.dispatchEvent(new CustomEvent("momenti-queue-flush"));
+      window.dispatchEvent(new CustomEvent("memento-queue-flush"));
     },
     [guestName, guestKey, info?.canUpload, slug],
   );
@@ -226,7 +226,7 @@ export function GuestUpload({
       <div className="relative mx-auto max-w-lg px-4 pb-14 pt-6">
         <div className="mb-5 flex items-center justify-between">
           <span className="font-display text-xl font-bold text-gradient">
-            Momenti ✨
+            მემენტო ✨
           </span>
           <LocaleToggle value={locale} onChange={setLocale} />
         </div>

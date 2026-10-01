@@ -39,7 +39,7 @@ export default function HomePage() {
                   </Button>
                 </Link>
                 <a
-                  href={`https://wa.me/${wa}?text=${encodeURIComponent("გამარჯობა, Momenti-ს შესახებ")}`}
+                  href={`https://wa.me/${wa}?text=${encodeURIComponent("გამარჯობა, მემენტოს შესახებ")}`}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-2 rounded-full border-2 border-[var(--text-ink)] bg-white px-6 py-3 font-bold shadow-[4px_4px_0_#1a1025]"

@@ -23,7 +23,7 @@ export async function getPartnerBootstrap(): Promise<
 
   if (!membership) {
     return {
-      error: "Partner access required. Contact Momenti to join.",
+      error: "Partner access required. Contact Memento to join.",
       status: 403,
     };
   }

@@ -7,7 +7,7 @@ function ensureVapid() {
   if (configured) return;
   const pub = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
   const priv = process.env.VAPID_PRIVATE_KEY;
-  const subject = process.env.VAPID_SUBJECT ?? "mailto:hello@momenti.ge";
+  const subject = process.env.VAPID_SUBJECT ?? "mailto:hello@memento.ge";
   if (!pub || !priv) {
     throw new Error("VAPID keys not configured");
   }
@@ -70,7 +70,7 @@ export async function notifyBatchedUploads(eventId: string, coupleNames: string)
   const count = event.pushPendingUploadCount;
   if (count < 1) return;
 
-  const title = "Momenti 📸";
+  const title = "Memento 📸";
   const body =
     count === 1
       ? `ახალი ფოტო · ${coupleNames}`

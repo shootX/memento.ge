@@ -143,7 +143,7 @@ if (partnerToken) {
   const partnerOrigin = new URL(base).origin;
   await partnerCtx.addCookies([
     {
-      name: "momenti_user",
+      name: "memento_user",
       value: partnerToken,
       domain: new URL(base).hostname,
       path: "/",

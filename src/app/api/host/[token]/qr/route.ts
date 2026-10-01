@@ -54,7 +54,7 @@ export async function GET(req: Request, { params }: Params) {
       headers: {
         "Content-Type": "image/png",
         "Content-Disposition": download
-          ? `attachment; filename="momenti-${template}-${size}.png"`
+          ? `attachment; filename="memento-${template}-${size}.png"`
           : "inline",
         "Cache-Control": "no-store",
       },
@@ -66,7 +66,7 @@ export async function GET(req: Request, { params }: Params) {
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": download
-        ? `attachment; filename="momenti-${template}-${size}.pdf"`
+        ? `attachment; filename="memento-${template}-${size}.pdf"`
         : "inline",
       "Cache-Control": "no-store",
     },

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ColorfulShell } from "@/components/colorful-shell";
 
 export const metadata = {
-  title: "ოფლაინი — Momenti",
+  title: "ოფლაინი — Memento",
 };
 
 export default function OfflinePage() {
@@ -14,7 +14,7 @@ export default function OfflinePage() {
           ოფლაინი ხარ
         </h1>
         <p className="w-full break-words text-pretty leading-relaxed text-[var(--text-muted)]">
-          ინტერნეტი არ არის, მაგრამ Momenti აპი მუშაობს. სტუმრის ატვირთვები რიგში
+          ინტერნეტი არ არის, მაგრამ მემენტოს აპი მუშაობს. სტუმრის ატვირთვები რიგში
           დგას და გაიგზავნება კავშირის აღდგომისას.
         </p>
         <Link
@@ -25,7 +25,7 @@ export default function OfflinePage() {
         </Link>
       </div>
       <p className="mt-8 text-xs text-[var(--text-muted)]" data-testid="offline-ready">
-        Momenti PWA · offline fallback
+        მემენტო PWA · offline fallback
       </p>
     </ColorfulShell>
   );

@@ -11,7 +11,7 @@ export function SiteHeader() {
     <header className="sticky top-0 z-50 border-b-2 border-pink-100 bg-white/90 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
         <Link href="/" className="font-display text-xl font-bold text-gradient">
-          Momenti ✨
+          მემენტო ✨
         </Link>
         <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-[var(--text-muted)]">
           {links.map((l) => (
