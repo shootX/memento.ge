@@ -94,12 +94,21 @@ type Bootstrap = {
   messages: GuestMsg[];
 };
 
+function parseTab(value: string | null | undefined): Tab {
+  if (value === "gallery" || value === "qr" || value === "guestbook" || value === "settings") {
+    return value;
+  }
+  return "gallery";
+}
+
 export function HostDashboard({
   token,
   bootstrap = null,
+  initialTab = "gallery",
 }: {
   token: string;
   bootstrap?: Bootstrap | null;
+  initialTab?: Tab;
 }) {
   const { spring } = useMotionSafe();
   const [event, setEvent] = useState<HostEvent | null>(
@@ -126,7 +135,7 @@ export function HostDashboard({
   const [media, setMedia] = useState<MediaItem[]>(bootstrap?.media ?? []);
   const [messages, setMessages] = useState<GuestMsg[]>(bootstrap?.messages ?? []);
   const [loading, setLoading] = useState(!bootstrap);
-  const [tab, setTab] = useState<Tab>("gallery");
+  const [tab, setTab] = useState<Tab>(parseTab(initialTab));
   const [activeTemplate, setActiveTemplate] =
     useState<(typeof templates)[number]["id"]>("elegant");
   const [lightbox, setLightbox] = useState<LightboxItem | null>(null);

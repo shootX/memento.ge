@@ -33,16 +33,9 @@ export function PwaInstallUi() {
     const params = new URLSearchParams(window.location.search);
     const demoAndroid = params.get("pwa_install_demo") === "1";
     const demoIos = params.get("pwa_ios_demo") === "1";
-    const dismissed = localStorage.getItem("momenti_pwa_install_dismiss");
+    if (demoAndroid || demoIos) return;
 
-    if (demoAndroid) {
-      setShowAndroid(true);
-      return;
-    }
-    if (demoIos) {
-      setShowIos(true);
-      return;
-    }
+    const dismissed = localStorage.getItem("momenti_pwa_install_dismiss");
 
     if (isStandalone() || dismissed) return;
 
@@ -84,9 +77,9 @@ export function PwaInstallUi() {
           data-testid="pwa-install-banner"
         >
           <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="font-extrabold text-lg">{pwaT(locale, "installTitle")}</p>
-              <p className="text-sm text-[var(--text-muted)] mt-1">
+            <div className="min-w-0 flex-1">
+              <p className="break-words font-extrabold text-lg">{pwaT(locale, "installTitle")}</p>
+              <p className="mt-1 break-words text-sm text-[var(--text-muted)]">
                 {pwaT(locale, "installBody")}
               </p>
             </div>
@@ -116,9 +109,9 @@ export function PwaInstallUi() {
           <div className="card-chunky w-full max-w-md p-6 animate-fade-up">
             <p className="text-2xl font-extrabold">{pwaT(locale, "iosTitle")} 📲</p>
             <ul className="mt-4 space-y-2 text-sm text-[var(--text-muted)]">
-              <li>{pwaT(locale, "iosStep1")}</li>
-              <li>{pwaT(locale, "iosStep2")}</li>
-              <li>{pwaT(locale, "iosStep3")}</li>
+              <li className="break-words text-pretty">{pwaT(locale, "iosStep1")}</li>
+              <li className="break-words text-pretty">{pwaT(locale, "iosStep2")}</li>
+              <li className="break-words text-pretty">{pwaT(locale, "iosStep3")}</li>
             </ul>
             <div className="mt-4 flex gap-2">
               <button type="button" className="btn-gradient flex-1 rounded-full py-2 font-bold text-white" onClick={dismiss}>

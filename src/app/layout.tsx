@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Noto_Sans_Georgian, Fredoka } from "next/font/google";
 import { PwaProvider } from "@/components/pwa/pwa-provider";
+import { PwaDemoOverlays } from "@/components/pwa/pwa-demo-overlays";
 import "./globals.css";
 
 const notoSans = Noto_Sans_Georgian({
@@ -43,6 +44,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${notoSans.variable} ${fredoka.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        <PwaDemoOverlays />
         <PwaProvider>{children}</PwaProvider>
       </body>
     </html>
