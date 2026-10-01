@@ -117,6 +117,11 @@ export async function POST(req: Request, { params }: Params) {
       },
     });
 
+    if (status === "approved") {
+      const { notifyBatchedUploads } = await import("@/lib/push-server");
+      void notifyBatchedUploads(event.id, event.coupleNames);
+    }
+
     return NextResponse.json({ id: media.id, ok: true, status });
   } catch (e) {
     return handleApiError(e);

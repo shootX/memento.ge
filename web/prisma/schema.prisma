@@ -152,6 +152,23 @@ model Event {
   payments      Payment[]
   referral      PartnerReferral?
   guestQuotas   GuestShotQuota[]
+  pushSubs      PushSubscription[]
+  pushPendingUploadCount Int       @default(0)
+  pushLastUploadNotifyAt DateTime?
+}
+
+model PushSubscription {
+  id           String   @id @default(cuid())
+  eventId      String
+  event        Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  endpoint     String   @unique
+  p256dh       String
+  auth         String
+  locale       String   @default("ka")
+  notifyUploads    Boolean @default(true)
+  notifyGuestbook  Boolean @default(true)
+  notifyExpiry     Boolean @default(true)
+  createdAt    DateTime @default(now())
 }
 
 model CoHostInvite {

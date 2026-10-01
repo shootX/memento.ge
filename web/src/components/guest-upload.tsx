@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Camera, CheckCircle2, Loader2, Sparkles } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { useMotionSafe } from "@/lib/motion";
+import { enqueueUpload } from "@/lib/offline-upload-queue";
 import type { GuestEventPayload } from "@/lib/guest-event-payload";
 
 type EventInfo = GuestEventPayload;
@@ -132,14 +133,34 @@ export function GuestUpload({
       setQueue(initial);
       setAllDone(false);
 
+      const offline = typeof navigator !== "undefined" && !navigator.onLine;
+
       for (let i = 0; i < prepared.length; i++) {
+        const file = prepared[i];
+        if (offline) {
+          await enqueueUpload({
+            slug,
+            guestName,
+            guestKey,
+            fileName: file.name,
+            mimeType: file.type || "application/octet-stream",
+            blob: file,
+          });
+          setQueue((q) =>
+            q.map((item, idx) =>
+              idx === i ? { ...item, status: "done", progress: 100 } : item,
+            ),
+          );
+          continue;
+        }
+
         setQueue((q) =>
           q.map((item, idx) =>
             idx === i ? { ...item, status: "uploading" } : item,
           ),
         );
         try {
-          await uploadWithRetry(slug, prepared[i], guestName, guestKey, (p) => {
+          await uploadWithRetry(slug, file, guestName, guestKey, (p) => {
             setQueue((q) =>
               q.map((item, idx) => (idx === i ? { ...item, progress: p } : item)),
             );
@@ -150,14 +171,23 @@ export function GuestUpload({
             ),
           );
         } catch {
+          await enqueueUpload({
+            slug,
+            guestName,
+            guestKey,
+            fileName: file.name,
+            mimeType: file.type || "application/octet-stream",
+            blob: file,
+          });
           setQueue((q) =>
             q.map((item, idx) =>
-              idx === i ? { ...item, status: "error", progress: 0 } : item,
+              idx === i ? { ...item, status: "done", progress: 100 } : item,
             ),
           );
         }
       }
       setAllDone(true);
+      window.dispatchEvent(new CustomEvent("momenti-queue-flush"));
     },
     [guestName, guestKey, info?.canUpload, slug],
   );

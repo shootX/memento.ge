@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Noto_Sans_Georgian, Fredoka } from "next/font/google";
+import { PwaProvider } from "@/components/pwa/pwa-provider";
 import "./globals.css";
 
 const notoSans = Noto_Sans_Georgian({
@@ -17,7 +18,22 @@ const fredoka = Fredoka({
 export const metadata: Metadata = {
   title: "Momenti — ქორწილის ფოტოალბომი",
   description: "QR-ით სტუმრები ატვირთავენ · ფერადი ალბომი ერთ კლიკში ✨",
+  applicationName: "Momenti",
+  appleWebApp: {
+    capable: true,
+    title: "Momenti",
+    statusBarStyle: "black-translucent",
+  },
+  icons: {
+    icon: "/icons/icon-192.png",
+    apple: "/icons/apple-touch-icon.png",
+  },
   openGraph: { title: "Momenti", locale: "ka_GE", type: "website" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#ff2d8a",
+  colorScheme: "light",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -26,7 +42,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="ka"
       className={`${notoSans.variable} ${fredoka.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <PwaProvider>{children}</PwaProvider>
+      </body>
     </html>
   );
 }

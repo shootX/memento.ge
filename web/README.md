@@ -21,6 +21,21 @@ npm run dev
 
 აპი: `http://localhost:43123`
 
+### PWA (ჰოსტი / პარტნიორი / სტუმარი)
+
+- `manifest.webmanifest` — Electric Sunset ხატულები (maskable), ქართული სახელი/აღწერა
+- Service worker (`/sw.js`, Serwist): app shell precache, `/offline` fallback, thumb cache მოკლე TTL-ით; API/signed media — მხოლოდ ქსელი
+- სტუმარი: IndexedDB ატვირთვის რიგი + Background Sync (iOS-ზე ხილული fallback)
+- Push (VAPID): `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` — ჰოსტის პარამეტრებში ჩართვა
+
+```bash
+npm run icons:pwa
+FORCE_SEED=1 npm run ensure:demo
+PWA_DEV=1 NEXT_PUBLIC_PWA_DEV=1 npm run dev   # SW ლოკალურად
+npm run build && npm run start
+npm run test:e2e
+```
+
 - **ლენდინგი:** `/`
 - **ღონისძიების შექმნა:** `/create`
 - **ადმინი:** `/admin` (პაროლი `ADMIN_PASSWORD`)
