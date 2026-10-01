@@ -66,6 +66,10 @@ export async function POST(req: Request, { params }: Params) {
         status: event.moderateUploads ? "pending" : "approved",
       },
     });
+    if (msg.status === "approved") {
+      const { notifyGuestbookMessage } = await import("@/lib/push-server");
+      void notifyGuestbookMessage(event.id, event.coupleNames);
+    }
     return NextResponse.json({ id: msg.id, ok: true });
   } catch (e) {
     return handleApiError(e);

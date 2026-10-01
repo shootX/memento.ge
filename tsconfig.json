@@ -18,6 +18,7 @@
         "name": "next"
       }
     ],
+    "types": ["@serwist/next/typings"],
     "paths": {
       "@/*": ["./src/*"]
     }
@@ -30,5 +31,5 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "tests"]
 }

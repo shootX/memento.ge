@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { PushSettings } from "@/components/pwa/push-settings";
 
 export function HostSettings({
   token,
@@ -139,6 +140,8 @@ export function HostSettings({
           </Button>
         </div>
       </div>
+
+      <PushSettings hostToken={token} csrfToken={csrfToken} />
 
       <Button type="button" onClick={() => void save()}>
         {saved ? "შენახულია ✓" : "შენახვა"}

@@ -5,7 +5,6 @@ import {
   extensionForMime,
   sanitizeZipEntryName,
 } from "@/lib/upload-validation";
-import archiver from "archiver";
 import { PassThrough } from "stream";
 import { clientIp, consumeApi, jsonError } from "@/lib/api-utils";
 import { verifyHostCsrf } from "@/lib/session";
@@ -34,8 +33,13 @@ export async function GET(req: Request, { params }: Params) {
     orderBy: { createdAt: "asc" },
   });
 
+  const createArchive = (await import("archiver")) as unknown as (
+    format: string,
+    options?: { zlib?: { level?: number } },
+  ) => import("archiver").Archiver;
+
   const passthrough = new PassThrough();
-  const archive = archiver("zip", { zlib: { level: 5 } });
+  const archive = createArchive("zip", { zlib: { level: 5 } });
   archive.on("error", () => passthrough.destroy());
   archive.pipe(passthrough);
 

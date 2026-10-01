@@ -4,6 +4,6 @@ export default defineConfig({
   testDir: "tests/e2e",
   timeout: 90_000,
   use: {
-    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:43123",
+    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:43123",
   },
 });
