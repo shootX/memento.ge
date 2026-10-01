@@ -25,6 +25,12 @@ jobs:
           --health-retries 10
     env:
       DATABASE_URL: postgresql://memento:memento@localhost:5432/memento_test
+      SESSION_SECRET: ci-session-secret-32-characters!!
+      MEDIA_SIGNING_SECRET: ci-media-signing-secret-32chars!!
+      CSRF_SECRET: ci-csrf-secret-32-characters!!!
+      STORAGE_BACKEND: local
+      LOCAL_STORAGE_PATH: ./data/test-uploads
+      EMAIL_PROVIDER: log
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
