@@ -61,7 +61,7 @@ await guestPage.screenshot({
   fullPage: false,
 });
 const fileInput = guestPage.locator('input[type="file"]');
-await fileInput.setInputFiles(path.join(__dirname, "../public/seed-samples/wedding-1.jpg"));
+await fileInput.setInputFiles(path.join(__dirname, "../public/seed-samples/wedding-4.jpg"));
 await guestPage.waitForTimeout(6000);
 await guestPage.screenshot({
   path: `${out}/v2-guest-mobile-after-uploads.png`,

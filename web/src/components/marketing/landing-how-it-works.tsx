@@ -14,7 +14,7 @@ const steps = [
   {
     title: "ლაივ სლაიდშოუ",
     text: "ახალი კადრები ეკრანზე — ტელევიზორზეც.",
-    img: "/seed-samples/wedding-1.jpg",
+    img: "/seed-samples/wedding-5.jpg",
   },
 ];
 

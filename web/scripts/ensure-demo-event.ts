@@ -1,4 +1,4 @@
-import { readFile, readdir, writeFile } from "fs/promises";
+import { readFile, writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { prisma } from "../src/lib/prisma";
 import { putObject, buildMediaKey, getObject } from "../src/lib/storage";
@@ -7,6 +7,19 @@ import { computeExpiresAt, getPlan } from "../src/lib/plans";
 
 const DEMO_GUEST_SLUG = "memento-demo-guest-01";
 const MANIFEST = path.join(process.cwd(), "public/demo-manifest.json");
+/** Bump when demo gallery files change so existing installs re-seed. */
+const DEMO_MEDIA_REVISION = 3;
+
+const DEMO_MEDIA_FILES: { file: string; guestName: string }[] = [
+  { file: "wedding-4.jpg", guestName: "მარიამ" },
+  { file: "wedding-2.jpg", guestName: "ლუკა" },
+  { file: "wedding-6.jpg", guestName: "ანა" },
+  { file: "wedding-3.jpg", guestName: "გიორგი" },
+  { file: "wedding-5.jpg", guestName: "ნიკა" },
+  { file: "wedding-3.jpg", guestName: "სოფო" },
+];
+
+const REVISION_FILE = path.join(process.cwd(), "data/demo-media-revision.txt");
 
 async function objectExists(key: string): Promise<boolean> {
   try {
@@ -33,12 +46,10 @@ async function demoMediaStorageOk(eventId: string): Promise<boolean> {
 async function seedDemoMedia(eventId: string) {
   await prisma.media.deleteMany({ where: { eventId } });
   const sampleDir = path.join(process.cwd(), "public/seed-samples");
-  const files = (await readdir(sampleDir)).filter((f) => f.endsWith(".jpg"));
-  const names = ["მარიამ", "ლუკა", "ანა", "გიორგი", "ნიკა", "სოფო"];
   let total = 0;
   let count = 0;
-  for (let i = 0; i < files.length; i++) {
-    const buf = await readFile(path.join(sampleDir, files[i]));
+  for (const { file, guestName } of DEMO_MEDIA_FILES) {
+    const buf = await readFile(path.join(sampleDir, file));
     const mediaId = crypto.randomUUID();
     const key = buildMediaKey(eventId, mediaId, "jpg");
     const thumbKey = `${key.replace(/\.jpg$/, "")}_thumb.jpg`;
@@ -52,7 +63,7 @@ async function seedDemoMedia(eventId: string) {
         thumbKey,
         mimeType: "image/jpeg",
         size: buf.length,
-        guestName: names[i % names.length],
+        guestName,
         width: 1200,
         height: 1600,
         status: "approved",
@@ -65,6 +76,8 @@ async function seedDemoMedia(eventId: string) {
     where: { id: eventId },
     data: { totalBytes: total, uploadCount: count },
   });
+  await mkdir(path.dirname(REVISION_FILE), { recursive: true });
+  await writeFile(REVISION_FILE, String(DEMO_MEDIA_REVISION), "utf8");
 }
 
 const DEMO_COVER_FILE = "wedding-4.jpg";
@@ -133,7 +146,13 @@ export async function ensureDemoEvent() {
 
   const force = process.env.FORCE_SEED === "1";
   const storageOk = await demoMediaStorageOk(event.id);
-  if (force || !storageOk) {
+  let storedRevision = "";
+  try {
+    storedRevision = (await readFile(REVISION_FILE, "utf8")).trim();
+  } catch {
+    storedRevision = "";
+  }
+  if (force || !storageOk || storedRevision !== String(DEMO_MEDIA_REVISION)) {
     await seedDemoMedia(event.id);
   }
 

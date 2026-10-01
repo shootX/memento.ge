@@ -146,13 +146,13 @@ export function SlideshowView({
         </p>
       )}
 
-      <aside className="absolute bottom-6 right-6 z-20 flex items-end gap-3 rounded-2xl bg-white/10 backdrop-blur-md p-3 border border-white/15">
+      <aside className="absolute bottom-6 right-6 z-20 flex items-end gap-3 rounded-2xl bg-black/50 backdrop-blur-md p-3 border border-white/20">
         <img
           src={`/api/slideshow/${slideshowToken}/qr`}
           alt="QR"
-          width={72}
-          height={72}
-          className="rounded-lg bg-white/90 p-1"
+          width={120}
+          height={120}
+          className="rounded-lg bg-white p-2 shadow-lg"
         />
         <div className="max-w-[140px] text-xs text-white/80 leading-snug">
           დაასკანერე

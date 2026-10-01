@@ -14,7 +14,7 @@ function coupleInitials(names: string): string {
 export function EventCover({
   coverUrl,
   coupleNames,
-  demoFallbackSrc = "/seed-samples/wedding-1.jpg",
+  demoFallbackSrc = "/seed-samples/wedding-4.jpg",
 }: {
   coverUrl: string | null;
   coupleNames: string;

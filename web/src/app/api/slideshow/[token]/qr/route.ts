@@ -4,17 +4,21 @@ import { jsonError } from "@/lib/api-utils";
 
 type Params = { params: Promise<{ token: string }> };
 
-export async function GET(_req: Request, { params }: Params) {
+export async function GET(req: Request, { params }: Params) {
   const { token } = await params;
   const event = await getEventBySlideshowToken(token);
   if (!event) return jsonError(404, "Not found");
 
-  const guestUrl = `${process.env.NEXT_PUBLIC_APP_URL}/e/${event.guestSlug}`;
+  const reqUrl = new URL(req.url);
+  const appBase =
+    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ??
+    `${reqUrl.protocol}//${reqUrl.host}`;
+  const guestUrl = `${appBase}/e/${event.guestSlug}`;
   const png = await QRCode.toBuffer(guestUrl, {
     type: "png",
-    width: 280,
-    margin: 1,
-    color: { dark: "#FFFFFF", light: "#00000000" },
+    width: 480,
+    margin: 2,
+    color: { dark: "#000000", light: "#ffffff" },
   });
 
   return new Response(new Uint8Array(png), {
