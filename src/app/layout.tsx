@@ -1,19 +1,25 @@
 import type { Metadata, Viewport } from "next";
 import { Noto_Sans_Georgian, Fredoka } from "next/font/google";
-import { PwaProvider } from "@/components/pwa/pwa-provider";
+import { PwaRoot } from "@/components/pwa/pwa-root";
 import { PwaDemoOverlays } from "@/components/pwa/pwa-demo-overlays";
 import "./globals.css";
 
 const notoSans = Noto_Sans_Georgian({
   variable: "--font-noto-sans",
   subsets: ["georgian", "latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "600", "700"],
+  display: "swap",
+  preload: true,
+  adjustFontFallback: true,
 });
 
 const fredoka = Fredoka({
   variable: "--font-fredoka",
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
+  weight: ["600", "700"],
+  display: "swap",
+  preload: false,
+  adjustFontFallback: true,
 });
 
 export const metadata: Metadata = {
@@ -52,7 +58,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <PwaDemoOverlays />
-        <PwaProvider>{children}</PwaProvider>
+        <PwaRoot>{children}</PwaRoot>
       </body>
     </html>
   );
