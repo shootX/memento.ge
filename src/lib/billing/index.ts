@@ -1,6 +1,8 @@
 import type { BillingAdapter, PaymentProvider } from "@/lib/billing/types";
 import { stripeAdapter } from "@/lib/billing/stripe-adapter";
-import { bogAdapter, tbcAdapter, flittAdapter } from "@/lib/billing/georgian-stub";
+import { bogAdapter } from "@/lib/billing/bog-adapter";
+import { tbcAdapter } from "@/lib/billing/tbc-adapter";
+import { flittAdapter } from "@/lib/billing/flitt-adapter";
 
 const adapters: Record<PaymentProvider, BillingAdapter> = {
   stripe: stripeAdapter,

@@ -4,101 +4,70 @@
 
 ## პაკეტები (GEL)
 
-კონფიგი: `src/lib/plans.ts`
-
-| `planTier` | ფასი | maxUploads | maxBytesPerFile | maxTotalBytes | retention |
-|------------|------|------------|-----------------|---------------|-----------|
-| starter | 49 | 200 | 15 MB | 2 GB | 30 დღე |
-| classic | 99 | 600 | 25 MB | 8 GB | 90 დღე |
-| premium | 149 | 1500 | 50 MB | 25 GB | 365 დღე |
-
-`Event.planTier` ირჩევა შექმნისას (`POST /api/events`). აქტივაცია: `Event.isPaid`, `paidAt`, `expiresAt` (`computeExpiresAt`).
+კონფიგი: `src/lib/plans.ts` — starter 49 / classic 99 / premium 149.
 
 ---
 
 ## Billing seam
 
-`src/lib/billing/index.ts` — `getBillingAdapter(provider)`:
+| provider | Adapter | Checkout API | Webhook / callback |
+|----------|---------|--------------|-------------------|
+| stripe | `stripe-adapter.ts` | Stripe Checkout | `/api/webhooks/stripe` |
+| bog | `bog-adapter.ts` | `POST api.bog.ge/.../ecommerce/orders` | `/api/webhooks/bog` + `Callback-Signature` RSA |
+| tbc | `tbc-adapter.ts` | `POST api.tbcbank.ge/v1/tpay/payments` | `/api/webhooks/tbc` + poll `GET /api/payments/tbc/poll?payId=` |
+| flitt | `flitt-adapter.ts` | `POST pay.flitt.com/api/checkout/url` | `/api/webhooks/flitt` + SHA1 signature in body |
+| manual | inline | — | admin PATCH |
 
-| provider | Adapter | Checkout | Webhook route |
-|----------|---------|----------|---------------|
-| stripe | `stripe-adapter.ts` | Stripe Checkout GEL | `/api/webhooks/stripe` |
-| bog | `georgian-stub.ts` | manual message | `/api/webhooks/bog` |
-| tbc | stub | manual message | **არ არის** |
-| flitt | stub | manual message | `/api/webhooks/flitt` |
-| manual | inline | manual | — |
-
-Types: `src/lib/billing/types.ts`.
+Idempotency: `PaymentWebhookEvent` + `claimWebhookEvent()`.
 
 ---
 
-## Stripe (ინტეგრირებული კოდი)
+## TBC (developers.tbcbank.ge)
 
-**Env:** `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`.
+**Env:** `TBC_API_KEY`, `TBC_CLIENT_ID`, `TBC_CLIENT_SECRET`, optional `TBC_CALLBACK_URL`.
 
-- `createCheckout` — one-time payment, metadata `eventId`, `planTier`.
-- Webhook `checkout.session.completed` → event paid + `Payment.status = paid`.
-
----
-
-## საქართველოს პროვაიდერები (stub)
-
-### BoG — `POST /api/webhooks/bog`
-
-- Header `x-bog-signature`: HMAC-SHA256(hex) of raw body, secret `BOG_WEBHOOK_SECRET`.
-- Expected JSON: `{ eventId, status: "paid" }` (app-defined placeholder).
-
-### Flitt — `POST /api/webhooks/flitt`
-
-- Header `x-flitt-signature`: HMAC-SHA256 **base64**.
-- Body: `{ status: "success", metadata: { eventId } }`.
-
-### TBC
-
-- `tbcAdapter` in `georgian-stub.ts` — checkout returns manual text only.
-- `verifyWebhook` checks `TBC_WEBHOOK_SECRET` but **no HTTP handler** wired.
-
-`georgian-stub.ts` კომენტარი: *Provider-specific HMAC verification will be implemented at integration time.*
+1. `POST /v1/tpay/access-token` (form: client_id, client_secret) + header `apikey`
+2. `POST /v1/tpay/payments` — `amount.total` GEL, `returnurl`, `callbackUrl`, `merchantPaymentId` = internal `Payment.id`
+3. Callback body: `{"PaymentId":"..."}` → respond 200 → `GET /v1/tpay/payments/{payId}` → status `Succeeded`
 
 ---
 
-## Manual flow (MVP)
+## BOG (api.bog.ge)
 
-1. Host creates event → `isPaid: false` → uploads blocked (`eventAllowsUpload`).
-2. Customer pays off-band (bank/WhatsApp).
-3. Admin `/admin` → `PATCH /api/admin/events/[id]` `{ "isPaid": true }`.
-4. ან `POST /api/billing/checkout` with `provider: "manual"` → `Payment` row status `manual`.
+**Env:** `BOG_CLIENT_ID`, `BOG_CLIENT_SECRET`, `BOG_CALLBACK_PUBLIC_KEY` (PEM).
 
-Legacy: `POST /api/payment/stub` — ინსტრუქციის JSON.
-
----
-
-## Partner credits
-
-`POST /api/partner/checkout`:
-
-- `{ credits, provider }` — **79 GEL × credits**.
-- Manual: audit log `partner.credits.manual`; credits **not** auto-applied in code (admin/process missing).
+- Create order with `external_order_id` = `Payment.id`
+- Callback: `event: order_payment`, verify **raw body** `Callback-Signature` (SHA256withRSA)
+- Paid when `body.order_status` matches `bogOrderIsPaid()` — **TODO:** დაადასტურეთ ზუსტი status merchant sandbox-ში
 
 ---
 
-## Payment model
+## Flitt (docs.flitt.com)
 
-`Payment`: `amountGel`, `provider`, `externalId`, `status`, optional `metadata` JSON.
+**Env:** `FLITT_MERCHANT_ID`, `FLITT_SECRET_KEY`.
+
+- Amount in **tetri** (`amountGel * 100`)
+- Callback: `order_status=approved`, `response_status=success`, signature SHA1 per docs
+- `merchant_data` JSON: `{ eventId, paymentId }`
 
 ---
 
-## რა დარჩა ინტეგრაციისთვის
+## Manual
 
-1. BoG/Flitt/TBC — ოფიციალური payload + signature spec.
-2. TBC webhook route + activation logic.
-3. Partner credit top-up after payment (automation).
-4. Stripe metadata on partner checkout (currently uses fake `planTier` string).
-5. Invoice/receipt generation (only metadata mentions in docs/database.md for payments).
+Admin `/admin` ან `provider: manual` — უცვლელი.
+
+---
+
+## Owner credentials საჭიროა
+
+- TBC: developer apikey + merchant client_id/secret (ecom.tbcpayments.ge)
+- BOG: OAuth client + callback public key
+- Flitt: merchant id + secret
+- Stripe: optional
 
 ---
 
 ## დაკავშირებული
 
-- [API.md](API.md) — billing endpoints
+- [API.md](API.md)
 - [ROADMAP.md](ROADMAP.md)

@@ -156,7 +156,7 @@ sequenceDiagram
 
 ## Email outbox
 
-`queueEmail()` → `EmailOutbox` row (`template`, JSON `payload`). **გაგზავნის worker/SMTP კოდი აპში არ არის** — dev-ში `console.info`. Production-ში საჭიროა გარე worker ან პროვაიდერი.
+`queueEmail()` → `EmailOutbox`; გაგზავნა: `processEmailOutbox()` (`EMAIL_PROVIDER`, retry/backoff). Cron: `/api/cron/email`.
 
 ---
 

@@ -4,7 +4,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 // --- Auth & accounts ---
@@ -155,6 +155,7 @@ model Event {
   pushSubs      PushSubscription[]
   pushPendingUploadCount Int       @default(0)
   pushLastUploadNotifyAt DateTime?
+  expiryReminderSentAt   DateTime?
 }
 
 model PushSubscription {
@@ -289,12 +290,26 @@ model AuditLog {
 }
 
 model EmailOutbox {
-  id        String    @id @default(cuid())
-  toEmail   String
-  template  String
-  payload   String
-  sentAt    DateTime?
-  createdAt DateTime  @default(now())
+  id            String    @id @default(cuid())
+  toEmail       String
+  template      String
+  payload       String
+  locale        String    @default("ka")
+  attempts      Int       @default(0)
+  lastError     String?
+  nextAttemptAt DateTime  @default(now())
+  sentAt        DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([sentAt, nextAttemptAt])
+}
+
+model PaymentWebhookEvent {
+  id             String   @id @default(cuid())
+  provider       String
+  idempotencyKey String   @unique
+  paymentId      String?
+  createdAt      DateTime @default(now())
 }
 
 model UsageSnapshot {

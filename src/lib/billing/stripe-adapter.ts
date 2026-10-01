@@ -35,7 +35,7 @@ export const stripeAdapter: BillingAdapter = {
           quantity: 1,
         },
       ],
-      metadata: { eventId: req.eventId, planTier: req.planTier },
+      metadata: { eventId: req.eventId, planTier: req.planTier, paymentId: req.paymentId },
     });
 
     return {

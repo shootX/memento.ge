@@ -25,22 +25,31 @@ export async function POST(req: Request) {
   const adapter = getBillingAdapter(body.provider as PaymentProvider);
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:43123";
 
-  const result = await adapter.createCheckout({
-    eventId: event.id,
-    planTier: event.planTier,
-    amountGel: plan.priceGel,
-    customerEmail: user?.email,
-    successUrl: `${appUrl}/dashboard?paid=1`,
-    cancelUrl: `${appUrl}/dashboard?paid=0`,
-  });
-
-  await prisma.payment.create({
+  const payment = await prisma.payment.create({
     data: {
       eventId: event.id,
       userId: user?.id,
       amountGel: plan.priceGel,
       provider: body.provider,
-      externalId: result.sessionId,
+      status: "pending",
+      metadata: JSON.stringify({ eventId: event.id, planTier: event.planTier }),
+    },
+  });
+
+  const result = await adapter.createCheckout({
+    eventId: event.id,
+    planTier: event.planTier,
+    amountGel: plan.priceGel,
+    customerEmail: user?.email,
+    paymentId: payment.id,
+    successUrl: `${appUrl}/dashboard?paid=1`,
+    cancelUrl: `${appUrl}/dashboard?paid=0`,
+  });
+
+  await prisma.payment.update({
+    where: { id: payment.id },
+    data: {
+      externalId: result.sessionId ?? payment.externalId,
       status: result.status === "created" ? "pending" : "manual",
     },
   });
