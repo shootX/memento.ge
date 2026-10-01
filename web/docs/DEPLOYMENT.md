@@ -25,11 +25,7 @@ npm start   # PORT env
 
 ### 2. Database
 
-**მიმდინარე კოდი:** SQLite ფაილი volume-ზე (`DATABASE_URL=file:/data/dev.db`).
-
-Fly: persistent volume mount. Backup: copy `.db` file.
-
-**Postgres:** საჭიროებს Prisma provider + adapter ცვლილებას (იხ. [SETUP.md](SETUP.md)). `docker-compose.yml` reference only.
+PostgreSQL (`DATABASE_URL`). Migrations: `npm run db:migrate`. Local: `docker compose up -d`.
 
 ### 3. Storage (Cloudflare R2)
 
@@ -81,10 +77,7 @@ Google Cloud Console:
 
 ### 8. Email
 
-აპი მხოლოდ `EmailOutbox`-ს წერს. Production-ში:
-
-- Cron/worker რომელიც კითხულობს outbox-ს და აგზავნის (Resend, SendGrid, SMTP)
-- ან magic link-ის ჩანაცვლება external auth-ით
+`EMAIL_PROVIDER=resend` ან `smtp`. Cron: `POST /api/cron/email?mode=expiry` + `Authorization: Bearer $CRON_SECRET`. ან `npm run email:worker`.
 
 ---
 

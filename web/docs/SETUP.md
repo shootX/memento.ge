@@ -9,33 +9,38 @@
 
 ---
 
-## SQLite (default)
+## PostgreSQL (recommended)
 
-აპი **მხოლოდ SQLite-ს** იყენებს Prisma adapter-ით (`src/lib/prisma.ts` → `@prisma/adapter-better-sqlite3`).
+Production და ლოკალური dev იყენებს **PostgreSQL**-ს (`@prisma/adapter-pg`, `prisma/migrations/`).
 
 ```bash
 cp .env.example .env
+docker compose up -d
 npm install
-npm run db:push          # prisma db push
-npm run dev              # PORT=43123
+npm run db:migrate:dev    # ან production: npm run db:migrate
+npm run ensure:demo
+npm run dev
 ```
 
-DB ფაილი: `DATABASE_URL=file:./dev.db` → პროექტის root-ში `dev.db`.
-
-`.gitignore` იგნორირებს `*.db`, `data/uploads/`, `.env`.
+`DATABASE_URL=postgresql://memento:memento@localhost:5432/memento`
 
 ---
 
-## Postgres (docker-compose)
-
-`docker-compose.yml` აწევს Postgres 16-ს:
+## Email worker
 
 ```bash
-docker compose up -d
-# DATABASE_URL=postgresql://memento:memento@localhost:5432/memento
+# dev: inline send after queue (EMAIL_PROCESS_INLINE=1)
+npm run email:worker      # background loop
+# ან cron: POST /api/cron/email  Authorization: Bearer $CRON_SECRET
 ```
 
-**მნიშვნელოვანი:** `prisma/schema.prisma`-ში `provider = "sqlite"` და კლიენტი hardcoded SQLite adapter-ია. Postgres-ზე გადასვლა საჭიროებს schema provider-ის, adapter-ის და migration-ის ცვლილებას — ამ repo-ის მიმდინარე კოდი **არ** უკავშირდება compose-ს ავტომატურად.
+`EMAIL_PROVIDER=log|smtp|resend` — MailHog/Mailcatcher: `SMTP_HOST=127.0.0.1` `SMTP_PORT=1025`.
+
+---
+
+## Legacy SQLite
+
+SQLite **აღარ არის** მხარდაჭერილი — გამოიყენეთ Postgres (compose ან managed DB).
 
 ---
 
@@ -45,7 +50,7 @@ docker compose up -d
 |--------|-------------|--------|
 | `NEXT_PUBLIC_APP_URL` | კი (prod) | საჯარო base URL (magic link, QR, OAuth redirect) |
 | `PORT` | არა | default `43123` |
-| `DATABASE_URL` | კი | SQLite: `file:./dev.db` |
+| `DATABASE_URL` | კი | `postgresql://memento:memento@localhost:5432/memento` |
 | `SESSION_SECRET` | კი | user session signing (min 16 chars in code) |
 | `MEDIA_SIGNING_SECRET` | კი | signed media URL HMAC |
 | `CSRF_SECRET` | კი | host CSRF HMAC |

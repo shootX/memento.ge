@@ -7,6 +7,8 @@ export interface CheckoutSessionRequest {
   customerEmail?: string;
   successUrl: string;
   cancelUrl: string;
+  /** Internal Payment row id (merchant reference) */
+  paymentId: string;
 }
 
 export interface CheckoutSessionResult {
@@ -28,4 +30,5 @@ export interface BillingAdapter {
   id: PaymentProvider;
   createCheckout(req: CheckoutSessionRequest): Promise<CheckoutSessionResult>;
   verifyWebhook(req: Request, rawBody: string): Promise<WebhookVerifyResult>;
+  pollPayment?(externalId: string): Promise<WebhookVerifyResult>;
 }

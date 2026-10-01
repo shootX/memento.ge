@@ -25,7 +25,7 @@ export async function POST(req: Request) {
   const { credits, provider } = schema.parse(await req.json());
   const amountGel = credits * PRICE_PER_CREDIT_GEL;
 
-  await prisma.payment.create({
+  const payment = await prisma.payment.create({
     data: {
       userId: user.id,
       amountGel,
@@ -53,8 +53,14 @@ export async function POST(req: Request) {
     planTier: `partner_credits_${credits}`,
     amountGel,
     customerEmail: user.email,
+    paymentId: payment.id,
     successUrl: `${process.env.NEXT_PUBLIC_APP_URL}/partner?credits=ok`,
     cancelUrl: `${process.env.NEXT_PUBLIC_APP_URL}/partner?credits=cancel`,
+  });
+
+  await prisma.payment.update({
+    where: { id: payment.id },
+    data: { externalId: result.sessionId ?? undefined },
   });
 
   return NextResponse.json(result);

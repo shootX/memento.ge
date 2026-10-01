@@ -9,8 +9,10 @@ Guests scan a QR link (`/e/{guestSlug}`), upload photos/videos without an app. H
 ## Stack
 
 - **Next.js 16** App Router, TypeScript, Tailwind
-- **SQLite** via Prisma 7 + `better-sqlite3` adapter (`src/lib/prisma.ts`) — not Postgres-ready without adapter/schema work
+- **PostgreSQL** via Prisma 7 + `@prisma/adapter-pg` (`npm run db:migrate`)
 - **Media:** local `data/uploads` or S3/R2 (`STORAGE_BACKEND=s3`)
+- **Email:** `EMAIL_PROVIDER=log|smtp|resend`, `npm run email:worker` or `POST /api/cron/email`
+- **Payments:** TBC/BOG/Flitt adapters in `src/lib/billing/` (merchant env required)
 - **PWA:** Serwist service worker, IndexedDB offline upload queue, optional Web Push
 
 ## Run locally
@@ -62,6 +64,5 @@ CI: `.github/workflows/ci.yml` (Vitest, build, Playwright, audit).
 ## Known gaps (see ROADMAP.md)
 
 - Rate limits: in-memory only (`rate-limiter-flexible`), not Redis
-- Email: `EmailOutbox` table only — no SMTP sender in app
-- Google OAuth: requires `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` (not in `.env.example`)
-- Postgres: `docker-compose.yml` exists but app code is SQLite-only today
+- BOG paid status strings: confirm in merchant sandbox
+- Partner credit top-up: still manual admin
