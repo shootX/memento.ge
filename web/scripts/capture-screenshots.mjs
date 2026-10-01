@@ -1,54 +1,67 @@
-import { chromium, devices } from "playwright";
-import { mkdir } from "fs/promises";
+import { chromium } from "playwright";
+import fs from "fs";
 
-const base = process.env.BASE_URL ?? "http://localhost:43123";
+const base = process.env.BASE_URL ?? "http://127.0.0.1:43123";
 const out = "/opt/cursor/artifacts/screenshots";
-await mkdir(out, { recursive: true });
-
-const tokens = process.env.DEMO_JSON
-  ? JSON.parse(process.env.DEMO_JSON)
-  : {
-      guest: "A8m__4geAw41Wd17eKMrc",
-      host: "leHqSWwO5PGNOqYct0kH3HFIVfqij0Y_",
-      slideshow: "SP47MAfWum_av8aVLGoQYgi-8_Xevozq",
-    };
+fs.mkdirSync(out, { recursive: true });
 
 const browser = await chromium.launch();
+const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+const req = ctx.request;
 
-const mobile = await browser.newContext({ ...devices["iPhone 13"] });
-const guestPage = await mobile.newPage();
-await guestPage.goto(`${base}/e/${tokens.guest}`, { waitUntil: "networkidle" });
-await guestPage.screenshot({ path: `${out}/guest-upload-mobile.png`, fullPage: true });
+const evRes = await req.post(`${base}/api/events`, {
+  data: {
+    coupleNames: "ნინო & გიორგი",
+    eventDate: new Date().toISOString(),
+    planTier: "classic",
+  },
+});
+const ev = await evRes.json();
+const login = await req.post(`${base}/api/admin/login`, {
+  data: { password: process.env.ADMIN_PASSWORD ?? "admin123" },
+});
+const cookie = (login.headers()["set-cookie"] ?? "").split(";")[0];
+await req.patch(`${base}/api/admin/events/${ev.id}`, {
+  data: { isPaid: true },
+  headers: cookie ? { Cookie: cookie } : {},
+});
 
-const desktop = await browser.newContext({ viewport: { width: 1400, height: 900 } });
-const landing = await desktop.newPage();
-await landing.goto(`${base}/`, { waitUntil: "networkidle" });
-await landing.screenshot({ path: `${out}/landing.png`, fullPage: true });
-
-await landing.goto(`${base}/pricing`, { waitUntil: "networkidle" });
-await landing.screenshot({ path: `${out}/pricing.png`, fullPage: true });
-
-const hostPage = await desktop.newPage();
-await hostPage.goto(`${base}/host/${tokens.host}`, { waitUntil: "networkidle", timeout: 60000 });
-await hostPage.waitForTimeout(1500);
-await hostPage.screenshot({ path: `${out}/host-gallery.png`, fullPage: true });
-
-for (const tpl of ["elegant", "botanical", "minimal"]) {
-  await hostPage.goto(
-    `${base}/api/host/${tokens.host}/qr?template=${tpl}&format=png&size=a6`,
-    { waitUntil: "networkidle" },
-  );
-  await hostPage.screenshot({ path: `${out}/qr-card-${tpl}.png` });
+async function shot(name, url, opts = {}) {
+  const context = opts.mobile
+    ? await browser.newContext({ viewport: { width: 390, height: 844 } })
+    : ctx;
+  const page = await context.newPage();
+  await page.goto(url, { waitUntil: "networkidle" });
+  await page.waitForTimeout(1000);
+  await page.screenshot({
+    path: `${out}/${name}.png`,
+    fullPage: Boolean(opts.fullPage),
+  });
+  if (opts.mobile) {
+    await context.close();
+  } else {
+    await page.close();
+  }
 }
 
-const slidePage = await desktop.newPage();
-await slidePage.goto(`${base}/slideshow/${tokens.slideshow}`, { waitUntil: "networkidle" });
-await slidePage.waitForTimeout(4000);
-await slidePage.screenshot({ path: `${out}/slideshow.png` });
+await shot("landing-desktop", `${base}/`, { fullPage: true });
+await shot("landing-mobile", `${base}/`, { mobile: true, fullPage: true });
+await shot("pricing", `${base}/pricing`);
+await shot("guest-mobile", `${base}/e/${ev.guestSlug}`, { mobile: true });
+await shot("host-gallery", `${base}/host/${ev.hostToken}`);
+await shot("slideshow", `${base}/slideshow/${ev.slideshowToken}`);
+await shot("public-gallery", `${base}/gallery/nino-giorgi-demo`);
+await shot("admin", `${base}/admin`);
 
-const admin = await desktop.newPage();
-await admin.goto(`${base}/admin`, { waitUntil: "networkidle" });
-await admin.screenshot({ path: `${out}/admin.png`, fullPage: true });
+for (const t of ["elegant", "botanical", "minimal"]) {
+  const page = await ctx.newPage();
+  await page.goto(
+    `${base}/api/host/${ev.hostToken}/qr?template=${t}&format=png`,
+    { waitUntil: "networkidle" },
+  );
+  await page.screenshot({ path: `${out}/qr-card-${t}.png` });
+  await page.close();
+}
 
 await browser.close();
-console.log("done", out);
+console.log("Screenshots saved to", out);
