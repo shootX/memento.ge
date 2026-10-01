@@ -41,3 +41,36 @@ test("landing hero phone photo decodes", async ({ page }) => {
   await page.goto(`${base}/`, { waitUntil: "networkidle" });
   await expectImagesDecoded(page, '[data-testid="hero-phone-photo"]', 1);
 });
+
+test("landing hero phone photo is full opacity on first paint", async ({ page }) => {
+  await page.goto(`${base}/`, { waitUntil: "domcontentloaded" });
+  const opacity = await page.evaluate(() => {
+    const img = document.querySelector('[data-testid="hero-phone-photo"]');
+    if (!img) return 0;
+    return parseFloat(getComputedStyle(img).opacity);
+  });
+  expect(opacity).toBeGreaterThanOrEqual(0.99);
+});
+
+test("landing QR preview renders scannable code", async ({ page }) => {
+  await page.goto(`${base}/`, { waitUntil: "networkidle" });
+  await page.waitForSelector('[data-testid="qr-preview"] img', { timeout: 15000 });
+  const qr = await page.evaluate(() => {
+    const root = document.querySelector('[data-testid="qr-preview"]');
+    if (!root) return { ok: false, reason: "missing root" };
+    const img = root.querySelector("img");
+    if (img && img.naturalWidth > 0 && img.naturalHeight > 0) {
+      return { ok: true, kind: "img", w: img.naturalWidth };
+    }
+    const canvas = root.querySelector("canvas");
+    if (canvas && canvas.width > 0 && canvas.height > 0) {
+      return { ok: true, kind: "canvas", w: canvas.width };
+    }
+    const svg = root.querySelector("svg");
+    if (svg && svg.querySelector("rect, path, circle")) {
+      return { ok: true, kind: "svg" };
+    }
+    return { ok: false, reason: "no qr content" };
+  });
+  expect(qr.ok, JSON.stringify(qr)).toBe(true);
+});
