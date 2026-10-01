@@ -140,12 +140,18 @@ export async function ensureDemoEvent() {
   return manifest;
 }
 
-ensureDemoEvent()
-  .then((m) => {
-    console.log("Demo ready:", m);
-    return prisma.$disconnect();
-  })
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  });
+const isMain =
+  typeof process.argv[1] === "string" &&
+  process.argv[1].replace(/\\/g, "/").endsWith("scripts/ensure-demo-event.ts");
+
+if (isMain) {
+  ensureDemoEvent()
+    .then((m) => {
+      console.log("Demo ready:", m);
+      return prisma.$disconnect();
+    })
+    .catch((e) => {
+      console.error(e);
+      process.exit(1);
+    });
+}
