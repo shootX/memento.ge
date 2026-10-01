@@ -1,0 +1,173 @@
+@import "tailwindcss";
+
+:root {
+  --bg-page: #fff8fc;
+  --bg-card: #ffffff;
+  --bg-dark: #1a0a2e;
+
+  --gradient-signature: linear-gradient(
+    125deg,
+    #ff2d8a 0%,
+    #ff6b35 45%,
+    #a855f7 100%
+  );
+  --gradient-soft: linear-gradient(
+    160deg,
+    rgba(255, 45, 138, 0.12) 0%,
+    rgba(255, 107, 53, 0.1) 50%,
+    rgba(168, 85, 247, 0.12) 100%
+  );
+
+  --pink: #ff2d8a;
+  --orange: #ff6b35;
+  --violet: #a855f7;
+  --mint: #34d399;
+  --sun: #fbbf24;
+
+  --text-ink: #1a1025;
+  --text-muted: #6b5f7a;
+  --color-ink: var(--text-ink);
+  --color-muted: var(--text-muted);
+  --color-border: rgba(255, 45, 138, 0.15);
+  --color-cream: var(--bg-page);
+  --color-gold: var(--pink);
+  --color-forest: var(--violet);
+  --color-blush: #ffe4f0;
+  --radius-chunky: 20px;
+  --radius-pill: 999px;
+  --shadow-playful: 0 8px 0 rgba(26, 16, 37, 0.08), 0 12px 32px rgba(255, 45, 138, 0.12);
+  --shadow-btn: 0 6px 0 #e91e7a;
+}
+
+@theme inline {
+  --font-sans: var(--font-noto-sans);
+  --font-display: var(--font-fredoka);
+}
+
+body {
+  background: var(--bg-page);
+  color: var(--text-ink);
+  font-family: var(--font-noto-sans), system-ui, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-fredoka), var(--font-noto-sans), sans-serif;
+}
+
+.bg-mesh {
+  background: var(--gradient-soft);
+  position: relative;
+  overflow: hidden;
+}
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.55;
+  animation: blob-float 12s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.blob-1 {
+  width: 320px;
+  height: 320px;
+  background: #ff2d8a;
+  top: -80px;
+  right: -60px;
+}
+.blob-2 {
+  width: 280px;
+  height: 280px;
+  background: #ff6b35;
+  bottom: 10%;
+  left: -80px;
+  animation-delay: -4s;
+}
+.blob-3 {
+  width: 240px;
+  height: 240px;
+  background: #a855f7;
+  top: 40%;
+  right: 10%;
+  animation-delay: -7s;
+}
+
+@keyframes blob-float {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(20px, -24px) scale(1.05);
+  }
+}
+
+.btn-gradient {
+  background: var(--gradient-signature);
+  color: white;
+  font-weight: 700;
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-btn);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.btn-gradient:hover {
+  transform: translateY(-2px) scale(1.02);
+}
+.btn-gradient:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #e91e7a;
+}
+
+.card-chunky {
+  background: var(--bg-card);
+  border-radius: var(--radius-chunky);
+  box-shadow: var(--shadow-playful);
+  border: 2px solid rgba(255, 45, 138, 0.08);
+}
+
+.text-gradient {
+  background: var(--gradient-signature);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.slideshow-ken-burns {
+  animation: ken-burns 12s ease-in-out infinite alternate;
+}
+
+@keyframes ken-burns {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blob,
+  .animate-fade-up,
+  .slideshow-ken-burns {
+    animation: none !important;
+  }
+  .btn-gradient:hover {
+    transform: none;
+  }
+}
