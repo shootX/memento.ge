@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getEventByHostToken } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { verifyHostCsrf } from "@/lib/session";
+import { authorizeHostMutation } from "@/lib/host-request-auth";
 import { newToken } from "@/lib/crypto";
 import { hashToken } from "@/lib/user-session";
 import { jsonError } from "@/lib/api-utils";
@@ -16,11 +16,9 @@ const schema = z.object({ email: z.string().email() });
 
 export async function POST(req: Request, { params }: Params) {
   const { token } = await params;
-  if (!(await verifyHostCsrf(token, req.headers.get("x-csrf-token")))) {
-    return jsonError(403, "Invalid CSRF");
-  }
-  const event = await getEventByHostToken(token);
-  if (!event) return jsonError(404, "Not found");
+  const auth = await authorizeHostMutation(req, token);
+  if (!auth.ok) return jsonError(403, "Invalid CSRF");
+  const event = auth.event;
 
   const { email } = schema.parse(await req.json());
   const raw = newToken(24);

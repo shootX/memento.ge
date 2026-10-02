@@ -4,7 +4,7 @@ import { nanoid } from "nanoid";
 import { prisma } from "@/lib/prisma";
 import { getPlan, computeExpiresAt, type PlanTier } from "@/lib/plans";
 import { clientIp, consumeApi, handleApiError, jsonError } from "@/lib/api-utils";
-import { getUserFromSession } from "@/lib/user-session";
+import { getUserFromRequest } from "@/lib/request-auth";
 import { auditLog } from "@/lib/audit";
 import { putObject, buildMediaKey } from "@/lib/storage";
 import { validateAndProcessUpload } from "@/lib/upload-validation";
@@ -59,7 +59,7 @@ export async function POST(req: Request) {
       return jsonError(400, "Invalid input");
     }
 
-    const user = await getUserFromSession();
+    const user = await getUserFromRequest(req);
     const ownerUserId = await resolveOwnerUserId(user?.id, ownerEmailStr);
     const guestSlug = nanoid(21);
     const hostToken = nanoid(32);

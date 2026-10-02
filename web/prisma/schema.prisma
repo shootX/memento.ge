@@ -21,6 +21,7 @@ model User {
   updatedAt     DateTime  @updatedAt
 
   sessions           Session[]
+  mobileAccessTokens MobileAccessToken[]
   oauthAccounts      OAuthAccount[]
   ownedEvents        Event[]          @relation("EventOwner")
   coHosts            EventCoHost[]
@@ -39,11 +40,29 @@ model Session {
 }
 
 model MagicLinkToken {
-  id        String   @id @default(cuid())
-  email     String
-  tokenHash String   @unique
+  id          String    @id @default(cuid())
+  email       String
+  tokenHash   String    @unique
+  codeHash    String?
+  client      String?
+  redirectUri String?
+  consumedAt  DateTime?
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+
+  @@index([email, createdAt])
+}
+
+model MobileAccessToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
   expiresAt DateTime
-  createdAt DateTime @default(now())
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
 }
 
 model OAuthAccount {
@@ -153,6 +172,7 @@ model Event {
   referral      PartnerReferral?
   guestQuotas   GuestShotQuota[]
   pushSubs      PushSubscription[]
+  mobilePushRegs MobilePushRegistration[]
   pushPendingUploadCount Int       @default(0)
   pushLastUploadNotifyAt DateTime?
   expiryReminderSentAt   DateTime?
@@ -170,6 +190,18 @@ model PushSubscription {
   notifyGuestbook  Boolean @default(true)
   notifyExpiry     Boolean @default(true)
   createdAt    DateTime @default(now())
+}
+
+/** Expo push token storage for native apps (no delivery in this endpoint). */
+model MobilePushRegistration {
+  id            String   @id @default(cuid())
+  eventId       String
+  event         Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  platform      String
+  expoPushToken String   @unique
+  createdAt     DateTime @default(now())
+
+  @@index([eventId])
 }
 
 model CoHostInvite {

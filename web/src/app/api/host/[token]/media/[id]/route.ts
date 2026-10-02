@@ -8,7 +8,7 @@ import {
   handleApiError,
   jsonError,
 } from "@/lib/api-utils";
-import { verifyHostCsrf } from "@/lib/session";
+import { authorizeHostMutation } from "@/lib/host-request-auth";
 
 type Params = { params: Promise<{ token: string; id: string }> };
 
@@ -16,12 +16,9 @@ export async function PATCH(req: Request, { params }: Params) {
   try {
     await consumeApi(clientIp(req));
     const { token, id } = await params;
-    const csrf = req.headers.get("x-csrf-token");
-    if (!(await verifyHostCsrf(token, csrf))) {
-      return jsonError(403, "Invalid CSRF");
-    }
-    const event = await getEventByHostToken(token);
-    if (!event) return jsonError(404, "Not found");
+    const auth = await authorizeHostMutation(req, token);
+    if (!auth.ok) return jsonError(403, "Invalid CSRF");
+    const event = auth.event;
     const media = await assertMediaBelongsToEvent(id, event.id);
     if (!media) return jsonError(404, "Not found");
     const body = (await req.json()) as { highlight?: boolean };
@@ -42,13 +39,9 @@ export async function DELETE(req: Request, { params }: Params) {
   try {
     await consumeApi(clientIp(req));
     const { token, id } = await params;
-    const csrf = req.headers.get("x-csrf-token");
-    if (!(await verifyHostCsrf(token, csrf))) {
-      return jsonError(403, "Invalid CSRF");
-    }
-
-    const event = await getEventByHostToken(token);
-    if (!event) return jsonError(404, "Not found");
+    const auth = await authorizeHostMutation(req, token);
+    if (!auth.ok) return jsonError(403, "Invalid CSRF");
+    const event = auth.event;
 
     const media = await assertMediaBelongsToEvent(id, event.id);
     if (!media) return jsonError(404, "Not found");

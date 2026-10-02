@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getPlan } from "@/lib/plans";
-import { getUserFromSession } from "@/lib/user-session";
+import { getUserFromRequest } from "@/lib/request-auth";
+import { authorizeHostMutation } from "@/lib/host-request-auth";
 import { jsonError } from "@/lib/api-utils";
-import { verifyHostCsrf } from "@/lib/session";
 import { startEventCheckout } from "@/lib/billing/checkout-flow";
 import { appUrl } from "@/lib/site-config";
 import type { CheckoutProvider } from "@/lib/site-config";
@@ -16,7 +16,7 @@ const schema = z.object({
 });
 
 export async function POST(req: Request) {
-  const user = await getUserFromSession();
+  const user = await getUserFromRequest(req);
   let body: z.infer<typeof schema>;
   try {
     body = schema.parse(await req.json());
@@ -28,11 +28,11 @@ export async function POST(req: Request) {
   if (!event) return jsonError(404, "Not found");
 
   const hostToken = body.hostToken ?? req.headers.get("x-host-token");
-  const csrf = req.headers.get("x-csrf-token");
-  const hostOk =
-    hostToken &&
-    (await verifyHostCsrf(hostToken, csrf)) &&
-    event.hostToken === hostToken;
+  const hostAuth =
+    hostToken && event.hostToken === hostToken
+      ? await authorizeHostMutation(req, hostToken)
+      : { ok: false as const };
+  const hostOk = hostAuth.ok;
 
   if (user && event.ownerUserId && event.ownerUserId !== user.id && !hostOk) {
     return jsonError(403, "Forbidden");

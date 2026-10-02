@@ -22,7 +22,7 @@ export async function GET(req: Request) {
   const row = await prisma.magicLinkToken.findUnique({
     where: { tokenHash: hashToken(token) },
   });
-  if (!row || row.expiresAt < new Date()) {
+  if (!row || row.expiresAt < new Date() || row.consumedAt) {
     return appRedirect("/login?error=expired");
   }
 

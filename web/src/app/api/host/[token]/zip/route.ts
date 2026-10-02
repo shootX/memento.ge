@@ -7,7 +7,7 @@ import {
 } from "@/lib/upload-validation";
 import { PassThrough } from "stream";
 import { clientIp, consumeApi, jsonError } from "@/lib/api-utils";
-import { verifyHostCsrf } from "@/lib/session";
+import { authorizeHostMutation } from "@/lib/host-request-auth";
 
 type Params = { params: Promise<{ token: string }> };
 
@@ -20,13 +20,9 @@ export async function GET(req: Request, { params }: Params) {
   }
 
   const { token } = await params;
-  const csrf = req.headers.get("x-csrf-token");
-  if (!(await verifyHostCsrf(token, csrf))) {
-    return jsonError(403, "Invalid CSRF");
-  }
-
-  const event = await getEventByHostToken(token);
-  if (!event) return jsonError(404, "Not found");
+  const auth = await authorizeHostMutation(req, token);
+  if (!auth.ok) return jsonError(403, "Invalid CSRF");
+  const event = auth.event;
 
   const media = await prisma.media.findMany({
     where: { eventId: event.id, status: "approved" },

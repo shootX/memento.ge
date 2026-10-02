@@ -1,12 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
-import { getEventByHostToken } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { verifyHostCsrf } from "@/lib/session";
+import { authorizeHostMutation } from "@/lib/host-request-auth";
 import { jsonError } from "@/lib/api-utils";
 import { validateCustomSlug } from "@/lib/guest-slug";
-import { e2eRequestAuthorized } from "@/lib/e2e-bypass";
 
 type Params = { params: Promise<{ token: string }> };
 
@@ -22,12 +20,9 @@ const schema = z.object({
 
 export async function PATCH(req: Request, { params }: Params) {
   const { token } = await params;
-  const csrfOk = await verifyHostCsrf(token, req.headers.get("x-csrf-token"));
-  if (!csrfOk && !e2eRequestAuthorized(req)) {
-    return jsonError(403, "Invalid CSRF");
-  }
-  const event = await getEventByHostToken(token);
-  if (!event) return jsonError(404, "Not found");
+  const auth = await authorizeHostMutation(req, token);
+  if (!auth.ok) return jsonError(403, "Invalid CSRF");
+  const event = auth.event;
 
   let body: z.infer<typeof schema>;
   try {
