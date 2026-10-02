@@ -84,7 +84,7 @@ export function PushSettings({
     >
       {!showControls ? (
         <p className="break-words text-sm text-[var(--text-muted)]">
-          Push მხარდაჭერა არ არის (ან VAPID გასაღებები არ არის კონფიგურირებული).
+          Push შეტყობინებები არ არის ხელმისაწვდომი (სერვერზე გასაღებები არ არის კონფიგურირებული).
         </p>
       ) : (
         <>

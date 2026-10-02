@@ -20,6 +20,7 @@ import { HostMediaGrid, type HostGridMedia } from "@/components/host-media-grid"
 import { HostLinkSaveCard } from "@/components/host-link-save-card";
 import Link from "next/link";
 import { formatEventDate } from "@/lib/format-date";
+import { guestShareInviteText } from "@/lib/share-metadata";
 
 type Tab = "gallery" | "qr" | "guestbook" | "settings";
 
@@ -246,15 +247,25 @@ export function HostDashboard({
 
   const shareGuestLink = async () => {
     if (!event) return;
+    const text = guestShareInviteText(event.coupleNames, event.guestUrl);
     if (navigator.share) {
       try {
-        await navigator.share({ url: event.guestUrl, title: event.coupleNames });
+        await navigator.share({ url: event.guestUrl, title: event.coupleNames, text });
         return;
       } catch {
         /* copy fallback */
       }
     }
-    await navigator.clipboard.writeText(event.guestUrl);
+    await navigator.clipboard.writeText(text);
+  };
+
+  const openQrForPrint = () => {
+    setTab("qr");
+    window.open(
+      `/api/host/${token}/qr?template=${activeTemplate}&format=pdf&download=1`,
+      "_blank",
+      "noopener,noreferrer",
+    );
   };
 
   if (loading) {
@@ -336,7 +347,7 @@ export function HostDashboard({
                 <Presentation className="mr-1 h-4 w-4" /> სლაიდშოუ
               </a>
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setTab("qr")}>
+            <Button variant="outline" size="sm" onClick={openQrForPrint}>
               <QrCode className="mr-1 h-4 w-4" /> QR ბეჭდვა
             </Button>
             <Button variant="outline" size="sm" onClick={() => void shareGuestLink()}>
