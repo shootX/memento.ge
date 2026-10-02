@@ -83,9 +83,10 @@ describe("BOG RSA callback signature", () => {
 });
 
 describe("payment mock adapters", () => {
-  it("mock TBC webhook activates payment row", async () => {
+  it("mock TBC activation via internal helper", async () => {
     process.env.PAYMENT_MOCK = "1";
     const { prisma } = await import("@/lib/prisma");
+    const { activateMockTbcPayment } = await import("@/lib/billing/tbc-public-callback");
     const event = await prisma.event.create({
       data: {
         coupleNames: "Mock Pay",
@@ -111,9 +112,7 @@ describe("payment mock adapters", () => {
       data: { externalId },
     });
 
-    const { tbcAdapter } = await import("@/lib/billing/tbc-adapter");
-    const raw = JSON.stringify({ payId: externalId, outcome: "success" });
-    const result = await tbcAdapter.verifyWebhook(new Request("http://x"), raw);
+    const result = await activateMockTbcPayment(externalId);
     expect(result.status).toBe("paid");
 
     const updated = await prisma.event.findUnique({ where: { id: event.id } });
@@ -124,10 +123,10 @@ describe("payment mock adapters", () => {
     delete process.env.PAYMENT_MOCK;
   });
 
-  it("mock BOG callback fixture marks paid on completed", async () => {
+  it("mock BOG activation via internal helper", async () => {
     process.env.PAYMENT_MOCK = "1";
     const { prisma } = await import("@/lib/prisma");
-    const { bogAdapter } = await import("@/lib/billing/bog-adapter");
+    const { activateMockBogPayment } = await import("@/lib/billing/tbc-public-callback");
     const event = await prisma.event.create({
       data: {
         coupleNames: "BOG Mock",
@@ -153,15 +152,7 @@ describe("payment mock adapters", () => {
       data: { externalId: orderId },
     });
 
-    const raw = JSON.stringify({
-      ...callbackFixture,
-      body: {
-        ...callbackFixture.body,
-        external_order_id: payment.id,
-        order_id: orderId,
-      },
-    });
-    const result = await bogAdapter.verifyWebhook(new Request("http://x"), raw);
+    const result = await activateMockBogPayment(orderId, payment.id);
     expect(result.status).toBe("paid");
 
     await prisma.payment.deleteMany({ where: { eventId: event.id } });

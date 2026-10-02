@@ -3,12 +3,10 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { jsonError } from "@/lib/api-utils";
 import { paymentMockEnabled } from "@/lib/billing/payment-mock";
-import { tbcAdapter } from "@/lib/billing/tbc-adapter";
-import { bogAdapter } from "@/lib/billing/bog-adapter";
 import {
-  claimWebhookEvent,
-  webhookIdempotencyKey,
-} from "@/lib/billing/activate-payment";
+  activateMockBogPayment,
+  activateMockTbcPayment,
+} from "@/lib/billing/tbc-public-callback";
 
 const schema = z.object({
   paymentId: z.string(),
@@ -37,22 +35,12 @@ export async function POST(req: Request) {
     data: { externalId, provider: body.provider, status: "pending" },
   });
 
-  const raw =
+  const verified =
     body.provider === "tbc"
-      ? JSON.stringify({ payId: externalId, outcome: "success" })
-      : JSON.stringify({
-          order_id: externalId,
-          external_order_id: payment.id,
-          order_status: "completed",
-          outcome: "success",
-        });
+      ? await activateMockTbcPayment(externalId)
+      : await activateMockBogPayment(externalId, payment.id);
 
-  const key = webhookIdempotencyKey(`mock-${body.provider}`, raw);
-  await claimWebhookEvent(body.provider, key, payment.id);
-
-  const adapter = body.provider === "tbc" ? tbcAdapter : bogAdapter;
-  const verified = await adapter.verifyWebhook(new Request("http://local"), raw);
-  if (!verified.ok || verified.status !== "paid") {
+  if (verified.status !== "paid") {
     return jsonError(500, "Mock activation failed");
   }
 

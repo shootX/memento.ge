@@ -27,11 +27,14 @@ describe("BOG callback signature", () => {
 });
 
 describe("TBC callback payload", () => {
-  it("parses PaymentId field per developers.tbcbank.ge", async () => {
-    const { tbcAdapter } = await import("@/lib/billing/tbc-adapter");
+  it("public webhook rejects unauthenticated request even in PAYMENT_MOCK", async () => {
+    process.env.PAYMENT_MOCK = "1";
+    const { handleTbcPaymentCallback } = await import("@/lib/billing/tbc-callback-handler");
     const raw = JSON.stringify({ PaymentId: "tpay-test-1" });
-    process.env.TBC_API_KEY = "";
-    const result = await tbcAdapter.verifyWebhook(new Request("http://x"), raw);
-    expect(result.ok).toBe(false);
+    const result = await handleTbcPaymentCallback(
+      new Request("http://x", { method: "POST", body: raw }),
+    );
+    expect(result.status).toBe(401);
+    delete process.env.PAYMENT_MOCK;
   });
 });

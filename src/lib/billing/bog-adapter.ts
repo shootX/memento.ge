@@ -6,22 +6,16 @@ import type {
 } from "@/lib/billing/types";
 import {
   bogCreateOrder,
-  bogGetPaymentDetails,
-  bogOrderStatusFromCallbackBody,
   parseBogCallback,
-  verifyBogCallbackSignature,
-  bogOrderIsPaid,
-  bogOrderIsTerminalFailure,
-  mapBogOrderStatus,
 } from "@/lib/billing/bog-client";
-import { bogCallbackUrl, bogConfigured, normalizeBogOrderStatus } from "@/lib/billing/bog-config";
-import { prisma } from "@/lib/prisma";
-import { markPaymentFailed, markPaymentPaid } from "@/lib/billing/activate-payment";
+import { processSignedBogCallback, verifyBogPublicCallbackSignature } from "@/lib/billing/bog-public-callback";
+import { bogCallbackUrl, bogConfigured } from "@/lib/billing/bog-config";
 import {
   mockCheckoutUrl,
   mockExternalId,
   paymentMockEnabled,
 } from "@/lib/billing/payment-mock";
+import { activateMockBogPayment } from "@/lib/billing/tbc-public-callback";
 
 function bogAcceptLanguage(req: CheckoutSessionRequest): "ka" | "en" {
   return req.checkoutLocale === "en" ? "en" : "ka";
@@ -73,119 +67,22 @@ export const bogAdapter: BillingAdapter = {
   },
 
   async verifyWebhook(req: Request, raw: string): Promise<WebhookVerifyResult> {
-    if (paymentMockEnabled()) {
-      return resolveMockBogWebhook(raw);
-    }
-
-    const sig = req.headers.get("Callback-Signature");
-    if (!verifyBogCallbackSignature(raw, sig)) {
+    if (!verifyBogPublicCallbackSignature(req, raw)) {
       return { ok: false };
     }
-
     const callback = parseBogCallback(raw);
     if (!callback?.body) return { ok: false };
-
-    if (callback.event && callback.event !== "order_payment") {
-      return { ok: true };
-    }
-
-    const orderStatus = bogOrderStatusFromCallbackBody(callback.body);
-    return resolveBogOrder(
-      callback.body.order_id,
-      callback.body.external_order_id,
-      orderStatus,
-    );
+    return processSignedBogCallback(callback);
   },
 
   async pollPayment(externalId: string): Promise<WebhookVerifyResult> {
     if (paymentMockEnabled() && externalId.startsWith("mock-bog-")) {
-      return resolveMockBogOrderId(externalId);
+      const paymentId = externalId.replace(/^mock-bog-/, "");
+      return activateMockBogPayment(externalId, paymentId);
     }
-    try {
-      const details = await bogGetPaymentDetails(externalId);
-      const orderStatus = normalizeBogOrderStatus(details.order_status);
-      return resolveBogOrder(
-        details.order_id ?? externalId,
-        details.external_order_id,
-        orderStatus,
-      );
-    } catch {
-      return { ok: false };
-    }
+    return processSignedBogCallback({
+      event: "order_payment",
+      body: { order_id: externalId },
+    });
   },
 };
-
-async function resolveMockBogWebhook(raw: string): Promise<WebhookVerifyResult> {
-  try {
-    const body = JSON.parse(raw) as {
-      order_id?: string;
-      external_order_id?: string;
-      order_status?: string;
-      outcome?: string;
-      event?: string;
-      body?: { order_id?: string; external_order_id?: string; order_status?: string };
-    };
-    const payload = body.body ?? body;
-    if (body.outcome === "fail" || payload.order_status === "rejected") {
-      return { ok: true, status: "failed", paymentId: payload.order_id };
-    }
-    return resolveBogOrder(
-      payload.order_id,
-      payload.external_order_id,
-      payload.order_status ?? "completed",
-    );
-  } catch {
-    return { ok: false };
-  }
-}
-
-async function resolveMockBogOrderId(orderId: string): Promise<WebhookVerifyResult> {
-  const paymentId = orderId.replace(/^mock-bog-/, "");
-  const payment = await prisma.payment.findUnique({ where: { id: paymentId } });
-  if (!payment?.eventId) return { ok: true, paymentId: orderId, status: "failed" };
-  await markPaymentPaid(orderId, payment.eventId);
-  return { ok: true, eventId: payment.eventId, paymentId: orderId, status: "paid" };
-}
-
-async function resolveBogOrder(
-  orderId: string | undefined,
-  externalOrderId: string | undefined,
-  orderStatus: string | undefined,
-): Promise<WebhookVerifyResult> {
-  const mapped = mapBogOrderStatus(orderStatus);
-
-  if (mapped === "pending") {
-    return { ok: true, paymentId: orderId };
-  }
-
-  const payment = externalOrderId
-    ? await prisma.payment.findUnique({ where: { id: externalOrderId } })
-    : orderId
-      ? await prisma.payment.findFirst({ where: { externalId: orderId, provider: "bog" } })
-      : null;
-
-  const ref = orderId ?? externalOrderId ?? payment?.id;
-
-  if (mapped === "failed" || bogOrderIsTerminalFailure(orderStatus)) {
-    if (ref) await markPaymentFailed(ref);
-    return { ok: true, status: "failed", paymentId: orderId };
-  }
-
-  if (!bogOrderIsPaid(orderStatus)) {
-    return { ok: true, status: "failed", paymentId: orderId };
-  }
-
-  const eventId = payment?.eventId;
-  if (!eventId) {
-    return { ok: true, paymentId: orderId, status: "failed" };
-  }
-
-  const paidRef = orderId ?? externalOrderId ?? payment.id;
-  await markPaymentPaid(paidRef, eventId);
-  return {
-    ok: true,
-    eventId,
-    paymentId: orderId,
-    status: "paid",
-  };
-}
