@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getEventByHostToken } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { verifyHostCsrf } from "@/lib/session";
 import { jsonError } from "@/lib/api-utils";
+import { authorizeHostMutation } from "@/lib/host-request-auth";
 import { getPlan } from "@/lib/plans";
 import { startEventCheckout } from "@/lib/billing/checkout-flow";
 import { appUrl } from "@/lib/site-config";
@@ -18,11 +17,9 @@ const schema = z.object({
 
 export async function POST(req: Request, { params }: Params) {
   const { token } = await params;
-  if (!(await verifyHostCsrf(token, req.headers.get("x-csrf-token")))) {
-    return jsonError(403, "Forbidden");
-  }
-  const event = await getEventByHostToken(token);
-  if (!event) return jsonError(404, "Not found");
+  const auth = await authorizeHostMutation(req, token);
+  if (!auth.ok) return jsonError(403, "Forbidden");
+  const event = auth.event;
   if (event.isPaid) {
     return NextResponse.json({ ok: true, alreadyPaid: true });
   }

@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { getUserFromSession } from "@/lib/user-session";
+import { getUserFromRequest } from "@/lib/request-auth";
 import { prisma } from "@/lib/prisma";
 import { jsonError } from "@/lib/api-utils";
 
-export async function GET() {
-  const user = await getUserFromSession();
+export async function GET(req: Request) {
+  const user = await getUserFromRequest(req);
   if (!user) return jsonError(401, "Unauthorized");
 
   const events = await prisma.event.findMany({
@@ -19,9 +19,10 @@ export async function GET() {
     events: events.map((e) => ({
       id: e.id,
       coupleNames: e.coupleNames,
-      eventDate: e.eventDate,
+      eventDate: e.eventDate.toISOString(),
       isPaid: e.isPaid,
       hostUrl: `${appUrl}/host/${e.hostToken}`,
+      guestUrl: `${appUrl}/e/${e.customSlug ?? e.guestSlug}`,
     })),
   });
 }

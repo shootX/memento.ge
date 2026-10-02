@@ -44,12 +44,23 @@ export function renderEmail(
   const subject = subjects[template]?.[loc] ?? `Memento — ${template}`;
 
   if (template === "magic_link") {
+    const codeLine =
+      vars.loginCode && /^\d{6}$/.test(vars.loginCode)
+        ? `<p style="font-size:28px;font-weight:800;letter-spacing:0.2em;margin:16px 0">${vars.loginCode}</p><p style="font-size:12px;color:#666">${
+            loc === "ka"
+              ? "ან შეიყვანეთ ეს კოდი მობილურ აპში"
+              : loc === "ru"
+                ? "Или введите код в мобильном приложении"
+                : "Or enter this code in the mobile app"
+          }</p>`
+        : "";
     const html = wrapHtml(
       loc,
       subject,
-      `<p>${loc === "ka" ? "დააჭირეთ ღილაკს შესასვლელად:" : loc === "ru" ? "Нажмите, чтобы войти:" : "Click to sign in:"}</p><p><a href="${vars.verifyUrl}" style="display:inline-block;background:#c4ff0d;color:#121212;padding:12px 20px;border-radius:999px;text-decoration:none;font-weight:700">Memento</a></p><p style="font-size:12px;color:#666">${vars.verifyUrl}</p>`,
+      `<p>${loc === "ka" ? "დააჭირეთ ღილაკს შესასვლელად:" : loc === "ru" ? "Нажмите, чтобы войти:" : "Click to sign in:"}</p><p><a href="${vars.verifyUrl}" style="display:inline-block;background:#c4ff0d;color:#121212;padding:12px 20px;border-radius:999px;text-decoration:none;font-weight:700">Memento</a></p>${codeLine}<p style="font-size:12px;color:#666">${vars.verifyUrl}</p>`,
     );
-    return { subject, html, text: `${subject}\n${vars.verifyUrl}` };
+    const textCode = vars.loginCode ? `\nCode: ${vars.loginCode}\n` : "";
+    return { subject, html, text: `${subject}\n${vars.verifyUrl}${textCode}` };
   }
 
   if (template === "cohost_invite") {

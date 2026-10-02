@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getEventByHostToken } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { clientIp, consumeApi, handleApiError, jsonError } from "@/lib/api-utils";
-import { verifyCsrfToken } from "@/lib/crypto";
+import { authorizeHostMutation } from "@/lib/host-request-auth";
 
 type Params = { params: Promise<{ token: string }> };
 
-const schema = z.object({
+const webPushSchema = z.object({
   subscription: z.object({
     endpoint: z.string().url(),
     keys: z.object({
@@ -18,17 +17,38 @@ const schema = z.object({
   locale: z.enum(["ka", "en", "ru"]).optional(),
 });
 
+const mobilePushSchema = z.object({
+  platform: z.enum(["ios", "android"]),
+  expoPushToken: z.string().min(8).max(200),
+});
+
 export async function POST(req: Request, { params }: Params) {
   try {
     await consumeApi(clientIp(req));
     const { token } = await params;
-    const event = await getEventByHostToken(token);
-    if (!event) return jsonError(404, "Not found");
+    const auth = await authorizeHostMutation(req, token);
+    if (!auth.ok) return jsonError(403, "Forbidden");
+    const event = auth.event;
 
-    const csrf = req.headers.get("x-csrf-token");
-    if (!csrf || !verifyCsrfToken(token, csrf)) return jsonError(403, "CSRF");
+    const raw = await req.json();
+    const mobile = mobilePushSchema.safeParse(raw);
+    if (mobile.success) {
+      await prisma.mobilePushRegistration.upsert({
+        where: { expoPushToken: mobile.data.expoPushToken },
+        create: {
+          eventId: event.id,
+          platform: mobile.data.platform,
+          expoPushToken: mobile.data.expoPushToken,
+        },
+        update: {
+          eventId: event.id,
+          platform: mobile.data.platform,
+        },
+      });
+      return NextResponse.json({ ok: true });
+    }
 
-    const body = schema.parse(await req.json());
+    const body = webPushSchema.parse(raw);
     await prisma.pushSubscription.upsert({
       where: { endpoint: body.subscription.endpoint },
       create: {
