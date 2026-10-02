@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ColorfulShell } from "@/components/colorful-shell";
 import { SiteHeader } from "@/components/site-header";
+import { formatEventDate } from "@/lib/format-date";
 
 type EventRow = {
   id: string;
@@ -68,7 +69,7 @@ export default function DashboardPage() {
               <div>
                 <p className="font-extrabold text-lg">{e.coupleNames}</p>
                 <p className="text-xs text-[var(--text-muted)]">
-                  {new Date(e.eventDate).toLocaleDateString("ka-GE")} ·{" "}
+                  {formatEventDate(e.eventDate, "ka")} ·{" "}
                   {e.isPaid ? "✅ აქტიური" : "⏳ მოლოდინში"}
                 </p>
               </div>

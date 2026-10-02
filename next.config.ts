@@ -17,6 +17,8 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     optimizePackageImports: ["lucide-react"],
+    /** Guest uploads (photos/video) — default Next proxy buffer is 10MB. */
+    proxyClientMaxBodySize: "105mb",
   },
   serverExternalPackages: [
     "archiver",

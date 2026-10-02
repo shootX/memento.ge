@@ -63,16 +63,21 @@ export async function POST(req: Request, { params }: Params) {
       return jsonError(400, "Missing file");
     }
 
+    if (file.size > plan.maxBytesPerFile) {
+      throw new ValidationError("FILE_TOO_LARGE", plan.maxBytesPerFile);
+    }
+
     const buffer = Buffer.from(await file.arrayBuffer());
     const validated = await validateAndProcessUpload(
       buffer,
       file.type,
       plan.maxBytesPerFile,
+      file.name,
     );
 
     const newTotal = event.totalBytes + validated.buffer.length;
     if (newTotal > plan.maxTotalBytes) {
-      throw new ValidationError("Event storage limit reached");
+      throw new ValidationError("STORAGE_LIMIT");
     }
 
     const mediaId = crypto.randomUUID();

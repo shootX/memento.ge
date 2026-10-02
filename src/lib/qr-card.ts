@@ -1,6 +1,7 @@
 import PDFDocument from "pdfkit";
 import QRCode from "qrcode";
 import sharp from "sharp";
+import { formatEventDate } from "@/lib/format-date";
 
 export type CardTemplate = "elegant" | "botanical" | "minimal";
 export type CardSize = "a6" | "a5";
@@ -109,11 +110,7 @@ export async function buildQrCardPng(opts: {
     color: { dark: palette.dark ? "#0b0b0b" : "#0b0b0b", light: "#ffffff" },
   });
   const qrDataUrl = `data:image/png;base64,${qr.toString("base64")}`;
-  const dateStr = opts.eventDate.toLocaleDateString("ka-GE", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const dateStr = formatEventDate(opts.eventDate, "ka");
 
   let base = await sharp(Buffer.from(
     cardSvg({

@@ -32,6 +32,12 @@ const dict: Record<Locale, Record<string, string>> = {
       "ალბომი ჯერ არ არის გააქტიურებული — მიმართეთ მასპინძელს",
     guestbookSent: "გაგზავნილია!",
     albumQueue: "ალბომში ფრინვა…",
+    fileTooLarge: "ფაილი ძალიან დიდია (მაქს. {{max}} MB)",
+    fileTooSmall: "ფაილი ძალიან პატარაა ან დაზიანებულია",
+    unsupportedFormat: "ფორმატი არ არის მხარდაჭერილი (JPG, PNG, HEIC, MP4)",
+    invalidImage: "სურათი ვერ გაიხსნა — სცადეთ სხვა ფოტო",
+    storageLimit: "ალბომის მეხსიერების ლიმიტი ამოიწურა",
+    uploadFailed: "ატვირთვა ვერ მოხერხდა",
   },
   en: {
     photosTab: "Photos",
@@ -60,6 +66,12 @@ const dict: Record<Locale, Record<string, string>> = {
     guestbookForbidden: "Guestbook is closed until the album is activated",
     guestbookSent: "Sent!",
     albumQueue: "Adding to album…",
+    fileTooLarge: "File too large (max {{max}} MB)",
+    fileTooSmall: "File is too small or corrupted",
+    unsupportedFormat: "Unsupported format — use JPG, PNG, HEIC, or MP4",
+    invalidImage: "Could not read this photo — try another",
+    storageLimit: "Album storage limit reached",
+    uploadFailed: "Upload failed",
   },
   ru: {
     photosTab: "Фото",
@@ -88,9 +100,48 @@ const dict: Record<Locale, Record<string, string>> = {
     guestbookForbidden: "Гостевая книга закрыта до активации альбома",
     guestbookSent: "Отправлено!",
     albumQueue: "Добавляем в альбом…",
+    fileTooLarge: "Файл слишком большой (макс. {{max}} MB)",
+    fileTooSmall: "Файл слишком мал или повреждён",
+    unsupportedFormat: "Формат не поддерживается — JPG, PNG, HEIC, MP4",
+    invalidImage: "Не удалось открыть фото — попробуйте другое",
+    storageLimit: "Лимит памяти альбома исчерпан",
+    uploadFailed: "Не удалось загрузить",
   },
 };
 
-export function t(locale: Locale, key: string): string {
-  return dict[locale][key] ?? dict.en[key] ?? key;
+export function t(
+  locale: Locale,
+  key: string,
+  vars?: Record<string, string | number>,
+): string {
+  let s = dict[locale][key] ?? dict.en[key] ?? key;
+  if (vars) {
+    for (const [k, v] of Object.entries(vars)) {
+      s = s.replaceAll(`{{${k}}}`, String(v));
+    }
+  }
+  return s;
+}
+
+export function uploadErrorMessage(
+  locale: Locale,
+  code: string | undefined,
+  maxBytes?: number,
+): string {
+  const max = maxBytes ? Math.round(maxBytes / (1024 * 1024)) : 100;
+  switch (code) {
+    case "FILE_TOO_LARGE":
+      return t(locale, "fileTooLarge", { max });
+    case "FILE_TOO_SMALL":
+      return t(locale, "fileTooSmall");
+    case "UNSUPPORTED_FORMAT":
+    case "FILE_TYPE_NOT_ALLOWED":
+      return t(locale, "unsupportedFormat");
+    case "INVALID_IMAGE":
+      return t(locale, "invalidImage");
+    case "STORAGE_LIMIT":
+      return t(locale, "storageLimit");
+    default:
+      return t(locale, "uploadFailed");
+  }
 }
