@@ -95,11 +95,13 @@ export function LandingV9() {
           alt=""
           fill
           priority
+          fetchPriority="high"
           sizes="100vw"
           className="object-cover"
           data-testid="hero-phone-photo"
+          unoptimized
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-black/10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/28 to-black/5" />
         <div className="relative flex min-h-[90vh] flex-col justify-end pb-10 md:min-h-screen md:pb-14">
           <div className="container-page">
             <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between lg:gap-12">

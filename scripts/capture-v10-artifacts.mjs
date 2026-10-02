@@ -29,8 +29,13 @@ async function expectImages(page, selector, min = 1) {
   await page.goto(`${base}/`, { waitUntil: "networkidle" });
   await page.waitForSelector('[data-testid="landing-hero"]');
   await expectImages(page, '[data-testid="hero-phone-photo"]');
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(300);
+  await expectImages(page, '[data-testid="hero-phone-photo"]');
   const hero = page.locator('[data-testid="landing-hero"]');
   await hero.screenshot({ path: `${out}/v10-landing-desktop-hero.png` });
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await expectImages(page, '[data-testid="hero-phone-photo"]');
   await page.screenshot({ path: `${out}/v10-landing-desktop-full.png`, fullPage: true });
   await ctx.close();
 }

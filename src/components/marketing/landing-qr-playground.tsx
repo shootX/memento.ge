@@ -93,7 +93,7 @@ export function LandingQrPlayground() {
             <p className="text-sm font-semibold text-[var(--accent-coral)]">14 ივნისი, 2026</p>
             <QrImage src={qrSrc} ringClass="border-[var(--accent-cool)]" />
             <p className="text-xs font-bold text-[var(--muted)]">QR · ატვირთე ფოტო</p>
-            <p className="font-display text-sm font-bold text-[var(--accent)]">memento.ge</p>
+            <p className="font-display text-sm font-bold text-[var(--accent-coral)]">memento.ge</p>
           </div>
         </div>
       )}

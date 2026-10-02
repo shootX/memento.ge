@@ -218,6 +218,15 @@ body {
   color: var(--fg);
 }
 
+.guest-shots-card {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 92, 138, 0.88) 0%,
+    #161616 42%,
+    rgba(92, 200, 255, 0.45) 100%
+  );
+}
+
 .guest-page-bg {
   background: var(--gradient-guest);
 }
