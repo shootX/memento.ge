@@ -25,11 +25,12 @@ await page.locator('[data-testid="host-checkout-providers"]').screenshot({
 
 await page.getByTestId("pay-provider-tbc").click();
 await page.waitForURL(/\/pay\/mock/);
+await page.locator('[data-testid="mock-pay-screen"]').screenshot({
+  path: `${out}/qa-mock-pay-screen.png`,
+});
 await page.getByTestId("mock-pay-success-btn").click();
 await page.waitForURL(new RegExp(`/host/${event.hostToken}`));
-await page.locator('[data-testid="mock-pay-success"]').screenshot({
-  path: `${out}/qa-mock-pay-success.png`,
-});
+await page.screenshot({ path: `${out}/qa-mock-pay-success-host.png`, fullPage: false });
 
 await browser.close();
 console.log("Payment QA screenshots saved");
