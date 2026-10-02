@@ -21,6 +21,8 @@ npm run build
 npm start   # PORT env
 ```
 
+თუ PM2 ლოგში `node_modules/.bin/next: Permission denied` (exit 126): `chmod +x node_modules/.bin/*` ან განაახლე repo (`npm start` იყენებს `node …/next/dist/bin/next`-ს execute bit-ის გარეშე).
+
 `serverExternalPackages` in `next.config.ts`: sharp, better-sqlite3, archiver, etc.
 
 ### 2. Database
