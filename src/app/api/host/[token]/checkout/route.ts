@@ -67,7 +67,7 @@ export async function POST(req: Request, { params }: Params) {
     if (redirectUrl.includes("/pay/mock")) {
       const u = new URL(redirectUrl);
       u.searchParams.set("hostToken", token);
-      if (body.locale) u.searchParams.set("locale", body.locale);
+      u.searchParams.set("locale", body.locale ?? "ka");
       if (!u.searchParams.get("amount")) {
         u.searchParams.set("amount", String(plan.priceGel));
       }

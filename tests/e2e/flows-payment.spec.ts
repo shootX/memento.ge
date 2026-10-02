@@ -1,6 +1,37 @@
 import { test, expect } from "@playwright/test";
 import { createEvent, mockPay, base, shot, activateEvent } from "./helpers";
 
+const cyrillic = /[\u0400-\u04FF]/;
+
+test("host pay ignores ru marketing cookie (Georgian payment copy)", async ({
+  page,
+  context,
+  request,
+}) => {
+  await context.addCookies([
+    {
+      name: "memento_locale",
+      value: "ru",
+      url: `${base}/`,
+    },
+  ]);
+  const event = await createEvent(request, "Locale Pay");
+  await page.goto(`${base}/host/${event.hostToken}/pay`, { waitUntil: "domcontentloaded" });
+  const panel = page.getByTestId("host-checkout-providers");
+  await expect(panel).toBeVisible();
+  await expect(panel).toContainText("აირჩიე გადახდის ბანკი");
+  const copy = await panel.innerText();
+  expect(copy).not.toMatch(cyrillic);
+
+  await page.getByTestId("pay-provider-tbc").click();
+  await page.getByTestId("pay-continue-btn").click();
+  await page.waitForURL(/\/pay\/mock/);
+  expect(new URL(page.url()).searchParams.get("locale")).toBe("ka");
+  const mockText = await page.getByTestId("mock-pay-screen").innerText();
+  expect(mockText).not.toMatch(cyrillic);
+  await expect(page.getByText("სატესტო რეჟიმი")).toBeVisible();
+});
+
 test("TBC mock checkout success → paid host", async ({ page, request }) => {
   const event = await createEvent(request, "Pay TBC");
   await mockPay(page, event.hostToken, "tbc", "success");
