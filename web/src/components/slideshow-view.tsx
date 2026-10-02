@@ -1,5 +1,7 @@
 "use client";
 
+import { formatEventDate } from "@/lib/format-date";
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 
@@ -94,7 +96,7 @@ export function SlideshowView({
           </h1>
           {boot?.eventDate && (
             <p className="text-sm text-white/60 mt-1" suppressHydrationWarning>
-              {new Date(boot.eventDate).toLocaleDateString("ka-GE", { dateStyle: "long" })}
+              {formatEventDate(boot.eventDate, "ka")}
             </p>
           )}
         </div>

@@ -18,7 +18,10 @@ export function handleApiError(err: unknown) {
     return jsonError(429, "Too many requests");
   }
   if (err instanceof ValidationError) {
-    return jsonError(400, err.message);
+    return NextResponse.json(
+      { error: err.message, code: err.code, maxBytes: err.maxBytes },
+      { status: 400 },
+    );
   }
   console.error(err);
   return jsonError(500, "Internal error");

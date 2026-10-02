@@ -19,6 +19,7 @@ import { PhotoLightbox, type LightboxItem } from "@/components/photo-lightbox";
 import { HostMediaGrid, type HostGridMedia } from "@/components/host-media-grid";
 import { HostLinkSaveCard } from "@/components/host-link-save-card";
 import Link from "next/link";
+import { formatEventDate } from "@/lib/format-date";
 
 type Tab = "gallery" | "qr" | "guestbook" | "settings";
 
@@ -308,7 +309,7 @@ export function HostDashboard({
               )}
               <h1 className="mt-2 font-display text-3xl font-bold md:text-4xl">{event.coupleNames}</h1>
               <p className="mt-1 text-sm text-[var(--muted)]" suppressHydrationWarning>
-                {eventDay.toLocaleDateString("ka-GE", { dateStyle: "long" })} · {plan?.nameKa}
+                {formatEventDate(eventDay, "ka")} · {plan?.nameKa}
                 {!event.isPaid && (
                   <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-800">
                     გადაუხდელი
