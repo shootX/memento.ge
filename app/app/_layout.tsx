@@ -1,56 +1,62 @@
-import { useFonts } from 'expo-font';
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
+import '@/src/i18n';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import * as Linking from 'expo-linking';
+import { Stack, router } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import 'react-native-reanimated';
+import { parseEventSlugFromUrl } from '@/src/lib/slug';
+import { useAuthStore } from '@/src/stores/auth-store';
+import { colors } from '@/src/theme/colors';
 
-import { useColorScheme } from '@/components/useColorScheme';
+const queryClient = new QueryClient();
 
-export {
-  // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
-} from 'expo-router';
-
-export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: '(tabs)',
-};
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
-
-export default function RootLayout() {
-  const [loaded, error] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
-
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
+function useDeepLinks() {
   useEffect(() => {
-    if (error) throw error;
-  }, [error]);
-
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
-  if (!loaded) {
-    return null;
-  }
-
-  return <RootLayoutNav />;
+    const handle = (url: string) => {
+      const slug = parseEventSlugFromUrl(url);
+      if (slug) router.push(`/e/${slug}`);
+    };
+    void Linking.getInitialURL().then((url) => {
+      if (url) handle(url);
+    });
+    const sub = Linking.addEventListener('url', ({ url }) => handle(url));
+    return () => sub.remove();
+  }, []);
 }
 
-function RootLayoutNav() {
-  const colorScheme = useColorScheme();
+export default function RootLayout() {
+  const hydrate = useAuthStore((s) => s.hydrate);
+  useDeepLinks();
+
+  useEffect(() => {
+    void hydrate();
+  }, [hydrate]);
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+    <QueryClientProvider client={queryClient}>
+      <StatusBar style="light" />
+      <Stack
+        screenOptions={{
+          headerStyle: { backgroundColor: colors.bg },
+          headerTintColor: colors.fg,
+          headerTitleStyle: { fontWeight: '800' },
+          contentStyle: { backgroundColor: colors.bg },
+        }}
+      >
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="onboarding" options={{ title: 'Memento' }} />
+        <Stack.Screen name="scan" options={{ title: 'QR' }} />
+        <Stack.Screen name="e/[slug]/index" options={{ headerShown: false }} />
+        <Stack.Screen name="e/[slug]/camera" options={{ title: 'Camera' }} />
+        <Stack.Screen name="e/[slug]/album" options={{ title: 'Album' }} />
+        <Stack.Screen name="gallery/[slug]" options={{ title: 'Gallery' }} />
+        <Stack.Screen name="host/login" options={{ title: 'Host' }} />
+        <Stack.Screen name="host/events" options={{ title: 'Events' }} />
+        <Stack.Screen name="host/create" options={{ title: 'New event' }} />
+        <Stack.Screen name="host/[token]/index" options={{ headerShown: false }} />
+        <Stack.Screen name="host/[token]/slideshow" options={{ headerShown: false }} />
+        <Stack.Screen name="host/[token]/pay" options={{ title: 'Payment' }} />
       </Stack>
-    </ThemeProvider>
+    </QueryClientProvider>
   );
 }

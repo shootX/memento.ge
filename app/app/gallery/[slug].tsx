@@ -1,0 +1,127 @@
+import { Image } from 'expo-image';
+import * as Sharing from 'expo-sharing';
+import { useLocalSearchParams } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import {
+  ActivityIndicator,
+  Dimensions,
+  FlatList,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+} from 'react-native';
+import { api } from '@/src/api/client';
+import { Field, GhostButton, PrimaryButton, Screen, Title } from '@/src/components/ui';
+import { colors } from '@/src/theme/colors';
+
+type Item = { id: string; url: string; thumbUrl?: string; guestName?: string };
+
+export default function GalleryScreen() {
+  const { slug } = useLocalSearchParams<{ slug: string }>();
+  const { t } = useTranslation();
+  const [locked, setLocked] = useState(false);
+  const [coupleNames, setCoupleNames] = useState('');
+  const [items, setItems] = useState<Item[]>([]);
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [lightbox, setLightbox] = useState<Item | null>(null);
+
+  const load = async (pwd?: string) => {
+    setLoading(true);
+    try {
+      const data = await api.getGallery(slug, pwd);
+      setLocked(!!data.locked);
+      setCoupleNames(data.coupleNames ?? '');
+      setItems(
+        (data.items ?? []).map((it, idx) => ({
+          id: it.id ?? String(idx),
+          url: it.url,
+          thumbUrl: it.thumbUrl,
+          guestName: it.guestName,
+        })),
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void load();
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <Screen style={styles.center}>
+        <ActivityIndicator color={colors.lime} />
+      </Screen>
+    );
+  }
+
+  if (locked) {
+    return (
+      <Screen>
+        <Title>{coupleNames}</Title>
+        <Text style={styles.lock}>🔒</Text>
+        <Field value={password} onChangeText={setPassword} placeholder="პაროლი" secureTextEntry />
+        <PrimaryButton label={t('continue')} onPress={() => void load(password)} />
+      </Screen>
+    );
+  }
+
+  const width = Dimensions.get('window').width;
+  const col = (width - 48) / 2;
+
+  return (
+    <Screen style={{ paddingHorizontal: 12 }}>
+      <Title>{coupleNames || t('album')}</Title>
+      {items.length === 0 ? (
+        <Text style={styles.empty}>{t('emptyAlbum')}</Text>
+      ) : (
+        <FlatList
+          data={items}
+          numColumns={2}
+          keyExtractor={(i) => i.id}
+          columnWrapperStyle={{ gap: 12 }}
+          contentContainerStyle={{ gap: 12, paddingVertical: 16 }}
+          renderItem={({ item }) => (
+            <Pressable onPress={() => setLightbox(item)} style={{ width: col }}>
+              <Image source={{ uri: item.thumbUrl ?? item.url }} style={styles.tile} contentFit="cover" />
+            </Pressable>
+          )}
+        />
+      )}
+
+      <Modal visible={!!lightbox} transparent animationType="fade">
+        <Pressable style={styles.lbBg} onPress={() => setLightbox(null)}>
+          {lightbox && (
+            <>
+              <Image source={{ uri: lightbox.url }} style={styles.lbImg} contentFit="contain" />
+              {lightbox.guestName && <Text style={styles.lbName}>{lightbox.guestName}</Text>}
+              <GhostButton
+                label={t('share')}
+                onPress={() => void Sharing.shareAsync(lightbox.url)}
+              />
+            </>
+          )}
+        </Pressable>
+      </Modal>
+    </Screen>
+  );
+}
+
+const styles = StyleSheet.create({
+  center: { justifyContent: 'center', alignItems: 'center' },
+  lock: { fontSize: 32, marginVertical: 12 },
+  empty: { color: colors.muted, marginTop: 24, textAlign: 'center' },
+  tile: { width: '100%', aspectRatio: 3 / 4, borderRadius: 16 },
+  lbBg: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    justifyContent: 'center',
+    padding: 16,
+  },
+  lbImg: { width: '100%', height: '70%' },
+  lbName: { color: colors.fg, textAlign: 'center', marginTop: 12, fontWeight: '700' },
+});

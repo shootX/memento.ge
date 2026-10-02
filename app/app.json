@@ -1,23 +1,37 @@
 {
   "expo": {
-    "name": "memento-expo",
-    "slug": "memento-expo",
+    "name": "მემენტო",
+    "slug": "memento-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "mementoexpo",
-    "userInterfaceStyle": "automatic",
+    "scheme": "memento",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "ge.memento.app",
+      "associatedDomains": ["applinks:memento.ge", "applinks:www.memento.ge"]
     },
     "android": {
+      "package": "ge.memento.app",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#0d0d0f",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            { "scheme": "https", "host": "memento.ge", "pathPrefix": "/e" },
+            { "scheme": "memento", "host": "*", "pathPrefix": "/e" }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -26,17 +40,40 @@
     },
     "plugins": [
       "expo-router",
+      "expo-localization",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "მემენტო იყენებს კამერას QR-ისა და ფოტოსთვის."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "მემენტო იყენებს გალერეას ფოტოს ასატვირთად."
+        }
+      ],
       [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#0d0d0f"
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "00000000-0000-4000-8000-000000000001"
+      }
+    },
+    "owner": "shootx"
   }
 }
