@@ -4,6 +4,7 @@ import { ArrowUpRight } from "lucide-react";
 import { PLANS, type PlanTier } from "@/lib/plans";
 import { planMarketingFeatures } from "@/lib/plan-features";
 import { getLandingCopy, type LandingLocale } from "@/lib/landing-copy";
+import { marketingPathForLocale } from "@/lib/marketing-locale-path";
 import { LandingQrPlayground } from "@/components/marketing/landing-qr-playground";
 import { cn } from "@/lib/cn";
 
@@ -114,7 +115,7 @@ export function LandingV9({ locale = "ka" }: { locale?: LandingLocale }) {
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-4">
-                  <Link href="/onboarding" className="pill-cta">
+                  <Link href={marketingPathForLocale(locale, "/onboarding")} className="pill-cta">
                     <span>{c.ctaStart}</span>
                     <span className="pill-cta-icon" aria-hidden>
                       <ArrowUpRight className="h-5 w-5" />
@@ -170,7 +171,7 @@ export function LandingV9({ locale = "ka" }: { locale?: LandingLocale }) {
                     ))}
                   </ul>
                   <Link
-                    href={`/onboarding?plan=${p.id}`}
+                    href={marketingPathForLocale(locale, `/onboarding?plan=${p.id}`)}
                     className={`mt-8 block text-center rounded-full py-3 text-sm font-bold ${
                       featured
                         ? "bg-[var(--lime-badge)] text-[var(--lime-badge-on)]"
@@ -259,7 +260,7 @@ export function LandingV9({ locale = "ka" }: { locale?: LandingLocale }) {
         <div className="container-page">
           <SectionHead num="05" label="პარტნიორები" title={c.partnersTitle} />
           <p className="max-w-2xl text-[var(--muted)]">{c.partnersBody}</p>
-          <Link href="/for-partners" className="pill-cta mt-8 inline-flex">
+          <Link href={marketingPathForLocale(locale, "/for-partners")} className="pill-cta mt-8 inline-flex">
             <span>{locale === "en" ? "Partner program" : locale === "ru" ? "Партнёрская программа" : "პარტნიორის პროგრამა"}</span>
             <span className="pill-cta-icon">
               <ArrowUpRight className="h-5 w-5" />
@@ -287,7 +288,9 @@ export function LandingV9({ locale = "ka" }: { locale?: LandingLocale }) {
       <footer className="section-y section-dark border-t border-[var(--border-on-dark)]">
         <div className="container-page flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--muted-on-dark)]">07 · კონტაქტი</p>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--muted-on-dark)]">
+              07 · {c.contactSectionLabel}
+            </p>
             <h2 className="mt-2 font-display text-3xl font-extrabold text-white">{c.contactTitle}</h2>
             <p className="mt-2 text-[var(--muted-on-dark)]">
               <a href="mailto:hello@memento.ge" className="underline hover:text-white">
@@ -295,7 +298,7 @@ export function LandingV9({ locale = "ka" }: { locale?: LandingLocale }) {
               </a>
             </p>
           </div>
-          <Link href="/onboarding" className="pill-cta">
+          <Link href={marketingPathForLocale(locale, "/onboarding")} className="pill-cta">
             <span>{c.freeStart}</span>
             <span className="pill-cta-icon">
               <ArrowUpRight className="h-5 w-5" />
