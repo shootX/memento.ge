@@ -18,13 +18,13 @@ export function CameraControlButton({ icon, label, active, onPress }: Props) {
       <View style={[styles.circle, active && styles.circleActive]}>
         <Ionicons name={icon} size={22} color={active ? colors.lime : colors.fg} />
       </View>
-      <Text style={styles.label} numberOfLines={1}>{label}</Text>
+      <Text style={styles.label} numberOfLines={2}>{label}</Text>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: { alignItems: 'center', width: 52 },
+  wrap: { alignItems: 'center', width: 56 },
   circle: {
     width: 44,
     height: 44,
