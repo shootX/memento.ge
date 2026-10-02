@@ -46,7 +46,7 @@ APPLE_PAY_DOMAIN_ASSOCIATION=
 ### Callback URL-ები
 
 - TBC: `https://qr.socialsave.cc/api/webhooks/tbc`
-- BOG: `https://qr.socialsave.cc/api/webhooks/bog`
+- BOG: `https://qr.socialsave.cc/api/payments/bog/callback` (alias: `/api/webhooks/bog`)
 
 ### Apple Pay domain verification
 
@@ -72,7 +72,7 @@ APPLE_PAY_DOMAIN_ASSOCIATION=
 ### Webhooks to register
 
 - `https://qr.socialsave.cc/api/webhooks/tbc`
-- `https://qr.socialsave.cc/api/webhooks/bog`
+- `https://qr.socialsave.cc/api/payments/bog/callback`
 
 ### Status mapping
 

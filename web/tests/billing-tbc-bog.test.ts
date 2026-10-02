@@ -1,25 +1,56 @@
 import { describe, it, expect } from "vitest";
+import { readFileSync } from "fs";
+import { join } from "path";
 import { createSign } from "crypto";
-import { verifyBogCallbackSignature } from "@/lib/billing/bog-client";
+import {
+  verifyBogCallbackSignature,
+  parseBogCallback,
+  bogOrderStatusFromCallbackBody,
+} from "@/lib/billing/bog-client";
 import {
   bogOrderIsPaid,
   mapBogOrderStatus,
-  BOG_PAID_ORDER_STATUSES,
+  normalizeBogOrderStatus,
+  bogCallbackUrl,
 } from "@/lib/billing/bog-config";
 import { mapTbcPaymentStatus, tbcIsPaidStatus } from "@/lib/billing/tbc-status";
+import createOrderFixture from "./fixtures/bog-create-order-response.json";
+import callbackFixture from "./fixtures/bog-callback-completed.json";
+
+const fixturesDir = join(__dirname, "fixtures");
 
 describe("BOG order_status mapping", () => {
-  it("treats documented paid statuses as paid", () => {
-    for (const s of ["completed", "success", "paid", "approved", "succeeded"]) {
-      expect(bogOrderIsPaid(s)).toBe(true);
-      expect(mapBogOrderStatus(s)).toBe("paid");
+  it("treats only completed as paid", () => {
+    expect(bogOrderIsPaid("completed")).toBe(true);
+    expect(mapBogOrderStatus("completed")).toBe("paid");
+    for (const s of ["success", "paid", "approved", "succeeded"]) {
+      expect(bogOrderIsPaid(s)).toBe(false);
+      expect(mapBogOrderStatus(s)).toBe("failed");
     }
   });
 
-  it("maps pending and failed", () => {
-    expect(mapBogOrderStatus("processing")).toBe("pending");
-    expect(mapBogOrderStatus("cancelled")).toBe("failed");
-    expect(BOG_PAID_ORDER_STATUSES.has("completed")).toBe(true);
+  it("maps receipt-style order_status.key", () => {
+    expect(normalizeBogOrderStatus({ key: "completed" })).toBe("completed");
+    expect(mapBogOrderStatus({ key: "processing" })).toBe("pending");
+    expect(mapBogOrderStatus({ key: "rejected" })).toBe("failed");
+    expect(mapBogOrderStatus({ key: "refunded" })).toBe("failed");
+    expect(mapBogOrderStatus({ key: "refunded_partially" })).toBe("failed");
+  });
+
+  it("parses documented callback sample", () => {
+    const raw = readFileSync(join(fixturesDir, "bog-callback-completed.json"), "utf8");
+    const parsed = parseBogCallback(raw);
+    expect(parsed?.event).toBe("order_payment");
+    expect(bogOrderStatusFromCallbackBody(parsed?.body)).toBe("completed");
+    expect(createOrderFixture._links.redirect.href).toContain("payment.bog.ge");
+  });
+});
+
+describe("BOG callback URL", () => {
+  it("defaults to /api/payments/bog/callback on app host", () => {
+    process.env.NEXT_PUBLIC_APP_URL = "https://qr.socialsave.cc";
+    delete process.env.BOG_CALLBACK_URL;
+    expect(bogCallbackUrl()).toBe("https://qr.socialsave.cc/api/payments/bog/callback");
   });
 });
 
@@ -38,10 +69,7 @@ describe("BOG RSA callback signature", () => {
     const { privateKey, publicKey } = generateKeyPairSync("rsa", {
       modulusLength: 2048,
     });
-    const raw = JSON.stringify({
-      event: "order_payment",
-      body: { order_status: "completed", external_order_id: "pay-1" },
-    });
+    const raw = JSON.stringify(callbackFixture);
     const signer = createSign("RSA-SHA256");
     signer.update(raw);
     signer.end();
@@ -90,6 +118,51 @@ describe("payment mock adapters", () => {
 
     const updated = await prisma.event.findUnique({ where: { id: event.id } });
     expect(updated?.isPaid).toBe(true);
+
+    await prisma.payment.deleteMany({ where: { eventId: event.id } });
+    await prisma.event.delete({ where: { id: event.id } });
+    delete process.env.PAYMENT_MOCK;
+  });
+
+  it("mock BOG callback fixture marks paid on completed", async () => {
+    process.env.PAYMENT_MOCK = "1";
+    const { prisma } = await import("@/lib/prisma");
+    const { bogAdapter } = await import("@/lib/billing/bog-adapter");
+    const event = await prisma.event.create({
+      data: {
+        coupleNames: "BOG Mock",
+        eventDate: new Date(),
+        guestSlug: `bog-guest-${Date.now()}`,
+        hostToken: `bog-host-${Date.now()}`.padEnd(32, "x"),
+        slideshowToken: `bog-slide-${Date.now()}`.padEnd(32, "y"),
+        planTier: "starter",
+        isPaid: false,
+      },
+    });
+    const payment = await prisma.payment.create({
+      data: {
+        eventId: event.id,
+        amountGel: 49,
+        provider: "bog",
+        status: "pending",
+      },
+    });
+    const orderId = `mock-bog-${payment.id}`;
+    await prisma.payment.update({
+      where: { id: payment.id },
+      data: { externalId: orderId },
+    });
+
+    const raw = JSON.stringify({
+      ...callbackFixture,
+      body: {
+        ...callbackFixture.body,
+        external_order_id: payment.id,
+        order_id: orderId,
+      },
+    });
+    const result = await bogAdapter.verifyWebhook(new Request("http://x"), raw);
+    expect(result.status).toBe("paid");
 
     await prisma.payment.deleteMany({ where: { eventId: event.id } });
     await prisma.event.delete({ where: { id: event.id } });

@@ -317,13 +317,19 @@
 | Body | raw Stripe event |
 | Effect | `checkout.session.completed` → `Event.isPaid`, `Payment` update |
 
-### `POST /api/webhooks/bog`
+### `POST /api/payments/bog/callback`
 
 | | |
 |--|--|
-| Header | `x-bog-signature` HMAC-SHA256 hex |
-| Body | `{ eventId?, status? }` — `paid` activates |
-| Note | if no secret, signature not enforced |
+| Header | `Callback-Signature` — SHA256withRSA over raw body |
+| Body | BOG `order_payment` JSON (`body.order_status`, `order_id`, `external_order_id`) |
+| Effect | `order_status: completed` → activate event; `rejected` / `refunded` → failed |
+| Idempotent | duplicate callbacks return `{ ok: true, duplicate: true }` |
+
+### `POST /api/webhooks/bog`
+
+Same handler as `/api/payments/bog/callback` (legacy URL).
+
 
 ### `POST /api/webhooks/flitt`
 

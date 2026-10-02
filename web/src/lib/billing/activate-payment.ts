@@ -55,6 +55,13 @@ export async function markPaymentPaid(
   });
 }
 
+export async function markPaymentFailed(ref: string): Promise<void> {
+  await prisma.payment.updateMany({
+    where: { OR: [{ externalId: ref }, { id: ref }] },
+    data: { status: "failed" },
+  });
+}
+
 export function parsePaymentMetadata(
   raw: string | null | undefined,
 ): Record<string, unknown> {
