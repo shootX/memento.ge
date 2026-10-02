@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getEventByHostToken } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { authorizeHostMutation } from "@/lib/host-request-auth";
 import { newToken } from "@/lib/crypto";
