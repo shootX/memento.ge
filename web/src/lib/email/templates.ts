@@ -27,7 +27,7 @@ function wrapHtml(locale: EmailLocale, title: string, bodyHtml: string): string 
       : locale === "ru"
         ? "memento.ge — фотоальбом для свадьбы"
         : "memento.ge — wedding photo album";
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"/></head><body style="font-family:Georgia,serif;background:#faf8f5;padding:24px;color:#2d3a2e"><div style="max-width:520px;margin:0 auto;background:#fff;border-radius:12px;padding:28px;border:1px solid #e8e0d5"><p style="letter-spacing:0.12em;font-size:11px;color:#c4a574">MEMENTO</p><h1 style="font-size:22px;margin:0 0 16px">${title}</h1>${bodyHtml}<p style="margin-top:32px;font-size:12px;color:#888">${footer}</p></div></body></html>`;
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"/></head><body style="font-family:Manrope,Noto Sans Georgian,sans-serif;background:#f7f7f2;padding:24px;color:#121212"><div style="max-width:520px;margin:0 auto;background:#fff;border-radius:16px;padding:28px;border:1px solid rgba(0,0,0,0.08);box-shadow:0 12px 32px rgba(0,0,0,0.06)"><p style="letter-spacing:0.12em;font-size:11px;color:#c4ff0d;background:#161616;display:inline-block;padding:4px 10px;border-radius:999px">MEMENTO</p><h1 style="font-size:22px;margin:16px 0 16px">${title}</h1>${bodyHtml}<p style="margin-top:32px;font-size:12px;color:#5c6366">${footer}</p></div></body></html>`;
 }
 
 export function renderEmail(
@@ -42,7 +42,7 @@ export function renderEmail(
     const html = wrapHtml(
       loc,
       subject,
-      `<p>${loc === "ka" ? "დააჭირეთ ღილაკს შესასვლელად:" : loc === "ru" ? "Нажмите, чтобы войти:" : "Click to sign in:"}</p><p><a href="${vars.verifyUrl}" style="display:inline-block;background:#3d4f3f;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none">Memento</a></p><p style="font-size:12px;color:#666">${vars.verifyUrl}</p>`,
+      `<p>${loc === "ka" ? "დააჭირეთ ღილაკს შესასვლელად:" : loc === "ru" ? "Нажмите, чтобы войти:" : "Click to sign in:"}</p><p><a href="${vars.verifyUrl}" style="display:inline-block;background:#c4ff0d;color:#121212;padding:12px 20px;border-radius:999px;text-decoration:none;font-weight:700">Memento</a></p><p style="font-size:12px;color:#666">${vars.verifyUrl}</p>`,
     );
     return { subject, html, text: `${subject}\n${vars.verifyUrl}` };
   }

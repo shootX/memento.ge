@@ -1,27 +1,45 @@
-/* Memento · Studiova Dark + Lime (reference: WrapPixel Studiova template) */
+/* Memento · v10 Studiova + lime (lighter, colourful) */
 
 :root {
-  --bg: #0b0b0b;
-  --bg-elevated: #111111;
-  --bg-muted: #161616;
-  --surface: #141414;
-  --surface-warm: #1a1a1a;
-  --surface-dark: #000000;
-  --surface-light: #f5f5f5;
-  --fg: #ffffff;
-  --fg-2: rgba(255, 255, 255, 0.82);
-  --muted: #9ca3af;
-  --meta: #626a6d;
-  --border: rgba(255, 255, 255, 0.12);
-  --border-soft: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.2);
+  /* Charcoal (dark bands — ~30% less full-black page) */
+  --bg-charcoal: #161616;
+  --bg-charcoal-elevated: #1c1c1e;
 
-  /* Studiova chartreuse — extracted from template header rule rgb(193,255,114) ≈ #c1ff72; brand accent #c4ff0d */
+  /* Light surfaces (default app + alternating landing sections) */
+  --bg-warm: #f7f7f2;
+  --bg-lime-wash: #f4ffe0;
+  --bg-blush-wash: #fff5f8;
+
+  --bg: var(--bg-warm);
+  --bg-page: var(--bg-warm);
+  --bg-elevated: #ffffff;
+  --bg-muted: #ebebe5;
+  --surface: #ffffff;
+  --surface-warm: #f7f7f2;
+  --surface-dark: var(--bg-charcoal);
+  --surface-light: var(--bg-warm);
+
+  --fg: #121212;
+  --fg-2: #2a2a2a;
+  --muted: #5c6366;
+  --meta: #6b7280;
+  --border: rgba(0, 0, 0, 0.1);
+  --border-soft: rgba(0, 0, 0, 0.06);
+  --border-strong: rgba(0, 0, 0, 0.14);
+
+  --fg-on-dark: #ffffff;
+  --fg-2-on-dark: rgba(255, 255, 255, 0.86);
+  --muted-on-dark: #9ca3af;
+  --border-on-dark: rgba(255, 255, 255, 0.12);
+  --border-soft-on-dark: rgba(255, 255, 255, 0.08);
+
+  /* Primary + secondary accents */
   --accent: #c4ff0d;
   --accent-line: #c1ff72;
   --accent-mid: #c4ff0d;
-  --accent-cool: #c4ff0d;
-  --accent-on: #0b0b0b;
+  --accent-cool: #5cc8ff;
+  --accent-coral: #ff5c8a;
+  --accent-on: #121212;
   --accent-hover: #d4ff33;
   --accent-active: #b0e600;
 
@@ -32,9 +50,17 @@
   --gradient-signature: linear-gradient(125deg, #c4ff0d 0%, #a8e600 100%);
   --gradient-soft: linear-gradient(
     160deg,
-    rgba(196, 255, 13, 0.12) 0%,
-    rgba(196, 255, 13, 0.04) 100%
+    rgba(196, 255, 13, 0.14) 0%,
+    rgba(92, 200, 255, 0.08) 50%,
+    rgba(255, 92, 138, 0.1) 100%
   );
+  --gradient-guest: linear-gradient(
+    165deg,
+    #f4ffe0 0%,
+    #f7f7f2 42%,
+    #fff5f8 100%
+  );
+  --gradient-card-warm: linear-gradient(145deg, rgba(255, 92, 138, 0.35), rgba(92, 200, 255, 0.25));
 
   --font-display: var(--font-manrope), var(--font-noto-sans), system-ui, sans-serif;
   --font-body: var(--font-noto-sans), var(--font-manrope), system-ui, sans-serif;
@@ -80,7 +106,7 @@
   --radius-xl: 24px;
   --radius-pill: 9999px;
 
-  --shadow-playful: 0 24px 48px rgba(0, 0, 0, 0.45);
+  --shadow-playful: 0 16px 40px rgba(0, 0, 0, 0.08);
   --shadow-btn: none;
   --shadow-outline: none;
   --elev-flat: none;
@@ -92,12 +118,11 @@
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
 
   /* Legacy aliases */
-  --bg-page: var(--bg);
   --bg-card: var(--surface);
-  --bg-dark: var(--surface-dark);
-  --pink: var(--accent);
-  --orange: var(--accent);
-  --violet: var(--accent);
+  --bg-dark: #0a0a0a;
+  --pink: var(--accent-coral);
+  --orange: var(--accent-coral);
+  --violet: var(--accent-cool);
   --mint: var(--success);
   --sun: var(--warn);
   --text-ink: var(--fg);
@@ -105,10 +130,10 @@
   --color-ink: var(--fg);
   --color-muted: var(--muted);
   --color-border: var(--border);
-  --color-cream: var(--bg);
+  --color-cream: var(--bg-warm);
   --color-gold: var(--accent);
   --color-forest: var(--accent);
-  --color-blush: var(--surface-warm);
+  --color-blush: var(--bg-blush-wash);
   --radius-chunky: var(--radius-md);
 }
 

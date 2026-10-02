@@ -12,7 +12,7 @@ const svg = (size: number, maskable: boolean) => {
   <defs>
     <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#c4ff0d"/>
-      <stop offset="100%" stop-color="#0b0b0b"/>
+      <stop offset="100%" stop-color="#161616"/>
     </linearGradient>
   </defs>
   <rect width="${size}" height="${size}" rx="${maskable ? 0 : size * 0.22}" fill="url(#g)"/>
