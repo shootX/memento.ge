@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 132 36" role="img" aria-label="TBC Bank">
+  <path fill="#00A3E0" d="M2 28 10 8 18 19 26 8 34 28Z"/>
+  <text x="42" y="24" font-family="system-ui,-apple-system,Segoe UI,Arial,sans-serif" font-size="20" font-weight="700" fill="#FFFFFF">TBC</text>
+  <text x="42" y="33" font-family="system-ui,Arial,sans-serif" font-size="8.5" font-weight="600" fill="#B8E8FA" letter-spacing="0.14em">BANK</text>
+</svg>

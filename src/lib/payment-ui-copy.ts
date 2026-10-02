@@ -28,6 +28,7 @@ type Copy = {
   tryAgain: string;
   invalidSession: string;
   secureHint: string;
+  cardOrDivider: string;
 };
 
 const copy: Record<PaymentUiLocale, Copy> = {
@@ -57,6 +58,7 @@ const copy: Record<PaymentUiLocale, Copy> = {
     tryAgain: "თავიდან ცდა",
     invalidSession: "გადახდის სესია არასწორია",
     secureHint: "დაცული კავშირი",
+    cardOrDivider: "ან ბარათით",
   },
   en: {
     chooseBank: "Choose your bank",
@@ -84,6 +86,7 @@ const copy: Record<PaymentUiLocale, Copy> = {
     tryAgain: "Try again",
     invalidSession: "Invalid payment session",
     secureHint: "Secure connection",
+    cardOrDivider: "or pay by card",
   },
   ru: {
     chooseBank: "Выберите банк",
@@ -111,6 +114,7 @@ const copy: Record<PaymentUiLocale, Copy> = {
     tryAgain: "Повторить",
     invalidSession: "Недействительная сессия оплаты",
     secureHint: "Защищённое соединение",
+    cardOrDivider: "или картой",
   },
 };
 
@@ -124,7 +128,10 @@ export function resolvePaymentUiLocale(value: string | null | undefined): Paymen
 }
 
 export function bankDisplayName(provider: "tbc" | "bog", locale: PaymentUiLocale): string {
-  if (provider === "tbc") return "TBC Bank";
+  if (provider === "tbc") {
+    if (locale === "ka") return "TBC ბანკი";
+    return "TBC Bank";
+  }
   if (locale === "en") return "Bank of Georgia";
   if (locale === "ru") return "Банк Грузии";
   return "საქართველოს ბანკი";

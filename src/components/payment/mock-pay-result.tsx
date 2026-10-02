@@ -31,9 +31,9 @@ export function MockPayResult({
       className="mx-auto flex min-h-screen max-w-lg flex-col"
       data-testid={outcome === "success" ? "mock-pay-success" : "mock-pay-failed"}
     >
-      <div className="px-4 py-3 text-center text-xs font-bold text-white" style={{ background: headerBg }}>
-        <div className="mx-auto flex max-w-md items-center justify-center gap-3">
-          <BankBrandLogo bank={provider} className="brightness-0 invert" />
+      <div className="relative px-4 py-4 text-white" style={{ background: headerBg }}>
+        <div className="mx-auto flex max-w-md justify-center">
+          <BankBrandLogo bank={provider} variant="onDark" className="h-9" />
         </div>
       </div>
       <div className="flex flex-1 flex-col items-center justify-center px-6 py-10 text-center">

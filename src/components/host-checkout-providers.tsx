@@ -107,7 +107,7 @@ export function HostCheckoutProviders({
       {bankProviders.length > 0 && (
         <Button
           className="btn-gradient w-full border-0 py-6 text-base font-bold"
-          disabled={!selected || loading || !isBankBrand(selected)}
+          disabled={!selected || loading}
           onClick={() => selected && void pay(selected)}
           data-testid="pay-continue-btn"
         >

@@ -40,13 +40,13 @@ export function MockBankCheckout({
       style={{ background: pageBg }}
       data-testid="mock-pay-screen"
     >
-      <div className="relative px-4 py-3 text-white" style={{ background: headerBg }}>
-        <span className="absolute right-3 top-3 rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide">
+      <div className="relative px-4 pb-4 pt-11 text-white" style={{ background: headerBg }}>
+        <span className="absolute left-3 top-2.5 max-w-[46%] rounded-full bg-white/15 px-2 py-1 text-[9px] font-bold uppercase leading-tight tracking-wide sm:max-w-none sm:px-2.5 sm:text-[10px]">
           {c.testModeBadge}
         </span>
-        <div className="mx-auto flex max-w-md items-center justify-between gap-3 pt-1">
-          <BankBrandLogo bank={provider} className="brightness-0 invert" priority />
-          <span className="text-xs font-semibold text-white/70">{c.secureHint}</span>
+        <div className="mx-auto flex max-w-md flex-col gap-2 pt-1">
+          <BankBrandLogo bank={provider} variant="onDark" className="h-9" />
+          <p className="text-[10px] font-semibold text-white/65 sm:text-xs">{c.secureHint}</p>
         </div>
       </div>
 
@@ -86,7 +86,11 @@ export function MockBankCheckout({
             </button>
           </div>
 
-          <p className="my-4 text-center text-xs font-semibold text-[var(--muted)]">—</p>
+          <div className="my-4 flex items-center gap-3">
+            <div className="h-px flex-1 bg-[var(--border-soft)]" />
+            <span className="shrink-0 text-xs font-semibold text-[var(--muted)]">{c.cardOrDivider}</span>
+            <div className="h-px flex-1 bg-[var(--border-soft)]" />
+          </div>
 
           <label className="block text-xs font-bold text-[var(--muted)]">{c.cardNumber}</label>
           <input

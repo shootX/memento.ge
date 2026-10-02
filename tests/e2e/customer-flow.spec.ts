@@ -80,6 +80,7 @@ test("mock TBC checkout → guest upload", async ({ page, request }) => {
   await page.goto(`${base}/host/${event.hostToken}/pay`, { waitUntil: "networkidle" });
   await expect(page.getByTestId("host-checkout-providers")).toBeVisible();
   await page.getByTestId("pay-provider-tbc").click();
+  await expect(page.getByTestId("pay-continue-btn")).toBeEnabled();
   await page.getByTestId("pay-continue-btn").click();
   await page.waitForURL(/\/pay\/mock/);
   await page.getByTestId("mock-pay-success-btn").click();

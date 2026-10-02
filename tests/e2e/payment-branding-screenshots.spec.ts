@@ -28,6 +28,7 @@ test("payment branding mobile screenshots", async ({ page, request }) => {
   });
 
   await page.getByTestId("pay-provider-tbc").click();
+  await expect(page.getByTestId("pay-continue-btn")).toBeEnabled();
   await page.getByTestId("pay-continue-btn").click();
   await page.waitForURL(/\/pay\/mock.*provider=tbc/);
   await page.screenshot({
@@ -37,11 +38,19 @@ test("payment branding mobile screenshots", async ({ page, request }) => {
 
   await page.goto(`${base}/host/${event.hostToken}/pay`, { waitUntil: "networkidle" });
   await page.getByTestId("pay-provider-bog").click();
+  await expect(page.getByTestId("pay-continue-btn")).toBeEnabled();
   await page.getByTestId("pay-continue-btn").click();
   await page.waitForURL(/\/pay\/mock.*provider=bog/);
   await expect(page.getByTestId("mock-pay-screen")).toBeVisible();
   await page.screenshot({
     path: path.join(outDir, "mock-checkout-bog-mobile.png"),
+    fullPage: true,
+  });
+
+  await page.getByTestId("mock-pay-success-btn").click();
+  await expect(page.getByTestId("mock-pay-success")).toBeVisible();
+  await page.screenshot({
+    path: path.join(outDir, "mock-pay-success-bog-mobile.png"),
     fullPage: true,
   });
 });
