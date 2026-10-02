@@ -3,19 +3,11 @@ import { useTranslation } from 'react-i18next';
 import { Dimensions, Modal, StyleSheet, Text, View } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 import { GhostButton, Screen, Title } from '@/src/components/ui';
+import { SEED } from '@/src/constants/images';
 import { colors } from '@/src/theme/colors';
-
 const items = [
-  {
-    id: '1',
-    url: 'https://qr.socialsave.cc/seed-samples/wedding-1.jpg',
-    guestName: 'მარიამი',
-  },
-  {
-    id: '2',
-    url: 'https://qr.socialsave.cc/seed-samples/wedding-6.jpg',
-    guestName: 'გიორგი',
-  },
+  { id: '1', url: SEED.photo1, guestName: 'მარიამი' },
+  { id: '2', url: SEED.photo2, guestName: 'გიორგი' },
 ];
 
 export default function PreviewGalleryScreen() {

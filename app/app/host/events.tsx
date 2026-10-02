@@ -46,7 +46,7 @@ export default function HostEventsScreen() {
             );
           })}
           {data?.length === 0 && (
-            <Text style={styles.empty}>ჯერ ცარიელია — შექმენი პირველი ღონისძიება</Text>
+            <Text style={styles.empty}>{t('eventsEmpty')}</Text>
           )}
         </View>
       )}

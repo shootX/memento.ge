@@ -1,24 +1,28 @@
+import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { api } from '@/src/api/client';
-import { Card, Field, GhostButton, PrimaryButton, Screen, Subtitle, Title } from '@/src/components/ui';
+import { CodeInput } from '@/src/components/CodeInput';
+import { Card, Field, GhostButton, PrimaryButton } from '@/src/components/ui';
+import { SEED } from '@/src/constants/images';
 import { useAuthStore } from '@/src/stores/auth-store';
-import { config } from '@/src/config';
+import { colors } from '@/src/theme/colors';
+import { fonts } from '@/src/theme/typography';
 
 export default function HostLoginScreen() {
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
-  const [sent, setSent] = useState(false);
+  const [step, setStep] = useState<'email' | 'code'>('email');
   const [error, setError] = useState<string | null>(null);
   const setSession = useAuthStore((s) => s.setSession);
 
   const sendLink = async () => {
     setError(null);
     await api.sendMagicLink(email.trim());
-    setSent(true);
+    setStep('code');
   };
 
   const verifyCode = async () => {
@@ -28,38 +32,52 @@ export default function HostLoginScreen() {
       await setSession(res.accessToken, res.user.email);
       router.replace('/host/events');
     } catch {
-      setError('კოდი არასწორია (დემოში — ნებისმიერი 6 ციფრი, გარდა 000000)');
+      setError(t('invalidCode'));
     }
   };
 
   return (
-    <Screen testID="host-login">
-      <Title>{t('login')}</Title>
-      <Subtitle>ელფოსტა + მაგიკ ლინკი / {t('codeLogin')}</Subtitle>
+    <ScrollView style={styles.root} contentContainerStyle={styles.scroll} testID="host-login">
+      <Image source={{ uri: SEED.cover }} style={styles.hero} contentFit="cover" />
+      <Text style={styles.title}>{t('login')}</Text>
+      <Text style={styles.sub}>{t('loginSubtitle')}</Text>
 
-      <Card style={{ marginTop: 20, gap: 8 }}>
-        <Field value={email} onChangeText={setEmail} placeholder="you@example.com" keyboardType="email-address" />
-        {!sent ? (
-          <PrimaryButton label={t('login')} onPress={() => void sendLink()} />
+      <Card style={styles.card}>
+        {step === 'email' ? (
+          <>
+            <Field
+              value={email}
+              onChangeText={setEmail}
+              placeholder={t('emailPlaceholder')}
+              keyboardType="email-address"
+            />
+            <PrimaryButton label={t('sendCode')} onPress={() => void sendLink()} />
+          </>
         ) : (
           <>
-            <Text style={{ color: '#9ca3af' }}>{t('magicLinkSent')}: {email}</Text>
-            <Field value={code} onChangeText={setCode} placeholder="123456" keyboardType="numeric" />
-            <PrimaryButton label={t('continue')} onPress={() => void verifyCode()} />
-            {error && <Text style={{ color: '#f87171' }}>{error}</Text>}
+            <Text style={styles.sent}>{t('magicLinkSent')}: {email}</Text>
+            <CodeInput value={code} onChange={setCode} />
+            <PrimaryButton label={t('verifyCode')} onPress={() => void verifyCode()} />
+            <GhostButton label={t('resendCode')} onPress={() => void sendLink()} />
+            {error && <Text style={styles.error}>{error}</Text>}
           </>
         )}
       </Card>
 
-      <View style={{ marginTop: 16, gap: 8 }}>
-        <GhostButton
-          label="დემო პანელი (mock-token)"
-          onPress={() => router.push('/host/mock-token-abc')}
-        />
-        {config.useMockApi && (
-          <Text style={{ color: '#ffb020', fontSize: 12 }}>{t('mockBanner')}</Text>
-        )}
-      </View>
-    </Screen>
+      {__DEV__ && (
+        <GhostButton label={t('demoPanel')} onPress={() => router.push('/preview/host')} />
+      )}
+    </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: colors.bg },
+  scroll: { padding: 24, paddingBottom: 40 },
+  hero: { width: '100%', height: 160, borderRadius: 20, marginBottom: 20 },
+  title: { color: colors.fg, fontFamily: fonts.display, fontSize: 28, fontWeight: '800' },
+  sub: { color: colors.muted, marginTop: 8, lineHeight: 22, fontFamily: fonts.body },
+  card: { marginTop: 20, gap: 12 },
+  sent: { color: colors.muted, fontSize: 13, fontFamily: fonts.body },
+  error: { color: colors.danger, fontFamily: fonts.bodyMedium },
+});

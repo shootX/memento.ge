@@ -60,7 +60,7 @@ export default function GuestEventScreen() {
   if (!info) {
     return (
       <Screen>
-        <Text style={styles.errTitle}>ღონისძიება ვერ მოიძებნა</Text>
+        <Text style={styles.errTitle}>{t('eventNotFound')}</Text>
         <GhostButton label={t('retry')} onPress={() => router.replace('/scan')} />
       </Screen>
     );
@@ -76,7 +76,7 @@ export default function GuestEventScreen() {
     <Screen style={styles.screen} testID="guest-ready">
       <View style={styles.topBar}>
         <Text style={styles.brand}>{t('appName')}</Text>
-        <LanguageSwitcher />
+        {__DEV__ && <LanguageSwitcher />}
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -84,6 +84,7 @@ export default function GuestEventScreen() {
           coverUrl={info.coverUrl}
           coupleNames={info.coupleNames}
           dateLabel={formatGeorgianDate(info.eventDate, locale)}
+          eventLabel={t('eventLabel')}
         />
 
         <Animated.View entering={FadeInUp.delay(120)} style={styles.content}>

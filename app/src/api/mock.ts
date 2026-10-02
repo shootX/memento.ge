@@ -43,8 +43,8 @@ const mockHost: HostBootstrap = {
 const mockMedia: HostMediaItem[] = [
   {
     id: '1',
-    url: 'https://qr.socialsave.cc/seed-samples/wedding-1.jpg',
-    thumbUrl: 'https://qr.socialsave.cc/seed-samples/wedding-1.jpg',
+    url: 'https://qr.socialsave.cc/seed-samples/wedding-2.jpg',
+    thumbUrl: 'https://qr.socialsave.cc/seed-samples/wedding-2.jpg',
     guestName: 'მარიამი',
     mimeType: 'image/jpeg',
   },

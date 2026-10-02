@@ -11,10 +11,8 @@ export default function PreviewPayScreen() {
       <View style={styles.card}>
         <Text style={styles.provider}>TBC / BOG</Text>
         <Text style={styles.amount}>99 ₾</Text>
-        <Text style={styles.hint}>
-          გადახდის შემდეგ ალბომი აქტიურდება — სტუმრები ატვირთავენ ფოტოებს.
-        </Text>
-        <PrimaryButton label="გადახდის გაგრძელება" onPress={() => {}} />
+        <Text style={styles.hint}>{t('payHint')}</Text>
+        <PrimaryButton label={t('payContinue')} onPress={() => {}} />
       </View>
     </Screen>
   );

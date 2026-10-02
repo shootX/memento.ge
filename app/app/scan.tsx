@@ -23,9 +23,9 @@ export default function ScanScreen() {
     return (
       <Screen>
         <Title>{t('scanQr')}</Title>
-        <Subtitle>კამერის ნებართვა საჭიროა QR-ისთვის.</Subtitle>
+        <Subtitle>{t('scanPermissionHint')}</Subtitle>
         <View style={styles.actions}>
-          <PrimaryButton label="ნებართვა" onPress={() => void requestPermission()} />
+          <PrimaryButton label={t('grantPermission')} onPress={() => void requestPermission()} />
           <Field value={manual} onChangeText={setManual} placeholder={t('enterSlug')} />
           <PrimaryButton
             label={t('continue')}

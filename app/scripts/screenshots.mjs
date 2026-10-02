@@ -20,9 +20,14 @@ const routes = [
 await mkdir(out, { recursive: true });
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+await page.addInitScript(() => {
+  localStorage.setItem('i18nextLng', 'ka');
+});
 
 for (const [name, path, selector] of routes) {
   await page.goto(`${base}${path}`, { waitUntil: 'networkidle', timeout: 60000 });
+  await page.evaluate(() => localStorage.setItem('i18nextLng', 'ka'));
+  await page.reload({ waitUntil: 'networkidle', timeout: 60000 });
   await page.waitForSelector(selector, { timeout: 30000 });
   await page.waitForTimeout(800);
   await page.screenshot({ path: `${out}/${name}.png`, fullPage: true });

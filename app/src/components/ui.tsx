@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, TextInput, View, type ViewStyle } from 'react-native';
 import { colors } from '@/src/theme/colors';
+import { fonts } from '@/src/theme/typography';
 
 export function Screen({
   children,
@@ -113,12 +114,14 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '800',
     letterSpacing: -0.5,
+    fontFamily: fonts.display,
   },
   subtitle: {
     color: colors.muted,
     fontSize: 15,
     marginTop: 6,
     lineHeight: 22,
+    fontFamily: fonts.body,
   },
   card: {
     backgroundColor: colors.surface,
@@ -140,6 +143,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 22,
     textAlign: 'center',
+    fontFamily: fonts.bodyMedium,
   },
   ghostBtn: {
     borderRadius: 999,
@@ -154,6 +158,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     lineHeight: 20,
     textAlign: 'center',
+    fontFamily: fonts.bodyMedium,
   },
   input: {
     backgroundColor: colors.bgElevated,
@@ -167,6 +172,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     minHeight: 52,
     marginTop: 8,
+    fontFamily: fonts.body,
   },
   badge: {
     alignSelf: 'flex-start',

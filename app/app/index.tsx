@@ -1,71 +1,93 @@
+import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Text, View } from 'react-native';
-import { LanguageSwitcher } from '@/src/components/LanguageSwitcher';
-import { Card, GhostButton, PrimaryButton, Screen, Subtitle, Title } from '@/src/components/ui';
-import { config } from '@/src/config';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { PrimaryButton, GhostButton } from '@/src/components/ui';
+import { SEED } from '@/src/constants/images';
 import { colors } from '@/src/theme/colors';
+import { fonts } from '@/src/theme/typography';
 
 export default function HomeScreen() {
   const { t } = useTranslation();
+  const steps = [
+    { icon: '📷', title: t('step1Title'), sub: t('step1Short') },
+    { icon: '⬆️', title: t('step2Title'), sub: t('step2Short') },
+    { icon: '✨', title: t('step3Title'), sub: t('step3Short') },
+  ];
 
   return (
-    <Screen style={styles.root}>
-      <View style={styles.top}>
-        <Text style={styles.logo}>{t('appName')}</Text>
-        <LanguageSwitcher />
-      </View>
+    <View style={styles.root}>
+      <Image source={{ uri: SEED.hero }} style={StyleSheet.absoluteFill} contentFit="cover" />
+      <LinearGradient colors={['rgba(0,0,0,0.35)', 'rgba(13,13,15,0.92)', colors.bg]} style={StyleSheet.absoluteFill} />
 
-      <View style={styles.hero}>
-        <View style={styles.glowSky} />
-        <View style={styles.glowLime} />
-        <Title>{t('tagline')}</Title>
-        <Subtitle>QR · ორიგინალი · ლაივ ალბომი</Subtitle>
-      </View>
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <Text style={styles.mark}>{t('appNameMark')}</Text>
+        <Text style={styles.headline}>{t('homeHeadline')}</Text>
 
-      {config.useMockApi && (
-        <Card style={styles.mock}>
-          <Text style={styles.mockText}>{t('mockBanner')}</Text>
-        </Card>
-      )}
+        <View style={styles.cta}>
+          <PrimaryButton label={t('homeGuestCta')} onPress={() => router.push('/scan')} />
+          <GhostButton label={t('homeHostCta')} onPress={() => router.push('/host/login')} />
+        </View>
 
-      <View style={styles.actions}>
-        <PrimaryButton label={t('scanQr')} onPress={() => router.push('/scan')} />
-        <GhostButton label={t('guest')} onPress={() => router.push('/e/demo')} />
-        <GhostButton label={t('openDemo')} onPress={() => router.push('/e/demo')} />
-        <GhostButton label={t('host')} onPress={() => router.push('/host/login')} />
-        <GhostButton label={t('start')} onPress={() => router.push('/onboarding')} />
-      </View>
-    </Screen>
+        <Text style={styles.how}>{t('howItWorks')}</Text>
+        <View style={styles.steps}>
+          {steps.map((s) => (
+            <View key={s.title} style={styles.step}>
+              <Text style={styles.stepIcon}>{s.icon}</Text>
+              <Text style={styles.stepTitle}>{s.title}</Text>
+              <Text style={styles.stepSub}>{s.sub}</Text>
+            </View>
+          ))}
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { paddingBottom: 32 },
-  top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  logo: { color: colors.lime, fontSize: 22, fontWeight: '900' },
-  hero: { marginTop: 48, marginBottom: 24, position: 'relative' },
-  glowLime: {
-    position: 'absolute',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: colors.lime,
-    opacity: 0.12,
-    top: -20,
-    right: 0,
+  root: { flex: 1, backgroundColor: colors.bg },
+  scroll: { paddingHorizontal: 24, paddingTop: 56, paddingBottom: 40 },
+  mark: {
+    color: colors.lime,
+    fontFamily: fonts.display,
+    fontSize: 34,
+    fontWeight: '800',
   },
-  glowSky: {
-    position: 'absolute',
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    backgroundColor: colors.sky,
-    opacity: 0.1,
-    left: -10,
-    bottom: 0,
+  headline: {
+    color: colors.fg,
+    fontFamily: fonts.display,
+    fontSize: 26,
+    lineHeight: 34,
+    fontWeight: '700',
+    marginTop: 16,
   },
-  actions: { gap: 12, marginTop: 8 },
-  mock: { marginBottom: 16, borderColor: colors.amber },
-  mockText: { color: colors.amber, fontSize: 13, fontWeight: '600' },
+  cta: { marginTop: 28, gap: 12 },
+  how: {
+    marginTop: 36,
+    color: colors.muted,
+    fontFamily: fonts.bodyMedium,
+    fontSize: 12,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  steps: { flexDirection: 'row', gap: 10, marginTop: 14 },
+  step: {
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 12,
+    minHeight: 100,
+  },
+  stepIcon: { fontSize: 22 },
+  stepTitle: {
+    color: colors.fg,
+    fontFamily: fonts.bodyMedium,
+    fontWeight: '700',
+    marginTop: 8,
+    fontSize: 13,
+  },
+  stepSub: { color: colors.muted, fontSize: 11, marginTop: 4, lineHeight: 15 },
 });

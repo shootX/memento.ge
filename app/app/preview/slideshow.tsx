@@ -1,27 +1,52 @@
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { StyleSheet, Text, View } from 'react-native';
+import { KenBurnsImage } from '@/src/components/KenBurnsImage';
+import { SEED } from '@/src/constants/images';
+import { colors } from '@/src/theme/colors';
+import { fonts } from '@/src/theme/typography';
 
 export default function PreviewSlideshowScreen() {
+  const { t } = useTranslation();
+
   return (
     <View style={styles.root} testID="host-slideshow">
-      <Image
-        source={{ uri: 'https://qr.socialsave.cc/seed-samples/wedding-6.jpg' }}
-        style={styles.img}
-        resizeMode="contain"
-      />
-      <Text style={styles.caption}>მარიამი</Text>
+      <KenBurnsImage uri={SEED.photo2} />
+      <View style={styles.qrBadge}>
+        <Text style={styles.qrText}>{t('slideshowQr')}</Text>
+      </View>
+      <Text style={styles.names}>ნინო & გიორგი</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#000', justifyContent: 'center' },
-  img: { width: '100%', height: '80%' },
-  caption: {
+  root: { flex: 1, backgroundColor: '#000' },
+  qrBadge: {
+    position: 'absolute',
+    top: 20,
+    right: 16,
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    borderWidth: 1,
+    borderColor: colors.lime,
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    maxWidth: 140,
+  },
+  qrText: {
+    color: colors.lime,
+    fontSize: 10,
+    fontFamily: fonts.bodyMedium,
+    fontWeight: '700',
+    lineHeight: 14,
+  },
+  names: {
     position: 'absolute',
     bottom: 48,
     alignSelf: 'center',
     color: '#fff',
+    fontFamily: fonts.display,
+    fontSize: 22,
     fontWeight: '800',
-    fontSize: 18,
   },
 });

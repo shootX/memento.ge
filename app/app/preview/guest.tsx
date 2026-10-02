@@ -1,37 +1,28 @@
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
-import { LanguageSwitcher } from '@/src/components/LanguageSwitcher';
 import { GuestHero } from '@/src/components/guest/GuestHero';
 import { ShotCounter } from '@/src/components/guest/ShotCounter';
 import { ShutterButton } from '@/src/components/guest/ShutterButton';
-import { Field, Screen } from '@/src/components/ui';
-import { formatGeorgianDate } from '@/src/lib/dates';
+import { Field } from '@/src/components/ui';
+import { SEED } from '@/src/constants/images';
 import { colors } from '@/src/theme/colors';
-
-const info = {
-  coupleNames: 'ნინო & გიორგი',
-  eventDate: '2026-06-14T00:00:00.000Z',
-  coverUrl: 'https://qr.socialsave.cc/seed-samples/wedding-4.jpg',
-  disposable: { enabled: true, shotsPerGuest: 5 },
-  limits: { shotsRemaining: 3, maxBytesPerFile: 104857600 },
-};
+import { fonts } from '@/src/theme/typography';
 
 export default function PreviewGuestScreen() {
-  const { t, i18n } = useTranslation();
-  const locale = i18n.language === 'en' || i18n.language === 'ru' ? i18n.language : 'ka';
+  const { t } = useTranslation();
 
   return (
-    <Screen style={styles.screen} testID="guest-ready">
+    <View style={styles.screen} testID="guest-ready">
       <View style={styles.topBar}>
         <Text style={styles.brand}>{t('appName')}</Text>
-        <LanguageSwitcher />
       </View>
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <GuestHero
-          coverUrl={info.coverUrl}
-          coupleNames={info.coupleNames}
-          dateLabel={formatGeorgianDate(info.eventDate, locale)}
+          coverUrl={SEED.cover}
+          coupleNames="ნინო & გიორგი"
+          dateLabel="14 ივნისი, 2026"
+          eventLabel={t('eventLabel')}
         />
         <Animated.View entering={FadeInUp} style={styles.content}>
           <ShotCounter remaining={3} total={5} label={t('shotsLeft')} />
@@ -42,21 +33,21 @@ export default function PreviewGuestScreen() {
           <Text style={styles.hint}>{t('takePhoto')}</Text>
         </Animated.View>
       </ScrollView>
-    </Screen>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { paddingHorizontal: 0, paddingTop: 8 },
-  topBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    marginBottom: 4,
-  },
-  brand: { color: colors.lime, fontWeight: '900', fontSize: 18 },
+  screen: { flex: 1, backgroundColor: colors.bg, paddingTop: 8 },
+  topBar: { paddingHorizontal: 20, marginBottom: 4 },
+  brand: { color: colors.lime, fontFamily: fonts.display, fontSize: 18, fontWeight: '800' },
   scroll: { paddingBottom: 80 },
   content: { paddingHorizontal: 20, gap: 14, marginTop: 16 },
   shutterRow: { alignItems: 'center', marginTop: 8 },
-  hint: { textAlign: 'center', color: colors.muted, fontWeight: '700' },
+  hint: {
+    textAlign: 'center',
+    color: colors.muted,
+    fontFamily: fonts.bodyMedium,
+    fontWeight: '700',
+  },
 });

@@ -13,6 +13,7 @@
     "test": "jest"
   },
   "dependencies": {
+    "@expo-google-fonts/noto-sans-georgian": "^0.4.3",
     "@react-native-async-storage/async-storage": "^3.1.1",
     "@tanstack/react-query": "^5.104.1",
     "expo": "~57.0.26",
