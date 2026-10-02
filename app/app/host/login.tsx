@@ -33,7 +33,7 @@ export default function HostLoginScreen() {
   };
 
   return (
-    <Screen>
+    <Screen testID="host-login">
       <Title>{t('login')}</Title>
       <Subtitle>ელფოსტა + მაგიკ ლინკი / {t('codeLogin')}</Subtitle>
 

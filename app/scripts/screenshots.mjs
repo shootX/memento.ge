@@ -11,7 +11,7 @@ const routes = [
   ['04-guest-demo', '/preview/guest', '[data-testid="guest-ready"]'],
   ['05-guest-upload', '/preview/upload', '[data-testid="upload-queue"]'],
   ['06-gallery-lightbox', '/preview/gallery', '[data-testid="gallery-lightbox"]'],
-  ['07-host-login', '/host/login', 'body'],
+  ['07-host-login', '/host/login', '[data-testid="host-login"]'],
   ['08-host-dashboard', '/preview/host', '[data-testid="host-ready"]'],
   ['09-host-slideshow', '/preview/slideshow', '[data-testid="host-slideshow"]'],
   ['10-host-payment', '/preview/pay', '[data-testid="host-pay"]'],
