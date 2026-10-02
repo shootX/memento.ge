@@ -102,7 +102,7 @@ export function HostMediaGrid({
                 )}
               </button>
             </div>
-            <div className="absolute right-2 top-2 flex gap-1 opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100">
+            <div className="absolute right-2 top-2 flex gap-1 opacity-100 md:opacity-0 md:transition md:group-hover:opacity-100 md:group-focus-within:opacity-100">
               <a
                 href={m.url}
                 download

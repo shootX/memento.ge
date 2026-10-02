@@ -1,21 +1,27 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { Download, Heart, Trash2, X } from "lucide-react";
 import { useEffect } from "react";
+import { cn } from "@/lib/cn";
 
 export type LightboxItem = {
   id: string;
   url: string;
   guestName?: string | null;
+  highlight?: boolean;
 };
 
 export function PhotoLightbox({
   item,
   onClose,
+  onDelete,
+  onToggleHighlight,
 }: {
   item: LightboxItem | null;
   onClose: () => void;
+  onDelete?: (id: string) => void;
+  onToggleHighlight?: (id: string, next: boolean) => void;
 }) {
   useEffect(() => {
     if (!item) return;
@@ -44,6 +50,51 @@ export function PhotoLightbox({
           >
             <X className="h-6 w-6" />
           </button>
+          {(onDelete || onToggleHighlight) && (
+            <div
+              className="absolute left-4 top-4 flex gap-2"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <a
+                href={item.url}
+                download
+                className="rounded-full bg-white/95 p-3 shadow"
+                aria-label="ჩამოტვირთვა"
+              >
+                <Download className="h-5 w-5 text-[var(--fg)]" />
+              </a>
+              {onToggleHighlight && (
+                <button
+                  type="button"
+                  className="rounded-full bg-white/95 p-3 shadow"
+                  aria-label="რჩეული"
+                  onClick={() => onToggleHighlight(item.id, !item.highlight)}
+                >
+                  <Heart
+                    className={cn(
+                      "h-5 w-5",
+                      item.highlight
+                        ? "fill-[var(--accent)] text-[var(--accent)]"
+                        : "text-[var(--fg)]",
+                    )}
+                  />
+                </button>
+              )}
+              {onDelete && (
+                <button
+                  type="button"
+                  className="rounded-full bg-white/95 p-3 shadow"
+                  aria-label="წაშლა"
+                  onClick={() => {
+                    onDelete(item.id);
+                    onClose();
+                  }}
+                >
+                  <Trash2 className="h-5 w-5 text-red-500" />
+                </button>
+              )}
+            </div>
+          )}
           <motion.img
             src={item.url}
             alt=""

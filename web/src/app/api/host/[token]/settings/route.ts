@@ -5,6 +5,7 @@ import { getEventByHostToken } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { verifyHostCsrf } from "@/lib/session";
 import { jsonError } from "@/lib/api-utils";
+import { validateCustomSlug } from "@/lib/guest-slug";
 
 type Params = { params: Promise<{ token: string }> };
 
@@ -26,7 +27,20 @@ export async function PATCH(req: Request, { params }: Params) {
   const event = await getEventByHostToken(token);
   if (!event) return jsonError(404, "Not found");
 
-  const body = schema.parse(await req.json());
+  let body: z.infer<typeof schema>;
+  try {
+    body = schema.parse(await req.json());
+  } catch (e) {
+    if (e instanceof z.ZodError) {
+      return jsonError(
+        400,
+        "მისამართი უნდა იყოს 3–40 სიმბოლო (a-z, 0-9, ტire).",
+        "INVALID_SLUG",
+      );
+    }
+    throw e;
+  }
+
   const data: Record<string, unknown> = {};
 
   if (body.disposableEnabled !== undefined) data.disposableEnabled = body.disposableEnabled;
@@ -37,6 +51,10 @@ export async function PATCH(req: Request, { params }: Params) {
   if (body.moderateUploads !== undefined) data.moderateUploads = body.moderateUploads;
   if (body.publicGallery !== undefined) data.publicGallery = body.publicGallery;
   if (body.customSlug !== undefined && body.customSlug) {
+    const slugCheck = validateCustomSlug(body.customSlug);
+    if (!slugCheck.ok) {
+      return jsonError(400, slugCheck.message, "INVALID_SLUG");
+    }
     const taken = await prisma.event.findFirst({
       where: {
         OR: [{ customSlug: body.customSlug }, { guestSlug: body.customSlug }],

@@ -217,10 +217,12 @@ export function HostDashboard({
 
   const deleteMedia = async (id: string) => {
     if (!event) return;
+    if (!window.confirm("წავშალოთ ეს ფოტო?")) return;
     await fetch(`/api/host/${token}/media/${id}`, {
       method: "DELETE",
       headers: { "x-csrf-token": event.csrfToken },
     });
+    setLightbox(null);
     void load();
   };
 
@@ -283,7 +285,12 @@ export function HostDashboard({
 
   return (
     <div className="min-h-screen bg-[var(--bg-page)]" data-testid="host-ready">
-      <PhotoLightbox item={lightbox} onClose={() => setLightbox(null)} />
+      <PhotoLightbox
+        item={lightbox}
+        onClose={() => setLightbox(null)}
+        onDelete={(id) => void deleteMedia(id)}
+        onToggleHighlight={(id, h) => void toggleHighlight(id, h)}
+      />
 
       <div className="relative overflow-hidden border-b-2 border-[var(--border-soft)]">
         {event.coverUrl ? (
@@ -451,6 +458,7 @@ export function HostDashboard({
                   id: m.id,
                   url: m.url,
                   guestName: m.guestName,
+                  highlight: m.highlight,
                 })
               }
               onDelete={deleteMedia}

@@ -38,6 +38,12 @@ const dict: Record<Locale, Record<string, string>> = {
     invalidImage: "სურათი ვერ გაიხსნა — სცადეთ სხვა ფოტო",
     storageLimit: "ალბომის მეხსიერების ლიმიტი ამოიწურა",
     uploadFailed: "ატვირთვა ვერ მოხერხდა",
+    uploadProgress: "{{current}} / {{total}}",
+    viewPublicAlbum: "ნახე ალბომი",
+    uploadsNotAllowed: "ატვირთვა დახურულია",
+    shotLimitReached: "კადრების ლიმიტი ამოიწურა",
+    galleryNotRevealed: "გალერეა ჯერ არ არის გახსნილი",
+    rateLimited: "ძალიან ბევრი მცდელობა — სცადეთ ცოტა შემდეგ",
   },
   en: {
     photosTab: "Photos",
@@ -72,6 +78,12 @@ const dict: Record<Locale, Record<string, string>> = {
     invalidImage: "Could not read this photo — try another",
     storageLimit: "Album storage limit reached",
     uploadFailed: "Upload failed",
+    uploadProgress: "{{current}} / {{total}}",
+    viewPublicAlbum: "View album",
+    uploadsNotAllowed: "Uploads are closed",
+    shotLimitReached: "Shot limit reached",
+    galleryNotRevealed: "Gallery not open yet",
+    rateLimited: "Too many attempts — try again shortly",
   },
   ru: {
     photosTab: "Фото",
@@ -106,6 +118,12 @@ const dict: Record<Locale, Record<string, string>> = {
     invalidImage: "Не удалось открыть фото — попробуйте другое",
     storageLimit: "Лимит памяти альбома исчерпан",
     uploadFailed: "Не удалось загрузить",
+    uploadProgress: "{{current}} / {{total}}",
+    viewPublicAlbum: "Смотреть альбом",
+    uploadsNotAllowed: "Загрузка закрыта",
+    shotLimitReached: "Лимит кадров исчерпан",
+    galleryNotRevealed: "Галерея ещё не открыта",
+    rateLimited: "Слишком много попыток — подождите",
   },
 };
 
@@ -141,6 +159,16 @@ export function uploadErrorMessage(
       return t(locale, "invalidImage");
     case "STORAGE_LIMIT":
       return t(locale, "storageLimit");
+    case "UPLOADS_NOT_ALLOWED":
+      return t(locale, "uploadsNotAllowed");
+    case "SHOT_LIMIT_REACHED":
+      return t(locale, "shotLimitReached");
+    case "GALLERY_NOT_REVEALED":
+      return t(locale, "galleryNotRevealed");
+    case "RATE_LIMITED":
+      return t(locale, "rateLimited");
+    case "NOT_FOUND":
+      return t(locale, "eventNotActivated");
     default:
       return t(locale, "uploadFailed");
   }

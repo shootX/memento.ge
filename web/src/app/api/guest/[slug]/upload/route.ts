@@ -26,13 +26,13 @@ export async function POST(req: Request, { params }: Params) {
     await consumeUpload(ip, slug);
 
     const event = await getEventByPublicSlug(slug);
-    if (!event) return jsonError(404, "Not found");
+    if (!event) return jsonError(404, "ღონისძიება ვერ მოიძებნა", "NOT_FOUND");
     if (!eventAllowsUpload(event)) {
-      return jsonError(403, "Uploads not allowed");
+      return jsonError(403, "ატვირთვა დახურულია", "UPLOADS_NOT_ALLOWED");
     }
 
     if (event.revealAt && event.revealAt > new Date() && event.disposableEnabled) {
-      return jsonError(403, "Gallery not revealed yet");
+      return jsonError(403, "გალერეა ჯერ არ არის გახსნილი", "GALLERY_NOT_REVEALED");
     }
 
     const plan = getPlan(event.planTier);
@@ -55,7 +55,7 @@ export async function POST(req: Request, { params }: Params) {
         update: {},
       });
       if (quota.used >= event.shotsPerGuest) {
-        return jsonError(403, "Shot limit reached");
+        return jsonError(403, "კადრების ლიმიტი ამოიწურა", "SHOT_LIMIT_REACHED");
       }
     }
 

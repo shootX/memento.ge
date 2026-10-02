@@ -6,18 +6,24 @@ import {
   setUserCookie,
 } from "@/lib/user-session";
 
+import { publicAppUrl } from "@/lib/app-url";
+
+function appRedirect(path: string) {
+  return NextResponse.redirect(new URL(path, publicAppUrl()));
+}
+
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const token = url.searchParams.get("token");
   if (!token) {
-    return NextResponse.redirect(new URL("/login?error=missing", req.url));
+    return appRedirect("/login?error=missing");
   }
 
   const row = await prisma.magicLinkToken.findUnique({
     where: { tokenHash: hashToken(token) },
   });
   if (!row || row.expiresAt < new Date()) {
-    return NextResponse.redirect(new URL("/login?error=expired", req.url));
+    return appRedirect("/login?error=expired");
   }
 
   await prisma.magicLinkToken.delete({ where: { id: row.id } });
@@ -37,5 +43,5 @@ export async function GET(req: Request) {
   const session = await createUserSession(user.id);
   await setUserCookie(session);
 
-  return NextResponse.redirect(new URL("/dashboard", req.url));
+  return appRedirect("/dashboard");
 }

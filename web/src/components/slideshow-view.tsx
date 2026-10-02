@@ -4,6 +4,7 @@ import { formatEventDate } from "@/lib/format-date";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
+import { Maximize2 } from "lucide-react";
 
 type Slide = {
   id: string;
@@ -81,6 +82,18 @@ export function SlideshowView({
     return () => es.close();
   }, [slideshowToken, slides.length]);
 
+  const enterFullscreen = () => {
+    void document.documentElement.requestFullscreen?.().catch(() => {});
+  };
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "f" || e.key === "F") enterFullscreen();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   return (
     <div
       className="fixed inset-0 overflow-hidden bg-[var(--bg-dark)] text-white"
@@ -105,6 +118,15 @@ export function SlideshowView({
             ✨ ახალი ფოტო!
           </span>
         )}
+        <button
+          type="button"
+          onClick={enterFullscreen}
+          className="pointer-events-auto flex items-center gap-2 rounded-full border border-white/30 bg-black/40 px-4 py-2 text-sm font-bold backdrop-blur-sm"
+          title="Fullscreen (F)"
+        >
+          <Maximize2 className="h-4 w-4" />
+          სრული ეკრანი
+        </button>
       </header>
 
       <div className="absolute inset-0 flex items-center justify-center">
@@ -143,20 +165,20 @@ export function SlideshowView({
       </div>
 
       {current?.guestName && (
-        <p className="absolute bottom-24 left-0 right-0 z-20 text-center text-lg text-white/85">
+        <p className="absolute bottom-28 left-0 right-0 z-20 text-center text-2xl font-bold text-white md:text-4xl drop-shadow-lg">
           {current.guestName}
         </p>
       )}
 
-      <aside className="absolute bottom-6 right-6 z-20 flex items-end gap-3 rounded-2xl bg-black/50 backdrop-blur-md p-3 border border-white/20">
+      <aside className="absolute bottom-6 right-6 z-20 flex items-end gap-4 rounded-2xl bg-black/50 backdrop-blur-md p-4 border border-white/20">
         <img
           src={`/api/slideshow/${slideshowToken}/qr`}
           alt="QR"
-          width={120}
-          height={120}
-          className="rounded-lg bg-white p-2 shadow-lg"
+          width={360}
+          height={360}
+          className="h-[min(28vw,360px)] w-[min(28vw,360px)] rounded-lg bg-white p-3 shadow-lg"
         />
-        <div className="max-w-[140px] text-xs text-white/80 leading-snug">
+        <div className="max-w-[180px] text-sm text-white/90 leading-snug">
           დაასკანერე
           <br />
           და გაგვიზიარე ფოტო

@@ -7,6 +7,7 @@ import { queueEmail } from "@/lib/email";
 import { publicAppUrl } from "@/lib/app-url";
 import { clientIp, consumeLogin, jsonError } from "@/lib/api-utils";
 import { isEmailDeliveryConfigured } from "@/lib/site-config";
+import { shouldExposeDevMagicLink } from "@/lib/dev-magic-link";
 
 const schema = z.object({ email: z.string().email().max(200) });
 
@@ -38,11 +39,13 @@ export async function POST(req: Request) {
     console.info("[magic-link]", normalized, verifyUrl);
   }
 
+  const exposeDev = shouldExposeDevMagicLink() && !emailOk;
+
   return NextResponse.json({
     ok: true,
-    devLink: !emailOk || process.env.NODE_ENV === "development" ? verifyUrl : undefined,
+    devLink: exposeDev ? verifyUrl : undefined,
     warning: !emailOk
-      ? "ელფოსტის გაგზავნა არ არის კონფიგურირებული — ლინკი ლოგშია."
+      ? "ელფოსტის გაგზავნა არ არის კონფიგურირებული."
       : undefined,
   });
 }

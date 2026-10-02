@@ -6,7 +6,8 @@ import { verifyHostCsrf } from "@/lib/session";
 import { newToken } from "@/lib/crypto";
 import { hashToken } from "@/lib/user-session";
 import { jsonError } from "@/lib/api-utils";
-import { queueEmail } from "@/lib/email";
+import { shouldExposeDevMagicLink } from "@/lib/dev-magic-link";
+import { publicAppUrl } from "@/lib/app-url";
 
 type Params = { params: Promise<{ token: string }> };
 
@@ -32,11 +33,11 @@ export async function POST(req: Request, { params }: Params) {
     },
   });
 
-  const link = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/cohost/accept?token=${raw}`;
+  const link = `${publicAppUrl()}/api/auth/cohost/accept?token=${raw}`;
   await queueEmail(email, "cohost_invite", { link, coupleNames: event.coupleNames });
 
   return NextResponse.json({
     ok: true,
-    devLink: process.env.NODE_ENV === "development" ? link : undefined,
+    devLink: shouldExposeDevMagicLink() ? link : undefined,
   });
 }
