@@ -17,6 +17,7 @@ type Bootstrap = {
   coupleNames: string;
   eventDate: string;
   guestUrl: string;
+  coverUrl: string | null;
   items: Slide[];
 };
 
@@ -35,6 +36,7 @@ export function SlideshowView({
   const seenRef = useRef(new Set<string>());
 
   const current = slides[index] ?? null;
+  const waiting = !current;
 
   const loadBootstrap = useCallback(async () => {
     const res = await fetch(`/api/slideshow/${slideshowToken}`);
@@ -99,6 +101,18 @@ export function SlideshowView({
       className="fixed inset-0 overflow-hidden bg-[var(--bg-dark)] text-white"
       data-testid={slides.length > 0 ? "slideshow-ready" : "slideshow-waiting"}
     >
+      {waiting && boot?.coverUrl && (
+        <>
+          <img
+            src={boot.coverUrl}
+            alt=""
+            aria-hidden
+            className="pointer-events-none absolute inset-0 h-full w-full scale-110 object-cover blur-3xl brightness-75"
+          />
+          <div className="pointer-events-none absolute inset-0 bg-black/45 z-[5]" />
+        </>
+      )}
+
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/70 z-10" />
 
       <header className="absolute left-0 right-0 top-0 z-20 flex items-start justify-between p-6 md:p-10">
@@ -129,11 +143,27 @@ export function SlideshowView({
         </button>
       </header>
 
-      <div className="absolute inset-0 flex items-center justify-center">
-        {!current ? (
-          <p className="font-display text-2xl text-white/50 animate-pulse z-20">
-            ველოდებით ფოტოებს…
-          </p>
+      <div className="absolute inset-0 flex items-center justify-center z-20">
+        {waiting ? (
+          <div className="flex max-w-lg flex-col items-center gap-8 px-6 text-center">
+            <p className="font-display text-xl text-white/70 md:text-2xl">ველოდებით ფოტოებს…</p>
+            <img
+              src={`/api/slideshow/${slideshowToken}/qr`}
+              alt="QR"
+              width={480}
+              height={480}
+              className="h-[min(52vw,22rem)] w-[min(52vw,22rem)] rounded-2xl bg-white p-4 shadow-2xl ring-4 ring-white/20"
+            />
+            {boot?.guestUrl ? (
+              <a
+                href={boot.guestUrl}
+                className="pointer-events-auto rounded-full btn-gradient px-10 py-4 text-lg font-extrabold shadow-xl transition hover:scale-[1.02] md:text-xl"
+              >
+                გაგვიზიარე ფოტო →
+              </a>
+            ) : null}
+            <p className="text-sm text-white/60">ან დაასკანერე QR კოდი</p>
+          </div>
         ) : current.mimeType.startsWith("video/") ? (
           <video
             key={current.id}
@@ -170,20 +200,22 @@ export function SlideshowView({
         </p>
       )}
 
-      <aside className="absolute bottom-6 right-6 z-20 flex items-end gap-4 rounded-2xl bg-black/50 backdrop-blur-md p-4 border border-white/20">
-        <img
-          src={`/api/slideshow/${slideshowToken}/qr`}
-          alt="QR"
-          width={360}
-          height={360}
-          className="h-[min(28vw,360px)] w-[min(28vw,360px)] rounded-lg bg-white p-3 shadow-lg"
-        />
-        <div className="max-w-[180px] text-sm text-white/90 leading-snug">
-          დაასკანერე
-          <br />
-          და გაგვიზიარე ფოტო
-        </div>
-      </aside>
+      {!waiting && (
+        <aside className="absolute bottom-6 right-6 z-20 flex items-end gap-4 rounded-2xl bg-black/50 backdrop-blur-md p-4 border border-white/20">
+          <img
+            src={`/api/slideshow/${slideshowToken}/qr`}
+            alt="QR"
+            width={360}
+            height={360}
+            className="h-[min(28vw,360px)] w-[min(28vw,360px)] rounded-lg bg-white p-3 shadow-lg"
+          />
+          <div className="max-w-[180px] text-sm text-white/90 leading-snug">
+            დაასკანერე
+            <br />
+            და გაგვიზიარე ფოტო
+          </div>
+        </aside>
+      )}
     </div>
   );
 }

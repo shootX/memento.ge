@@ -7,9 +7,11 @@ import { guestShareInviteText, buildEventShareMetadata } from "@/lib/share-metad
 import { resolveOwnerUserId } from "@/lib/resolve-owner";
 
 describe("landing QA", () => {
-  it("serves en copy for /en locale header", () => {
-    expect(resolveLandingLocale("en")).toBe("en");
-    expect(getLandingCopy("en").ctaStart).toBe("Get started");
+  it("serves en nav chrome copy", () => {
+    const c = getLandingCopy("en");
+    expect(c.wordmark).toBe("Memento");
+    expect(c.navPricing).toBe("Pricing");
+    expect(c.login).toBe("Log in");
   });
 
   it("removes fake demo stats from landing source", () => {

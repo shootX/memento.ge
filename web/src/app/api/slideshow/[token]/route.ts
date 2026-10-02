@@ -22,10 +22,17 @@ export async function GET(req: Request, { params }: Params) {
     const exp = Date.now() + 3600_000;
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
 
+    let coverUrl: string | null = null;
+    if (event.coverPhotoKey) {
+      const coverToken = signMediaAccess(`cover:${event.id}`, exp);
+      coverUrl = `/api/media/cover/${event.id}?token=${encodeURIComponent(coverToken)}`;
+    }
+
     return NextResponse.json({
       coupleNames: event.coupleNames,
       eventDate: event.eventDate,
       guestUrl: `${appUrl}/e/${event.guestSlug}`,
+      coverUrl,
       items: items.map((m) => ({
         id: m.id,
         mimeType: m.mimeType,

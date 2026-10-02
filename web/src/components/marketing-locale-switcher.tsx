@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
+import { localeSwitcherHref } from "@/lib/marketing-locale-path";
 
 const locales = [
   { code: "ka", href: "/", label: "ქარ" },
@@ -36,7 +37,7 @@ export function MarketingLocaleSwitcher({
       {locales.map((l) => (
         <Link
           key={l.code}
-          href={l.href}
+          href={localeSwitcherHref(pathname, l.href)}
           className={cn(
             "rounded-full px-3 py-1 text-xs font-bold transition",
             active === l.code

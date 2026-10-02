@@ -1,22 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { MarketingLocaleSwitcher } from "@/components/marketing-locale-switcher";
-
-const links = [
-  { href: "/pricing", label: "ფასები" },
-  { href: "/for-partners", label: "პარტნიორებს" },
-  { href: "/faq", label: "კითხვები" },
-];
+import { getLandingCopy } from "@/lib/landing-copy";
+import {
+  isMarketingHomePath,
+  marketingLocaleFromPath,
+  withMarketingLocalePath,
+} from "@/lib/marketing-locale-path";
 
 export function SiteHeaderNav() {
   const [open, setOpen] = useState(false);
-  const pathname = usePathname();
-  const homeHero = pathname === "/";
+  const pathname = usePathname() ?? "/";
+  const homeHero = isMarketingHomePath(pathname);
+  const locale = marketingLocaleFromPath(pathname);
+  const c = getLandingCopy(locale);
+
+  const links = useMemo(
+    () => [
+      { href: withMarketingLocalePath(pathname, "/pricing"), label: c.navPricing },
+      { href: withMarketingLocalePath(pathname, "/for-partners"), label: c.navPartners },
+      { href: withMarketingLocalePath(pathname, "/faq"), label: c.navFaq },
+    ],
+    [pathname, c.navPricing, c.navPartners, c.navFaq],
+  );
 
   const linkClass = homeHero
     ? "text-white/90 hover:text-white"
@@ -34,13 +45,14 @@ export function SiteHeaderNav() {
       >
         <div className="container-page flex items-center justify-between py-4 md:py-5">
           <Link
-            href="/"
+            href={withMarketingLocalePath(pathname, "/")}
             className={cn(
               "font-display text-lg font-extrabold tracking-tight md:text-xl",
               homeHero ? "text-white" : "text-[var(--fg)]",
             )}
           >
-            მემენტო<span className="text-[var(--accent)]">.</span>
+            {c.wordmark}
+            <span className="text-[var(--accent)]">.</span>
           </Link>
           <nav className="hidden items-center gap-8 text-sm font-semibold md:flex">
             {links.map((l) => (
@@ -52,21 +64,21 @@ export function SiteHeaderNav() {
           <div className="flex items-center gap-2 md:gap-3">
             <MarketingLocaleSwitcher className={homeHero ? "hidden sm:flex" : "hidden md:flex"} dark={homeHero} />
             <Link
-              href="/login"
+              href={withMarketingLocalePath(pathname, "/login")}
               className={cn(
                 "text-sm font-semibold transition",
                 homeHero ? "text-white/85 hover:text-white" : "text-[var(--fg)] hover:text-[var(--accent)]",
               )}
             >
-              შესვლა
+              {c.login}
             </Link>
             <Link
-              href="/onboarding"
+              href={withMarketingLocalePath(pathname, "/onboarding")}
               className={cn(
                 "hidden rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-bold text-[var(--accent-on)] sm:inline-flex",
               )}
             >
-              დაიწყე
+              {c.ctaStart}
             </Link>
             <button
               type="button"
@@ -76,7 +88,7 @@ export function SiteHeaderNav() {
                   ? "border-white/30 bg-black/20 text-white backdrop-blur-sm hover:bg-black/30"
                   : "border-[var(--border)] text-[var(--fg)] hover:bg-[var(--bg-muted)]",
               )}
-              aria-label="მენიუ"
+              aria-label={c.menuAria}
               aria-expanded={open}
               onClick={() => setOpen((v) => !v)}
             >
@@ -93,11 +105,15 @@ export function SiteHeaderNav() {
                 {l.label}
               </Link>
             ))}
-            <Link href="/login" onClick={() => setOpen(false)}>
-              შესვლა
+            <Link href={withMarketingLocalePath(pathname, "/login")} onClick={() => setOpen(false)}>
+              {c.login}
             </Link>
-            <Link href="/onboarding" className="text-[var(--accent)]" onClick={() => setOpen(false)}>
-              დაიწყე →
+            <Link
+              href={withMarketingLocalePath(pathname, "/onboarding")}
+              className="text-[var(--accent)]"
+              onClick={() => setOpen(false)}
+            >
+              {c.ctaStart} →
             </Link>
             <MarketingLocaleSwitcher dark />
           </nav>
