@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { verifyHostCsrf } from "@/lib/session";
 import { jsonError } from "@/lib/api-utils";
 import { validateCustomSlug } from "@/lib/guest-slug";
+import { e2eRequestAuthorized } from "@/lib/e2e-bypass";
 
 type Params = { params: Promise<{ token: string }> };
 
@@ -21,7 +22,8 @@ const schema = z.object({
 
 export async function PATCH(req: Request, { params }: Params) {
   const { token } = await params;
-  if (!(await verifyHostCsrf(token, req.headers.get("x-csrf-token")))) {
+  const csrfOk = await verifyHostCsrf(token, req.headers.get("x-csrf-token"));
+  if (!csrfOk && !e2eRequestAuthorized(req)) {
     return jsonError(403, "Invalid CSRF");
   }
   const event = await getEventByHostToken(token);

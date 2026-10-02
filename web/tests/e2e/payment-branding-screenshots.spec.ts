@@ -1,7 +1,6 @@
 import { test, expect } from "@playwright/test";
 import path from "path";
-
-const base = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:43123";
+import { base, e2eHeaders } from "./helpers";
 const outDir = "/opt/cursor/artifacts";
 
 test.use({
@@ -11,6 +10,7 @@ test.use({
 
 test("payment branding mobile screenshots", async ({ page, request }) => {
   const create = await request.post(`${base}/api/events`, {
+    headers: e2eHeaders({ "Content-Type": "application/json" }),
     data: {
       coupleNames: "Brand QA",
       eventDate: new Date().toISOString(),
@@ -20,7 +20,7 @@ test("payment branding mobile screenshots", async ({ page, request }) => {
   expect(create.ok()).toBeTruthy();
   const event = await create.json();
 
-  await page.goto(`${base}/host/${event.hostToken}/pay`, { waitUntil: "networkidle" });
+  await page.goto(`${base}/host/${event.hostToken}/pay`, { waitUntil: "domcontentloaded" });
   await expect(page.getByTestId("host-checkout-providers")).toBeVisible();
   await page.screenshot({
     path: path.join(outDir, "payment-picker-mobile.png"),
@@ -28,6 +28,7 @@ test("payment branding mobile screenshots", async ({ page, request }) => {
   });
 
   await page.getByTestId("pay-provider-tbc").click();
+  await expect(page.getByTestId("pay-provider-tbc")).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByTestId("pay-continue-btn")).toBeEnabled();
   await page.getByTestId("pay-continue-btn").click();
   await page.waitForURL(/\/pay\/mock.*provider=tbc/);
@@ -36,8 +37,9 @@ test("payment branding mobile screenshots", async ({ page, request }) => {
     fullPage: true,
   });
 
-  await page.goto(`${base}/host/${event.hostToken}/pay`, { waitUntil: "networkidle" });
+  await page.goto(`${base}/host/${event.hostToken}/pay`, { waitUntil: "domcontentloaded" });
   await page.getByTestId("pay-provider-bog").click();
+  await expect(page.getByTestId("pay-provider-bog")).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByTestId("pay-continue-btn")).toBeEnabled();
   await page.getByTestId("pay-continue-btn").click();
   await page.waitForURL(/\/pay\/mock.*provider=bog/);

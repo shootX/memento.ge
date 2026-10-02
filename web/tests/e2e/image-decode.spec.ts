@@ -1,15 +1,27 @@
 import { test, expect } from "@playwright/test";
 import { readFileSync } from "fs";
-
-const base = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:43123";
-const demo = JSON.parse(readFileSync("public/demo-manifest.json", "utf8"));
+import {
+  activateEvent,
+  base,
+  createEvent,
+  e2eHeaders,
+  tinyPng,
+} from "./helpers";
 
 async function expectImagesDecoded(
   page: import("@playwright/test").Page,
   selector: string,
   min = 1,
 ) {
-  await page.waitForLoadState("networkidle");
+  await page.locator(selector).first().waitFor({ state: "visible", timeout: 30_000 });
+  await page.waitForFunction(
+    (sel) => {
+      const imgs = [...document.querySelectorAll<HTMLImageElement>(sel)];
+      return imgs.some((img) => img.naturalWidth > 0 && img.naturalHeight > 0);
+    },
+    selector,
+    { timeout: 30_000 },
+  );
   const result = await page.evaluate((sel) => {
     const imgs = [...document.querySelectorAll<HTMLImageElement>(sel)];
     return imgs.map((img) => ({
@@ -25,8 +37,19 @@ async function expectImagesDecoded(
   }
 }
 
-test("host gallery media images decode", async ({ page }) => {
-  await page.goto(`${base}/host/${demo.hostToken}?tab=gallery`, { waitUntil: "networkidle" });
+const demo = JSON.parse(readFileSync("public/demo-manifest.json", "utf8"));
+
+test("host gallery media images decode", async ({ page, request }) => {
+  const event = await createEvent(request, "Decode Host");
+  await activateEvent(request, event.id);
+  await request.post(`${base}/api/guest/${event.guestSlug}/upload`, {
+    headers: e2eHeaders(),
+    multipart: {
+      file: { name: "a.png", mimeType: "image/png", buffer: tinyPng },
+      guestKey: "decode-host",
+    },
+  });
+  await page.goto(`${base}/host/${event.hostToken}?tab=gallery`, { waitUntil: "domcontentloaded" });
   await page.waitForSelector('[data-testid="host-ready"]');
   await expectImagesDecoded(page, '[data-testid="host-media-img"]', 1);
 });

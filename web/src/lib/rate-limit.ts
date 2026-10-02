@@ -16,6 +16,7 @@ const loginLimiter = new RateLimiterMemory({
 });
 
 export async function consumeUpload(ip: string, guestSlug: string): Promise<void> {
+  if (process.env.E2E_RATE_LIMIT_FREE === "1") return;
   const key = `up:${ip}:${guestSlug}`;
   try {
     await uploadLimiter.consume(key);
@@ -25,6 +26,7 @@ export async function consumeUpload(ip: string, guestSlug: string): Promise<void
 }
 
 export async function consumeApi(ip: string): Promise<void> {
+  if (process.env.E2E_RATE_LIMIT_FREE === "1") return;
   try {
     await apiLimiter.consume(ip);
   } catch {
@@ -33,6 +35,7 @@ export async function consumeApi(ip: string): Promise<void> {
 }
 
 export async function consumeLogin(ip: string): Promise<void> {
+  if (process.env.E2E_RATE_LIMIT_FREE === "1") return;
   try {
     await loginLimiter.consume(ip);
   } catch {

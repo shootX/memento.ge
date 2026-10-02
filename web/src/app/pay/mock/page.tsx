@@ -82,6 +82,7 @@ function MockPayInner() {
       busy={busy}
       onPay={() => void complete("success")}
       onDecline={() => void complete("fail")}
+      cancelHref={hostToken ? `/host/${hostToken}/pay` : null}
     />
   );
 }
