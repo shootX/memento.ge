@@ -279,17 +279,15 @@ export function GuestUpload({
 
         {disposable && shotsLeft !== null && (
           <motion.div
-            className="mt-5 rounded-3xl border-2 border-[var(--accent)]/40 bg-black p-5 text-white"
+            className="guest-shots-card mt-5 rounded-3xl border border-white/15 p-5 text-white shadow-lg"
             animate={reduce ? {} : { scale: [1, 1.02, 1] }}
             transition={{ repeat: Infinity, duration: 2 }}
           >
             <p className="text-center text-xs font-bold uppercase tracking-widest text-[var(--accent)]">
               {t(locale, "shotsRemaining")}
             </p>
-            <p className="mt-2 text-center font-display text-5xl font-bold">
-              {shotsLeft}
-            </p>
-            <p className="text-center text-sm text-[var(--fg-2)]">კადარი დარჩა</p>
+            <p className="mt-2 text-center font-display text-5xl font-bold">{shotsLeft}</p>
+            <p className="text-center text-sm font-medium text-white/90">კადარი დარჩა</p>
             <div className="mt-4 flex justify-center gap-1.5">
               {Array.from({ length: info.disposable.shotsPerGuest }).map((_, i) => {
                 const remaining = shotsLeft ?? 0;
@@ -302,7 +300,7 @@ export function GuestUpload({
                       "film-strip-dot h-11 w-9 rounded-md border-2 transition",
                       isRemaining
                         ? "border-[var(--accent)] bg-[var(--accent)] shadow-[0_0_12px_rgba(196,255,13,0.45)]"
-                        : "border-white/10 bg-black/30 opacity-40",
+                        : "border-white/25 bg-white/10 opacity-50",
                     )}
                     aria-hidden
                   />
