@@ -6,6 +6,7 @@ import { newToken } from "@/lib/crypto";
 import { queueEmail } from "@/lib/email";
 import { publicAppUrl } from "@/lib/app-url";
 import { clientIp, consumeLogin, jsonError } from "@/lib/api-utils";
+import { isEmailDeliveryConfigured } from "@/lib/site-config";
 
 const schema = z.object({ email: z.string().email().max(200) });
 
@@ -32,8 +33,16 @@ export async function POST(req: Request) {
   const verifyUrl = `${publicAppUrl()}/api/auth/verify?token=${token}`;
   await queueEmail(normalized, "magic_link", { verifyUrl });
 
+  const emailOk = isEmailDeliveryConfigured();
+  if (!emailOk) {
+    console.info("[magic-link]", normalized, verifyUrl);
+  }
+
   return NextResponse.json({
     ok: true,
-    devLink: process.env.NODE_ENV === "development" ? verifyUrl : undefined,
+    devLink: !emailOk || process.env.NODE_ENV === "development" ? verifyUrl : undefined,
+    warning: !emailOk
+      ? "ელფოსტის გაგზავნა არ არის კონფიგურირებული — ლინკი ლოგშია."
+      : undefined,
   });
 }

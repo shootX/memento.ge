@@ -1,6 +1,20 @@
 import { prisma } from "@/lib/prisma";
 import type { Event } from "@/generated/prisma/client";
 import { getPlan } from "@/lib/plans";
+import { trialUploadLimit } from "@/lib/site-config";
+
+function isValidPublicSlug(slug: string): boolean {
+  if (!slug || slug.length < 3 || slug.length > 64) return false;
+  return /^[a-zA-Z0-9_-]+$/.test(slug);
+}
+
+/** Guest upload URL slug (auto-generated guestSlug or host customSlug). */
+export async function getEventByPublicSlug(slug: string): Promise<Event | null> {
+  if (!isValidPublicSlug(slug)) return null;
+  return prisma.event.findFirst({
+    where: { OR: [{ guestSlug: slug }, { customSlug: slug }] },
+  });
+}
 
 export async function getEventByGuestSlug(slug: string): Promise<Event | null> {
   if (!slug || slug.length < 12 || slug.length > 64) return null;
@@ -28,12 +42,27 @@ export function eventIsActive(event: Event): boolean {
   return true;
 }
 
+export function eventInTrialUploads(event: Event): boolean {
+  const trial = trialUploadLimit();
+  if (trial <= 0 || event.isPaid) return false;
+  return event.uploadCount < trial;
+}
+
 export function eventAllowsUpload(event: Event): boolean {
-  if (!eventIsActive(event)) return false;
+  if (event.expiresAt && event.expiresAt < new Date()) return false;
   const plan = getPlan(event.planTier);
-  if (event.uploadCount >= plan.maxUploads) return false;
-  if (event.totalBytes >= plan.maxTotalBytes) return false;
-  return true;
+
+  if (event.isPaid) {
+    if (event.uploadCount >= plan.maxUploads) return false;
+    if (event.totalBytes >= plan.maxTotalBytes) return false;
+    return true;
+  }
+
+  if (eventInTrialUploads(event)) {
+    return event.uploadCount < trialUploadLimit();
+  }
+
+  return false;
 }
 
 export async function assertMediaBelongsToEvent(

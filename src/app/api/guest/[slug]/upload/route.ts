@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
-  getEventByGuestSlug,
+  getEventByPublicSlug,
   eventAllowsUpload,
 } from "@/lib/auth";
 import { getPlan } from "@/lib/plans";
@@ -25,7 +25,7 @@ export async function POST(req: Request, { params }: Params) {
     const ip = clientIp(req);
     await consumeUpload(ip, slug);
 
-    const event = await getEventByGuestSlug(slug);
+    const event = await getEventByPublicSlug(slug);
     if (!event) return jsonError(404, "Not found");
     if (!eventAllowsUpload(event)) {
       return jsonError(403, "Uploads not allowed");

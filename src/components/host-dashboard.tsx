@@ -17,6 +17,8 @@ import { cn } from "@/lib/cn";
 import { HostSettings } from "@/components/host-settings";
 import { PhotoLightbox, type LightboxItem } from "@/components/photo-lightbox";
 import { HostMediaGrid, type HostGridMedia } from "@/components/host-media-grid";
+import { HostLinkSaveCard } from "@/components/host-link-save-card";
+import Link from "next/link";
 
 type Tab = "gallery" | "qr" | "guestbook" | "settings";
 
@@ -24,6 +26,7 @@ type HostEvent = {
   coupleNames: string;
   eventDate: string;
   guestUrl: string;
+  hostUrl: string;
   slideshowUrl: string;
   isPaid: boolean;
   planTier: string;
@@ -50,6 +53,8 @@ type GuestMsg = {
   guestName: string | null;
   body: string;
   createdAt: string;
+  status?: string;
+  type?: string;
 };
 
 const templates = [
@@ -69,6 +74,7 @@ type Bootstrap = {
   coupleNames: string;
   eventDate: string;
   guestUrl: string;
+  hostUrl: string;
   slideshowUrl: string;
   isPaid: boolean;
   planTier: string;
@@ -96,10 +102,14 @@ export function HostDashboard({
   token,
   bootstrap = null,
   initialTab = "gallery",
+  showWelcome = false,
+  paidBanner = false,
 }: {
   token: string;
   bootstrap?: Bootstrap | null;
   initialTab?: Tab;
+  showWelcome?: boolean;
+  paidBanner?: boolean;
 }) {
   const [event, setEvent] = useState<HostEvent | null>(
     bootstrap
@@ -107,6 +117,7 @@ export function HostDashboard({
           coupleNames: bootstrap.coupleNames,
           eventDate: bootstrap.eventDate,
           guestUrl: bootstrap.guestUrl,
+          hostUrl: bootstrap.hostUrl,
           slideshowUrl: bootstrap.slideshowUrl,
           isPaid: bootstrap.isPaid,
           planTier: bootstrap.planTier,
@@ -130,6 +141,8 @@ export function HostDashboard({
     useState<(typeof templates)[number]["id"]>("botanical");
   const [lightbox, setLightbox] = useState<LightboxItem | null>(null);
   const [newPulse, setNewPulse] = useState(false);
+  const [zipError, setZipError] = useState<string | null>(null);
+  const [welcomeOpen, setWelcomeOpen] = useState(showWelcome);
 
   const load = useCallback(async () => {
     try {
@@ -138,7 +151,34 @@ export function HostDashboard({
         fetch(`/api/host/${token}/media`).then((r) => r.json()),
         fetch(`/api/host/${token}/guestbook`).then((r) => r.json()),
       ]);
-      if (!ev.error) setEvent(ev);
+      if (!ev.error)
+        setEvent((prev) =>
+          prev
+            ? {
+                ...prev,
+                ...ev,
+                hostUrl: ev.hostUrl ?? prev.hostUrl,
+                guestUrl: ev.guestUrl ?? prev.guestUrl,
+              }
+            : {
+                coupleNames: ev.coupleNames,
+                eventDate: ev.eventDate,
+                guestUrl: ev.guestUrl,
+                hostUrl: ev.hostUrl,
+                slideshowUrl: ev.slideshowUrl,
+                isPaid: ev.isPaid,
+                planTier: ev.planTier,
+                usage: ev.usage,
+                coverUrl: ev.coverUrl,
+                csrfToken: ev.csrfToken,
+                customSlug: ev.customSlug,
+                publicGallery: ev.publicGallery,
+                disposableEnabled: ev.disposableEnabled,
+                shotsPerGuest: ev.shotsPerGuest,
+                revealAt: ev.revealAt,
+                moderateUploads: ev.moderateUploads,
+              },
+        );
       if (!med.error) {
         setMedia((prev) => {
           const items = (med.items ?? []) as MediaItem[];
@@ -185,14 +225,33 @@ export function HostDashboard({
 
   const downloadZip = async () => {
     if (!event) return;
+    setZipError(null);
     const res = await fetch(`/api/host/${token}/zip`, {
       headers: { "x-csrf-token": event.csrfToken },
     });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setZipError(data.error ?? "ZIP ვერ ჩამოიტვირთა");
+      return;
+    }
     const blob = await res.blob();
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = "album.zip";
     a.click();
+  };
+
+  const shareGuestLink = async () => {
+    if (!event) return;
+    if (navigator.share) {
+      try {
+        await navigator.share({ url: event.guestUrl, title: event.coupleNames });
+        return;
+      } catch {
+        /* copy fallback */
+      }
+    }
+    await navigator.clipboard.writeText(event.guestUrl);
   };
 
   if (loading) {
@@ -272,17 +331,57 @@ export function HostDashboard({
             <Button variant="outline" size="sm" onClick={() => setTab("qr")}>
               <QrCode className="mr-1 h-4 w-4" /> QR ბეჭდვა
             </Button>
-            <Button variant="outline" size="sm" asChild>
-              <a href={event.guestUrl} target="_blank" rel="noreferrer">
+            <Button variant="outline" size="sm" onClick={() => void shareGuestLink()}>
                 <ExternalLink className="mr-1 h-4 w-4" /> ლინკის გაზიარება
-              </a>
             </Button>
-            <Button size="sm" className="btn-gradient border-0" onClick={downloadZip}>
+            <Button size="sm" className="btn-gradient border-0" onClick={() => void downloadZip()}>
               <Download className="mr-1 h-4 w-4" /> ZIP
             </Button>
           </div>
+          {zipError && <p className="mt-3 text-sm font-semibold text-red-600">{zipError}</p>}
         </div>
       </div>
+
+      {!event.isPaid && (
+        <div className="container-page -mt-2 pb-4">
+          <div
+            className="card-chunky flex flex-col gap-4 border-2 border-amber-200 bg-amber-50/80 p-5 md:flex-row md:items-center md:justify-between"
+            data-testid="host-pay-cta"
+          >
+            <div>
+              <p className="font-bold text-amber-950">ალბომი გადაუხდელია</p>
+              <p className="mt-1 text-sm text-amber-900/90">
+                გადახდის შემდეგ სტუმრები შეძლებენ ატვირთვას და სტუმრების წიგნს.
+              </p>
+            </div>
+            <Button className="btn-gradient shrink-0 border-0" asChild>
+              <Link href={`/host/${token}/pay`}>გადახდა</Link>
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {paidBanner && event.isPaid && (
+        <div className="container-page pb-2">
+          <p className="rounded-2xl bg-[var(--accent)]/20 px-4 py-3 text-sm font-bold text-[var(--fg)]">
+            გადახდა მიღებულია — ალბომი აქტიურია ✓
+          </p>
+        </div>
+      )}
+
+      {welcomeOpen && (
+        <div className="container-page pb-4">
+          <HostLinkSaveCard
+            token={token}
+            csrfToken={event.csrfToken}
+            hostUrl={event.hostUrl}
+            guestUrl={event.guestUrl}
+          />
+          <Button type="button" variant="ghost" className="mt-2" onClick={() => setWelcomeOpen(false)}>
+            გასაგებია
+          </Button>
+        </div>
+      )}
 
       <header className="sticky top-0 z-30 border-b border-[var(--border-soft)] bg-[var(--bg)]/92 backdrop-blur-md">
         <nav className="container-page flex gap-2 overflow-x-auto py-3">
@@ -418,8 +517,49 @@ export function HostDashboard({
             ) : (
               messages.map((m) => (
                 <div key={m.id} className="card-chunky p-5">
-                  <p className="font-bold">{m.guestName ?? "სტუმარი"}</p>
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <p className="font-bold">{m.guestName ?? "სტუმარი"}</p>
+                    {m.status === "pending" && (
+                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-900">
+                        მოლოდინში
+                      </span>
+                    )}
+                  </div>
                   <p className="mt-2 text-[var(--text-muted)]">{m.body}</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {m.status === "pending" && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={async () => {
+                          await fetch(`/api/host/${token}/guestbook/${m.id}`, {
+                            method: "PATCH",
+                            headers: {
+                              "Content-Type": "application/json",
+                              "x-csrf-token": event.csrfToken,
+                            },
+                            body: JSON.stringify({ status: "approved" }),
+                          });
+                          void load();
+                        }}
+                      >
+                        დამტკიცება
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={async () => {
+                        await fetch(`/api/host/${token}/guestbook/${m.id}`, {
+                          method: "DELETE",
+                          headers: { "x-csrf-token": event.csrfToken },
+                        });
+                        void load();
+                      }}
+                    >
+                      წაშლა
+                    </Button>
+                  </div>
                 </div>
               ))
             )}

@@ -26,6 +26,10 @@ const nextConfig: NextConfig = {
     "better-sqlite3",
     "@prisma/adapter-better-sqlite3",
   ],
+  env: {
+    NEXT_PUBLIC_WHATSAPP_NUMBER:
+      process.env.WHATSAPP_NUMBER ?? process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "",
+  },
   poweredByHeader: false,
   devIndicators: false,
   async redirects() {

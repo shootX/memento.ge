@@ -22,8 +22,8 @@ export function LocaleToggle({
           className={cn(
             "rounded-full px-3 py-1 text-xs font-medium transition-colors",
             value === l
-              ? "bg-[var(--color-forest)] text-white"
-              : "text-[var(--color-muted)] hover:text-[var(--color-ink)]",
+              ? "bg-[var(--accent)] text-[var(--accent-on)]"
+              : "text-[var(--muted)] hover:text-[var(--fg)]",
           )}
         >
           {labels[l]}

@@ -56,7 +56,7 @@ export default function PricingPage() {
                 </li>
                 <li className="text-sm font-semibold">სლაიდშოუ + QR ბარათები</li>
               </ul>
-              <Link href="/onboarding" className="mt-8 block">
+              <Link href={`/onboarding?plan=${p.id}`} className="mt-8 block">
                 <Button
                   className={cn(
                     "w-full border-0 py-6 text-lg",

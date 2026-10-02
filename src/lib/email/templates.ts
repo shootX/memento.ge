@@ -18,6 +18,11 @@ const subjects: Record<string, Record<EmailLocale, string>> = {
     en: "Memento — your plan is expiring soon",
     ru: "Memento — срок пакета истекает",
   },
+  host_link: {
+    ka: "Memento — ჰოსტის ლინკი",
+    en: "Memento — your host link",
+    ru: "Memento — ссылка хоста",
+  },
 };
 
 function wrapHtml(locale: EmailLocale, title: string, bodyHtml: string): string {
@@ -61,6 +66,15 @@ export function renderEmail(
       loc,
       subject,
       `<p>${loc === "ka" ? `«${vars.coupleNames}» — პაკეტის ვადა: ${vars.expiresAt}` : loc === "ru" ? `«${vars.coupleNames}» — срок до ${vars.expiresAt}` : `«${vars.coupleNames}» expires ${vars.expiresAt}`}</p><p><a href="${vars.hostUrl}">${vars.hostUrl}</a></p>`,
+    );
+    return { subject, html, text: `${subject}\n${vars.hostUrl}` };
+  }
+
+  if (template === "host_link") {
+    const html = wrapHtml(
+      loc,
+      subject,
+      `<p>${loc === "ka" ? `ღონისძიება «${vars.coupleNames}» — ჰოსტის პანელი:` : loc === "ru" ? `Событие «${vars.coupleNames}» — панель:` : `Event «${vars.coupleNames}» — host panel:`}</p><p><a href="${vars.hostUrl}" style="display:inline-block;background:#c4ff0d;color:#121212;padding:12px 20px;border-radius:999px;text-decoration:none;font-weight:700">Host</a></p><p style="font-size:12px;color:#666">${vars.hostUrl}</p>`,
     );
     return { subject, html, text: `${subject}\n${vars.hostUrl}` };
   }

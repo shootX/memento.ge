@@ -2,6 +2,7 @@ import { getEventByHostToken, eventIsActive } from "@/lib/auth";
 import { getPlan } from "@/lib/plans";
 import { signMediaAccess, signCsrfToken } from "@/lib/crypto";
 import { prisma } from "@/lib/prisma";
+import { appUrl } from "@/lib/site-config";
 
 export async function getHostBootstrap(token: string) {
   const event = await getEventByHostToken(token);
@@ -43,11 +44,15 @@ export async function getHostBootstrap(token: string) {
     take: 100,
   });
 
+  const base = appUrl();
+  const publicSlug = event.customSlug ?? event.guestSlug;
+
   return {
     coupleNames: event.coupleNames,
     eventDate: event.eventDate.toISOString(),
-    guestUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/e/${event.guestSlug}`,
-    slideshowUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/slideshow/${event.slideshowToken}`,
+    guestUrl: `${base}/e/${publicSlug}`,
+    hostUrl: `${base}/host/${token}`,
+    slideshowUrl: `${base}/slideshow/${event.slideshowToken}`,
     isPaid: event.isPaid,
     planTier: event.planTier,
     usage: {
@@ -71,6 +76,8 @@ export async function getHostBootstrap(token: string) {
       guestName: m.guestName,
       body: m.body ?? (m.type === "audio" ? "🎤 ხმოვანი შეტყობინება" : ""),
       createdAt: m.createdAt.toISOString(),
+      status: m.status,
+      type: m.type,
     })),
   };
 }

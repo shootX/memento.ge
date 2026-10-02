@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import imageCompression from "browser-image-compression";
-import confetti from "canvas-confetti";
 import { motion } from "framer-motion";
 import { Locale, t } from "@/lib/i18n";
 import { LocaleToggle } from "@/components/locale-toggle";
@@ -74,6 +73,10 @@ export function GuestUpload({
   const [allDone, setAllDone] = useState(false);
   const [guestKey, setGuestKey] = useState("");
   const [guestbookText, setGuestbookText] = useState("");
+  const [guestbookError, setGuestbookError] = useState<string | null>(null);
+  const [guestbookOk, setGuestbookOk] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [recorder, setRecorder] = useState<MediaRecorder | null>(null);
   const [tab, setTab] = useState<"photos" | "book">("photos");
   const [browserOffline, setBrowserOffline] = useState(false);
   const [uploadDeferred, setUploadDeferred] = useState(false);
@@ -88,6 +91,13 @@ export function GuestUpload({
       window.removeEventListener("online", syncOnline);
       window.removeEventListener("offline", syncOnline);
     };
+  }, []);
+
+  useEffect(() => {
+    const cookie = document.cookie.match(/memento_locale=(en|ru|ka)/);
+    if (cookie?.[1] === "en" || cookie?.[1] === "ru" || cookie?.[1] === "ka") {
+      setLocale(cookie[1]);
+    }
   }, []);
 
   useEffect(() => {
@@ -106,11 +116,14 @@ export function GuestUpload({
     if (!allDone || reduce) return;
     const done = queue.length > 0 && queue.every((q) => q.status === "done");
     if (!done) return;
-    confetti({
-      particleCount: 120,
-      spread: 70,
-      origin: { y: 0.65 },
-      colors: ["#c4ff0d", "#a8e600", "#c1ff72", "#ffffff"],
+    localStorage.setItem("memento_guest_has_uploaded", "1");
+    void import("canvas-confetti").then(({ default: confettiFn }) => {
+      confettiFn({
+        particleCount: 120,
+        spread: 70,
+        origin: { y: 0.65 },
+        colors: ["#c4ff0d", "#a8e600", "#c1ff72", "#ffffff"],
+      });
     });
   }, [allDone, queue, reduce]);
 
@@ -246,7 +259,7 @@ export function GuestUpload({
 
       <div className="relative container-narrow pb-14 pt-6">
         <div className="mb-6 flex items-center justify-between gap-3">
-          <span className="font-display text-lg font-bold text-gradient">მემენტო</span>
+          <span className="font-display text-lg font-bold text-[var(--fg)]">მემენტო</span>
           <LocaleToggle value={locale} onChange={setLocale} />
         </div>
 
@@ -287,7 +300,7 @@ export function GuestUpload({
               {t(locale, "shotsRemaining")}
             </p>
             <p className="mt-2 text-center font-display text-5xl font-bold">{shotsLeft}</p>
-            <p className="text-center text-sm font-medium text-white/90">კადარი დარჩა</p>
+            <p className="text-center text-sm font-medium text-white/90">{t(locale, "shotLeft")}</p>
             <div className="mt-4 flex justify-center gap-1.5">
               {Array.from({ length: info.disposable.shotsPerGuest }).map((_, i) => {
                 const remaining = shotsLeft ?? 0;
@@ -328,9 +341,18 @@ export function GuestUpload({
 
         {tab === "book" ? (
           <div className="mt-6 card-chunky space-y-3 p-5">
+            <label className="block text-sm font-medium">
+              {t(locale, "guestbookName")}
+              <input
+                className="mt-1 w-full rounded-2xl border-2 border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-[var(--fg)] outline-none focus:border-[var(--accent)]"
+                value={guestName}
+                onChange={(e) => setGuestName(e.target.value)}
+                maxLength={80}
+              />
+            </label>
             <textarea
               className="w-full rounded-2xl border-2 border-[var(--border)] bg-[var(--surface)] px-4 py-3 min-h-[120px] text-[var(--fg)] outline-none focus:border-[var(--accent)]"
-              placeholder="თქვენი სიყვარულის სიტყვა… 💕"
+              placeholder={t(locale, "guestbookPlaceholder")}
               value={guestbookText}
               onChange={(e) => setGuestbookText(e.target.value)}
             />
@@ -338,21 +360,81 @@ export function GuestUpload({
               type="button"
               className="btn-gradient w-full border-0"
               onClick={async () => {
-                await fetch(`/api/guest/${slug}/guestbook`, {
+                setGuestbookError(null);
+                setGuestbookOk(false);
+                const res = await fetch(`/api/guest/${slug}/guestbook`, {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({ body: guestbookText, guestName }),
                 });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                  setGuestbookError(data.error ?? t(locale, "guestbookForbidden"));
+                  return;
+                }
                 setGuestbookText("");
+                setGuestbookOk(true);
               }}
             >
-              გაგზავნა ✨
+              {t(locale, "sendGuestbook")}
+            </Button>
+            {guestbookError && (
+              <p className="text-sm font-semibold text-red-600">{guestbookError}</p>
+            )}
+            {guestbookOk && (
+              <p className="text-sm font-semibold text-[var(--success)]">{t(locale, "guestbookSent")}</p>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={async () => {
+                if (recording && recorder) {
+                  recorder.stop();
+                  return;
+                }
+                try {
+                  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                  const mr = new MediaRecorder(stream);
+                  const chunks: BlobPart[] = [];
+                  mr.ondataavailable = (e) => chunks.push(e.data);
+                  mr.onstop = async () => {
+                    stream.getTracks().forEach((t) => t.stop());
+                    setRecording(false);
+                    const blob = new Blob(chunks, { type: "audio/webm" });
+                    const form = new FormData();
+                    form.append("audio", blob, "voice.webm");
+                    if (guestName) form.append("guestName", guestName);
+                    const res = await fetch(`/api/guest/${slug}/guestbook`, {
+                      method: "POST",
+                      body: form,
+                    });
+                    const data = await res.json().catch(() => ({}));
+                    if (!res.ok) {
+                      setGuestbookError(data.error ?? t(locale, "guestbookForbidden"));
+                      return;
+                    }
+                    setGuestbookOk(true);
+                  };
+                  mr.start();
+                  setRecorder(mr);
+                  setRecording(true);
+                } catch {
+                  setGuestbookError(t(locale, "guestbookForbidden"));
+                }
+              }}
+            >
+              {recording ? t(locale, "stopRecording") : t(locale, "recordVoice")}
             </Button>
           </div>
         ) : closed ? (
           <div className="mt-6 card-chunky p-8 text-center">
             <p className="font-bold text-lg">
-              {!info.isActive ? t(locale, "eventClosed") : t(locale, "limitReached")}
+              {!info.isPaid && !info.inTrial
+                ? t(locale, "eventNotActivated")
+                : info.isActive
+                  ? t(locale, "limitReached")
+                  : t(locale, "eventNotActivated")}
             </p>
           </div>
         ) : allDone && queue.every((q) => q.status === "done") ? (
@@ -411,7 +493,7 @@ export function GuestUpload({
                 animate={{ opacity: 1, y: 0 }}
                 className="mt-8"
               >
-                <p className="type-label mb-3">ალბომში ფრინვა…</p>
+                <p className="type-label mb-3">{t(locale, "albumQueue")}</p>
                 <ul className="grid grid-cols-3 gap-2">
                   {queue.map((item, i) => (
                     <li

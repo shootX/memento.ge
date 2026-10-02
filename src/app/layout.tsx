@@ -22,10 +22,12 @@ const manrope = Manrope({
   adjustFontFallback: true,
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://memento.ge";
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://memento.ge"),
+  metadataBase: new URL(siteUrl),
   title: "მემენტო — ქორწილის ფოტოალბომი",
-  description: "QR-ით სტუმრები ატვირთავენ · ფერადი ალბომი ერთ კლიკში ✨ · memento.ge",
+  description: "QR-ით სტუმრები ატვირთავენ · ფერადი ალბომი ერთ კლიკში ✨",
   applicationName: "მემენტო",
   appleWebApp: {
     capable: true,
@@ -36,12 +38,16 @@ export const metadata: Metadata = {
     icon: "/icons/icon-192.png",
     apple: "/icons/apple-touch-icon.png",
   },
+  alternates: {
+    canonical: siteUrl,
+  },
   openGraph: {
     title: "მემენტო — Memento",
-    description: "QR ფოტოალბომი ქორწილებისთვის · memento.ge",
-    url: "https://memento.ge",
+    description: "QR ფოტოალბომი ქორწილებისთვის",
+    url: siteUrl,
     locale: "ka_GE",
     type: "website",
+    images: [{ url: "/seed-samples/wedding-6.jpg", width: 1200, height: 800, alt: "Memento" }],
   },
 };
 
