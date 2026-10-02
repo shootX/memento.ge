@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Loader2, MessageCircle } from "lucide-react";
 import { PLANS } from "@/lib/plans";
+import { HostCheckoutProviders } from "@/components/host-checkout-providers";
+import type { PaymentProviderOption } from "@/lib/billing/payment-providers";
 
 export function ManualPaymentPanel({
   token,
@@ -16,6 +18,8 @@ export function ManualPaymentPanel({
   iban,
   payName,
   whatsappHref,
+  providers,
+  paymentMock,
 }: {
   token: string;
   csrfToken: string;
@@ -26,38 +30,10 @@ export function ManualPaymentPanel({
   iban: string;
   payName: string;
   whatsappHref?: string;
+  providers: PaymentProviderOption[];
+  paymentMock?: boolean;
 }) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const plan = PLANS[planTier as keyof typeof PLANS];
-
-  const tryOnlinePay = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/host/${token}/checkout`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-csrf-token": csrfToken,
-        },
-        body: JSON.stringify({ provider: "auto" }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error ?? "გადახდა ვერ დაწყდა");
-        return;
-      }
-      if (data.redirectUrl) {
-        window.location.href = data.redirectUrl;
-        return;
-      }
-    } catch {
-      setError("კავშირის შეცდომა");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="card-chunky space-y-6 p-6 md:p-8" data-testid="manual-pay-panel">
@@ -71,21 +47,15 @@ export function ManualPaymentPanel({
       </div>
 
       <p className="text-sm leading-relaxed text-[var(--muted)]">
-        ალბომის გასააქტიურებლად გადაიხადეთ ბანკის გადარიცხვით ან ონლაინ გადახდით (თუ ჩართულია).
-        გადახდის შემდეგ სტუმრები შეძლებენ ატვირთვას.
+        აირჩიე ბანკი ან გადაიხადე საბანკო გადარიცხვით. გადახდის შემდეგ სტუმრები შეძლებენ ატვირთვას.
       </p>
 
-      <Button
-        type="button"
-        className="btn-gradient w-full border-0"
-        disabled={loading}
-        onClick={() => void tryOnlinePay()}
-        data-testid="host-pay-online"
-      >
-        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "ონლაინ გადახდა"}
-      </Button>
-
-      {error && <p className="text-sm font-semibold text-red-600">{error}</p>}
+      <HostCheckoutProviders
+        token={token}
+        csrfToken={csrfToken}
+        providers={providers}
+        mock={paymentMock}
+      />
 
       {iban && payName ? (
         <div className="rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-warm)] p-5 text-sm">
@@ -99,11 +69,11 @@ export function ManualPaymentPanel({
             დანიშნულება: <strong>Memento · {coupleNames}</strong>
           </p>
         </div>
-      ) : (
+      ) : providers.length === 0 ? (
         <p className="rounded-2xl bg-amber-50 p-4 text-sm text-amber-900">
           საბანკო ანგარიში ჯერ არ არის დაყენებული.
         </p>
-      )}
+      ) : null}
 
       {whatsappHref ? (
         <Button variant="outline" className="w-full" asChild>

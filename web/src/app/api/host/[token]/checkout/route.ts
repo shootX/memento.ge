@@ -62,7 +62,13 @@ export async function POST(req: Request, { params }: Params) {
   });
 
   if (result.checkoutUrl) {
-    return NextResponse.json({ redirectUrl: result.checkoutUrl });
+    let redirectUrl = result.checkoutUrl;
+    if (redirectUrl.includes("/pay/mock")) {
+      const u = new URL(redirectUrl);
+      u.searchParams.set("hostToken", token);
+      redirectUrl = u.toString();
+    }
+    return NextResponse.json({ redirectUrl });
   }
 
   return NextResponse.json({

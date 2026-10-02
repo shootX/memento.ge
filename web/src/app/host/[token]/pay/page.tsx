@@ -4,6 +4,8 @@ import { ManualPaymentPanel } from "@/components/manual-payment-panel";
 import { manualPayIban, manualPayName, whatsappUrl, appUrl } from "@/lib/site-config";
 import { getPlan } from "@/lib/plans";
 import Link from "next/link";
+import { listPaymentProviderOptions } from "@/lib/billing/payment-providers";
+import { paymentMockEnabled } from "@/lib/billing/payment-mock";
 
 type Props = { params: Promise<{ token: string }> };
 
@@ -14,6 +16,7 @@ export default async function HostPayPage({ params }: Props) {
 
   const plan = getPlan(bootstrap.planTier);
   const hostUrl = `${appUrl()}/host/${token}`;
+  const providers = listPaymentProviderOptions();
 
   return (
     <div className="min-h-screen bg-[var(--bg-page)] py-10">
@@ -36,6 +39,8 @@ export default async function HostPayPage({ params }: Props) {
                 `გამარჯობა, გადავიხადე ${bootstrap.coupleNames}-ის ალბომისთვის (${plan.nameKa}, ${plan.priceGel}₾).`,
               ) ?? undefined
             }
+            providers={providers}
+            paymentMock={paymentMockEnabled()}
           />
         </div>
       </div>
