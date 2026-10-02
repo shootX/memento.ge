@@ -1,21 +1,30 @@
 import { appUrl } from "@/lib/site-config";
 import type { PaymentProvider } from "@/lib/billing/types";
+import type { PaymentUiLocale } from "@/lib/payment-ui-copy";
 
 export function paymentMockEnabled(): boolean {
   return process.env.PAYMENT_MOCK === "1";
 }
 
+export type MockCheckoutQuery = {
+  hostToken?: string;
+  amountGel?: number;
+  locale?: PaymentUiLocale;
+};
+
 export function mockCheckoutUrl(
   paymentId: string,
   provider: PaymentProvider,
-  hostToken?: string,
+  opts?: MockCheckoutQuery,
 ): string {
   const base = appUrl();
   const q = new URLSearchParams({
     paymentId,
     provider,
   });
-  if (hostToken) q.set("hostToken", hostToken);
+  if (opts?.hostToken) q.set("hostToken", opts.hostToken);
+  if (opts?.amountGel != null) q.set("amount", String(opts.amountGel));
+  if (opts?.locale && opts.locale !== "ka") q.set("locale", opts.locale);
   return `${base}/pay/mock?${q.toString()}`;
 }
 

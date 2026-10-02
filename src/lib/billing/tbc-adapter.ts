@@ -33,7 +33,7 @@ export const tbcAdapter: BillingAdapter = {
         provider: "tbc",
         status: "created",
         sessionId: payId,
-        checkoutUrl: mockCheckoutUrl(req.paymentId, "tbc"),
+        checkoutUrl: mockCheckoutUrl(req.paymentId, "tbc", { amountGel: req.amountGel }),
       };
     }
 

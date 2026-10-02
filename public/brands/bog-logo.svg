@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 36" role="img" aria-label="Bank of Georgia">
+  <rect width="140" height="36" rx="6" fill="#262A36"/>
+  <path fill="#FF5F00" d="M12 8h8v20h-8V8zm12 0h6.5c5.2 0 8.5 3 8.5 7.5S35.7 23 30.5 23H24v5h-8V8h8zm0 8h2.2c2 0 3.2-1 3.2-2.5S26.2 11 24.2 11H24v5zm18.5-8h8l6 14.5L62.5 8h8v20h-7.5V18L54 32h-6L43.5 18v10H36V8h6.5zm34 0c6.8 0 11 4.4 11 10.5S87.3 29 80.5 29h-3v3h-8V8h11zm-3 14.5c3.2 0 5-1.8 5-4.5s-1.8-4.5-5-4.5h-3v9h3z"/>
+  <path fill="#fff" d="M98 12h26v3H98v-3zm0 9h20v3H98v-3z" opacity=".9"/>
+</svg>

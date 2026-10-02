@@ -31,7 +31,7 @@ export const bogAdapter: BillingAdapter = {
         provider: "bog",
         status: "created",
         sessionId: orderId,
-        checkoutUrl: mockCheckoutUrl(req.paymentId, "bog"),
+        checkoutUrl: mockCheckoutUrl(req.paymentId, "bog", { amountGel: req.amountGel }),
       };
     }
 

@@ -7,6 +7,7 @@ import { Loader2, MessageCircle } from "lucide-react";
 import { PLANS } from "@/lib/plans";
 import { HostCheckoutProviders } from "@/components/host-checkout-providers";
 import type { PaymentProviderOption } from "@/lib/billing/payment-providers";
+import type { PaymentUiLocale } from "@/lib/payment-ui-copy";
 
 export function ManualPaymentPanel({
   token,
@@ -20,6 +21,7 @@ export function ManualPaymentPanel({
   whatsappHref,
   providers,
   paymentMock,
+  locale = "ka",
 }: {
   token: string;
   csrfToken: string;
@@ -32,6 +34,7 @@ export function ManualPaymentPanel({
   whatsappHref?: string;
   providers: PaymentProviderOption[];
   paymentMock?: boolean;
+  locale?: PaymentUiLocale;
 }) {
   const plan = PLANS[planTier as keyof typeof PLANS];
 
@@ -55,6 +58,7 @@ export function ManualPaymentPanel({
         csrfToken={csrfToken}
         providers={providers}
         mock={paymentMock}
+        locale={locale}
       />
 
       {iban && payName ? (
