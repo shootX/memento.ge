@@ -1,4 +1,7 @@
 import { publicAppUrl } from "@/lib/app-url";
+import { bogConfigured } from "@/lib/billing/bog-config";
+import { paymentMockEnabled } from "@/lib/billing/payment-mock";
+import { tbcConfigured } from "@/lib/billing/tbc-config";
 
 export function whatsappNumber(): string {
   return (
@@ -61,13 +64,14 @@ export function isEmailDeliveryConfigured(): boolean {
 export function paymentProviderConfigured(
   id: "stripe" | "bog" | "tbc" | "flitt",
 ): boolean {
+  if (paymentMockEnabled() && (id === "tbc" || id === "bog")) return true;
   switch (id) {
     case "stripe":
       return Boolean(process.env.STRIPE_SECRET_KEY);
     case "bog":
-      return Boolean(process.env.BOG_CLIENT_ID && process.env.BOG_CLIENT_SECRET);
+      return bogConfigured();
     case "tbc":
-      return Boolean(process.env.TBC_CLIENT_ID && process.env.TBC_CLIENT_SECRET);
+      return tbcConfigured();
     case "flitt":
       return Boolean(process.env.FLITT_MERCHANT_ID && process.env.FLITT_SECRET_KEY);
     default:

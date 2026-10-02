@@ -66,6 +66,37 @@ test("create → manual pay → admin activates → guest upload on host", async
   });
 });
 
+test("mock TBC checkout → guest upload", async ({ page, request }) => {
+  const create = await request.post(`${base}/api/events`, {
+    data: {
+      coupleNames: "Mock Pay",
+      eventDate: new Date().toISOString(),
+      planTier: "classic",
+    },
+  });
+  expect(create.ok()).toBeTruthy();
+  const event = await create.json();
+
+  await page.goto(`${base}/host/${event.hostToken}/pay`, { waitUntil: "networkidle" });
+  await expect(page.getByTestId("host-checkout-providers")).toBeVisible();
+  await page.getByTestId("pay-provider-tbc").click();
+  await page.waitForURL(/\/pay\/mock/);
+  await page.getByTestId("mock-pay-success-btn").click();
+  await page.waitForURL(new RegExp(`/host/${event.hostToken}`));
+
+  const png = Buffer.from(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+    "base64",
+  );
+  const upload = await request.post(`${base}/api/guest/${event.guestSlug}/upload`, {
+    multipart: {
+      file: { name: "shot.png", mimeType: "image/png", buffer: png },
+      guestKey: "mock-flow",
+    },
+  });
+  expect(upload.ok()).toBeTruthy();
+});
+
 test("marketing nav links visible on hero", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(`${base}/`, { waitUntil: "networkidle" });

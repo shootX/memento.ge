@@ -1,4 +1,8 @@
-const TBC_BASE = process.env.TBC_API_BASE_URL ?? "https://api.tbcbank.ge";
+import {
+  tbcApiBaseUrl,
+  tbcPaymentMethodIds,
+  tbcConfigured,
+} from "@/lib/billing/tbc-config";
 
 type TokenCache = { token: string; expiresAt: number };
 let cached: TokenCache | null = null;
@@ -7,6 +11,10 @@ function requireEnv(name: string): string {
   const v = process.env[name]?.trim();
   if (!v) throw new Error(`${name} not configured`);
   return v;
+}
+
+function tbcBase(): string {
+  return tbcApiBaseUrl();
 }
 
 export async function tbcAccessToken(): Promise<string> {
@@ -19,7 +27,7 @@ export async function tbcAccessToken(): Promise<string> {
   const client_secret = requireEnv("TBC_CLIENT_SECRET");
 
   const body = new URLSearchParams({ client_id, client_secret });
-  const res = await fetch(`${TBC_BASE}/v1/tpay/access-token`, {
+  const res = await fetch(`${tbcBase()}/v1/tpay/access-token`, {
     method: "POST",
     headers: {
       apikey,
@@ -52,6 +60,7 @@ export type TbcCreatePaymentBody = {
   merchantPaymentId?: string;
   description?: string;
   language?: "KA" | "EN";
+  methods?: number[];
 };
 
 export type TbcCreatePaymentResponse = {
@@ -62,19 +71,33 @@ export type TbcCreatePaymentResponse = {
 
 export async function tbcCreatePayment(
   body: TbcCreatePaymentBody,
+  idempotencyKey?: string,
 ): Promise<TbcCreatePaymentResponse> {
+  if (!tbcConfigured() || process.env.PAYMENT_MOCK === "1") {
+    throw new Error("TBC not available in mock-only path");
+  }
+
   const apikey = requireEnv("TBC_API_KEY");
   const token = await tbcAccessToken();
+  const payload = {
+    ...body,
+    methods: body.methods ?? tbcPaymentMethodIds(),
+  };
 
-  const res = await fetch(`${TBC_BASE}/v1/tpay/payments`, {
+  const headers: Record<string, string> = {
+    apikey,
+    Authorization: `Bearer ${token}`,
+    "Content-Type": "application/json",
+    accept: "application/json",
+  };
+  if (idempotencyKey) {
+    headers["Idempotency-Key"] = idempotencyKey;
+  }
+
+  const res = await fetch(`${tbcBase()}/v1/tpay/payments`, {
     method: "POST",
-    headers: {
-      apikey,
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-      accept: "application/json",
-    },
-    body: JSON.stringify(body),
+    headers,
+    body: JSON.stringify(payload),
   });
 
   const json = (await res.json()) as TbcCreatePaymentResponse & {
@@ -102,7 +125,7 @@ export async function tbcGetPayment(payId: string): Promise<TbcPaymentDetails> {
   const apikey = requireEnv("TBC_API_KEY");
   const token = await tbcAccessToken();
 
-  const res = await fetch(`${TBC_BASE}/v1/tpay/payments/${encodeURIComponent(payId)}`, {
+  const res = await fetch(`${tbcBase()}/v1/tpay/payments/${encodeURIComponent(payId)}`, {
     method: "GET",
     headers: {
       apikey,
@@ -119,16 +142,35 @@ export async function tbcGetPayment(payId: string): Promise<TbcPaymentDetails> {
   return (await res.json()) as TbcPaymentDetails;
 }
 
+export async function tbcCancelPayment(payId: string): Promise<boolean> {
+  try {
+    const apikey = requireEnv("TBC_API_KEY");
+    const token = await tbcAccessToken();
+    const res = await fetch(
+      `${tbcBase()}/v1/tpay/payments/${encodeURIComponent(payId)}/cancel`,
+      {
+        method: "POST",
+        headers: {
+          apikey,
+          Authorization: `Bearer ${token}`,
+          accept: "application/json",
+        },
+      },
+    );
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 export function tbcCheckoutUrl(response: TbcCreatePaymentResponse): string | undefined {
   const link = response.links?.find(
-    (l) => l.rel === "approval_url" || l.method === "REDIRECT",
+    (l) => l.rel === "approval_url" || l.method === "REDIRECT" || l.rel === "redirect",
   );
   return link?.uri;
 }
 
-export function tbcIsPaidStatus(status: string | undefined): boolean {
-  return status === "Succeeded";
-}
+export { tbcIsPaidStatus } from "@/lib/billing/tbc-status";
 
 export function resetTbcTokenCacheForTests() {
   cached = null;

@@ -6,34 +6,44 @@ import type {
 } from "@/lib/billing/types";
 import {
   bogCreateOrder,
+  bogGetOrder,
   bogOrderIsPaid,
   parseBogCallback,
   verifyBogCallbackSignature,
 } from "@/lib/billing/bog-client";
+import { bogConfigured } from "@/lib/billing/bog-config";
 import { prisma } from "@/lib/prisma";
 import { markPaymentPaid } from "@/lib/billing/activate-payment";
-
-function configured(): boolean {
-  return Boolean(process.env.BOG_CLIENT_ID && process.env.BOG_CLIENT_SECRET);
-}
+import {
+  mockCheckoutUrl,
+  mockExternalId,
+  paymentMockEnabled,
+} from "@/lib/billing/payment-mock";
+import { appUrl } from "@/lib/site-config";
 
 export const bogAdapter: BillingAdapter = {
   id: "bog",
 
   async createCheckout(req: CheckoutSessionRequest): Promise<CheckoutSessionResult> {
-    if (!configured()) {
+    if (paymentMockEnabled()) {
+      const orderId = mockExternalId(req.paymentId, "bog");
       return {
         provider: "bog",
-        status: "manual",
-        message: "BOG არ არის კონფიგურირებული (BOG_CLIENT_ID, BOG_CLIENT_SECRET).",
+        status: "created",
+        sessionId: orderId,
+        checkoutUrl: mockCheckoutUrl(req.paymentId, "bog"),
       };
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:43123";
+    if (!bogConfigured()) {
+      return { provider: "bog", status: "manual", message: "bog_not_configured" };
+    }
+
+    const base = appUrl();
     const order = await bogCreateOrder({
       externalOrderId: req.paymentId,
       amountGel: req.amountGel,
-      callbackUrl: `${appUrl}/api/webhooks/bog`,
+      callbackUrl: `${base}/api/webhooks/bog`,
       successUrl: req.successUrl,
       failUrl: req.cancelUrl,
     });
@@ -47,6 +57,10 @@ export const bogAdapter: BillingAdapter = {
   },
 
   async verifyWebhook(req: Request, raw: string): Promise<WebhookVerifyResult> {
+    if (paymentMockEnabled()) {
+      return resolveMockBogWebhook(raw);
+    }
+
     const sig = req.headers.get("Callback-Signature");
     const pemConfigured = Boolean(process.env.BOG_CALLBACK_PUBLIC_KEY?.trim());
     if (pemConfigured && !verifyBogCallbackSignature(raw, sig)) {
@@ -60,28 +74,73 @@ export const bogAdapter: BillingAdapter = {
       return { ok: true };
     }
 
-    const externalId = callback.body.external_order_id;
-    const orderStatus = callback.body.order_status;
-    if (!bogOrderIsPaid(orderStatus)) {
-      return { ok: true, status: "failed", paymentId: callback.body.order_id };
+    return resolveBogOrder(callback.body.order_id, callback.body.external_order_id, callback.body.order_status);
+  },
+
+  async pollPayment(externalId: string): Promise<WebhookVerifyResult> {
+    if (paymentMockEnabled() && externalId.startsWith("mock-bog-")) {
+      return resolveMockBogOrderId(externalId);
     }
-
-    const payment = externalId
-      ? await prisma.payment.findUnique({ where: { id: externalId } })
-      : null;
-
-    const eventId = payment?.eventId;
-    if (!eventId) {
-      return { ok: true, paymentId: callback.body.order_id, status: "failed" };
+    try {
+      const details = await bogGetOrder(externalId);
+      return resolveBogOrder(externalId, undefined, details.order_status);
+    } catch {
+      return { ok: false };
     }
-
-    const ref = callback.body.order_id ?? externalId ?? payment.id;
-    await markPaymentPaid(ref, eventId);
-    return {
-      ok: true,
-      eventId,
-      paymentId: callback.body.order_id,
-      status: "paid",
-    };
   },
 };
+
+async function resolveMockBogWebhook(raw: string): Promise<WebhookVerifyResult> {
+  try {
+    const body = JSON.parse(raw) as {
+      order_id?: string;
+      external_order_id?: string;
+      order_status?: string;
+      outcome?: string;
+    };
+    if (body.outcome === "fail") {
+      return { ok: true, status: "failed", paymentId: body.order_id };
+    }
+    return resolveBogOrder(body.order_id, body.external_order_id, body.order_status ?? "completed");
+  } catch {
+    return { ok: false };
+  }
+}
+
+async function resolveMockBogOrderId(orderId: string): Promise<WebhookVerifyResult> {
+  const paymentId = orderId.replace(/^mock-bog-/, "");
+  const payment = await prisma.payment.findUnique({ where: { id: paymentId } });
+  if (!payment?.eventId) return { ok: true, paymentId: orderId, status: "failed" };
+  await markPaymentPaid(orderId, payment.eventId);
+  return { ok: true, eventId: payment.eventId, paymentId: orderId, status: "paid" };
+}
+
+async function resolveBogOrder(
+  orderId: string | undefined,
+  externalOrderId: string | undefined,
+  orderStatus: string | undefined,
+): Promise<WebhookVerifyResult> {
+  if (!bogOrderIsPaid(orderStatus)) {
+    return { ok: true, status: "failed", paymentId: orderId };
+  }
+
+  const payment = externalOrderId
+    ? await prisma.payment.findUnique({ where: { id: externalOrderId } })
+    : orderId
+      ? await prisma.payment.findFirst({ where: { externalId: orderId, provider: "bog" } })
+      : null;
+
+  const eventId = payment?.eventId;
+  if (!eventId) {
+    return { ok: true, paymentId: orderId, status: "failed" };
+  }
+
+  const ref = orderId ?? externalOrderId ?? payment.id;
+  await markPaymentPaid(ref, eventId);
+  return {
+    ok: true,
+    eventId,
+    paymentId: orderId,
+    status: "paid",
+  };
+}

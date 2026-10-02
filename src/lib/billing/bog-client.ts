@@ -1,4 +1,12 @@
 import { createVerify } from "crypto";
+import {
+  bogApiBaseUrl,
+  bogPaymentMethods,
+  bogTokenUrl,
+  bogConfigured,
+} from "@/lib/billing/bog-config";
+
+export { bogOrderIsPaid, mapBogOrderStatus } from "@/lib/billing/bog-config";
 
 /** BOG Callback-Signature: SHA256withRSA over raw body (api.bog.ge docs) */
 export function verifyBogCallbackSignature(
@@ -20,11 +28,6 @@ export function verifyBogCallbackSignature(
   }
 }
 
-const BOG_TOKEN_URL =
-  process.env.BOG_TOKEN_URL ??
-  "https://oauth2.bog.ge/auth/realms/bog/protocol/openid-connect/token";
-const BOG_API_BASE = process.env.BOG_API_BASE_URL ?? "https://api.bog.ge/payments/v1";
-
 type TokenCache = { token: string; expiresAt: number };
 let cached: TokenCache | null = null;
 
@@ -41,7 +44,7 @@ export async function bogAccessToken(): Promise<string> {
     client_secret: clientSecret,
   });
 
-  const res = await fetch(BOG_TOKEN_URL, {
+  const res = await fetch(bogTokenUrl(), {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body,
@@ -63,17 +66,23 @@ export async function bogCreateOrder(params: {
   successUrl: string;
   failUrl: string;
 }): Promise<{ order_id: string; redirect?: string }> {
+  if (!bogConfigured() || process.env.PAYMENT_MOCK === "1") {
+    throw new Error("BOG not available in mock-only path");
+  }
+
   const token = await bogAccessToken();
-  const res = await fetch(`${BOG_API_BASE}/ecommerce/orders`, {
+  const res = await fetch(`${bogApiBaseUrl()}/ecommerce/orders`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
       "Accept-Language": "ka",
+      "Idempotency-Key": params.externalOrderId,
     },
     body: JSON.stringify({
       callback_url: params.callbackUrl,
       external_order_id: params.externalOrderId,
+      payment_method: bogPaymentMethods(),
       purchase_units: {
         currency: "GEL",
         total_amount: params.amountGel,
@@ -108,6 +117,18 @@ export async function bogCreateOrder(params: {
   };
 }
 
+export async function bogGetOrder(orderId: string): Promise<{ order_status?: string }> {
+  const token = await bogAccessToken();
+  const res = await fetch(`${bogApiBaseUrl()}/ecommerce/orders/${encodeURIComponent(orderId)}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      accept: "application/json",
+    },
+  });
+  if (!res.ok) throw new Error(`BOG get order ${res.status}`);
+  return (await res.json()) as { order_status?: string };
+}
+
 export function resetBogTokenCacheForTests() {
   cached = null;
 }
@@ -127,11 +148,4 @@ export function parseBogCallback(raw: string): BogCallbackBody | null {
   } catch {
     return null;
   }
-}
-
-/** BOG order_status values that mean paid — verify exact value with BOG receipt in production. */
-export function bogOrderIsPaid(orderStatus: string | undefined): boolean {
-  if (!orderStatus) return false;
-  const s = orderStatus.toLowerCase();
-  return s === "completed" || s === "success" || s === "paid";
 }
