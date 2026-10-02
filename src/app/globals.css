@@ -7,8 +7,8 @@
   --color-bg-page: var(--bg);
   --color-ink: var(--fg);
   --color-muted: var(--muted);
-  --color-pink: var(--accent);
-  --color-orange: var(--accent-mid);
+  --color-pink: var(--accent-coral);
+  --color-orange: var(--accent-coral);
   --color-violet: var(--accent-cool);
   --radius-chunky: var(--radius-md);
 }
@@ -189,7 +189,7 @@ body {
 .blob-2 {
   width: 280px;
   height: 280px;
-  background: var(--accent-mid);
+  background: var(--accent-coral);
   bottom: 10%;
   left: -80px;
   animation-delay: -4s;
@@ -201,6 +201,25 @@ body {
   top: 40%;
   right: 10%;
   animation-delay: -7s;
+}
+
+.section-dark {
+  background: var(--bg-charcoal);
+  color: var(--fg-on-dark);
+}
+
+.section-light {
+  background: var(--bg-warm);
+  color: var(--fg);
+}
+
+.section-lime {
+  background: var(--bg-lime-wash);
+  color: var(--fg);
+}
+
+.guest-page-bg {
+  background: var(--gradient-guest);
 }
 
 @keyframes blob-float {
@@ -236,6 +255,12 @@ body {
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-playful);
   border: 1px solid var(--border-soft);
+}
+
+.section-dark .card-chunky {
+  background: var(--bg-charcoal-elevated);
+  border-color: var(--border-on-dark);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.35);
 }
 
 .text-gradient {

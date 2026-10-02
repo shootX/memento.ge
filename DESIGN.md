@@ -1,79 +1,32 @@
-# Memento · Studiova Dark + Lime
+# Memento · v10 Studiova + lime (lighter)
 
-> Visual reference: [Studiova agency template](https://studiova-agency-business-bootstrap-template-v2.21st.app/) (WrapPixel). **Reference only** — no copied assets or markup.
+Visual reference: Studiova dark+lime, adapted with **~30% less full-black** and **secondary accents**.
 
-## 1. Atmosphere
+## Atmosphere
 
-Dark editorial agency aesthetic adapted for Georgian wedding photo-sharing: near-black canvas, white typography, single neon lime accent, numbered sections, oversized stats, pill CTAs with circular arrow.
+- **Default app shell:** warm off-white `#f7f7f2`, dark text `#121212`
+- **Dark bands (hero, 04 why-us, footer):** charcoal `#161616` / `#1c1c1e` — not pure `#0b0b0b`
+- **Light alternating sections:** `#f7f7f2`, `#f4ffe0` (lime wash)
+- **Primary CTA:** lime `#c4ff0d` · text on lime: `#121212`
+- **Secondary accents:** coral `#ff5c8a`, sky `#5cc8ff` (chips, stats, gallery washes)
+- **WCAG AA:** no white on lime; dark text on lime buttons
 
-- **Mood:** confident, cinematic, modern, premium
-- **Default surface:** `#0b0b0b` page, `#141414` cards
-- **Accent:** chartreuse `#c4ff0d` (template uses `#c1ff72` top rule; both documented)
-- **Contrast:** WCAG AA — **black text on lime** for filled buttons; **white text on black/dark** for body; never white on lime
+## Tokens
 
-## 2. Color tokens (from reference CSS)
+See `tokens.css` for `--bg-charcoal`, `--bg-warm`, `--bg-lime-wash`, `--accent-coral`, `--accent-cool`.
 
-| Role | Token | Value |
-| --- | --- | --- |
-| Page | `--bg` | `#0b0b0b` |
-| Elevated | `--bg-elevated` | `#111111` |
-| Card | `--surface` | `#141414` |
-| Primary text | `--fg` | `#ffffff` |
-| Secondary | `--fg-2` | `rgba(255,255,255,0.82)` |
-| Muted | `--muted` | `#9ca3af` |
-| Body meta (ref) | `--meta` | `#626a6d` |
-| Accent | `--accent` | `#c4ff0d` |
-| Top hairline | `--accent-line` | `#c1ff72` |
-| Text on accent | `--accent-on` | `#0b0b0b` |
-| Footer dark (ref) | — | `#2b2d31` |
-| Light section alt | `--surface-light` | `#f5f5f5` (optional marketing bands) |
-| Border | `--border` | white 12% alpha |
+## Surfaces
 
-## 3. Typography
-
-- **Latin / UI:** Manrope (`--font-manrope`) — geometric sans, weights 500–800
-- **Georgian:** Noto Sans Georgian (`--font-noto-sans`) — paired in stack for ka/en/ru
-- **Display:** tight tracking `--tracking-display`, hero `clamp(3.5rem, 8vw, 7rem)`
-- **Section labels:** uppercase, `--tracking-label`, xs/sm + section number `01`, `02`…
-
-## 4. Layout patterns (from reference)
-
-- Top **3px lime line** full width
-- Hero: full-bleed photo + dark overlay; wordmark bottom-left with lime dot
-- Tagline row: lime asterisk + sentence with **lime-highlight** keywords
-- Primary CTA: lime pill + white circle arrow button
-- Round **hamburger** control (mobile nav)
-- Sections numbered; stats at 4xl–5xl
-- Project grid with tag chips; FAQ accordion; pricing with lime “popular” card
-
-## 5. Memento mapping
-
-| Ref section | Landing |
+| Surface | Mode |
 | --- | --- |
-| Hero | Dark wedding photo, «მემენტო.», tagline, CTA |
-| Stats | 01 How it works + demo-safe stats |
-| Projects grid | 02 Featured events + chips |
-| Services list | 03 Features |
-| Why choose us | 04 Why Memento + % stats |
-| Testimonials | 05 Examples |
-| Pricing | 06 49/99/149 ₾ |
-| Partners | 07 Photographers |
-| FAQ | 08 |
-| Footer | 09 Contact |
+| Landing | Alternating light / charcoal sections |
+| Guest upload | Gradient `#f4ffe0 → #f7f7f2 → #fff5f8`, lime shutter |
+| Host dashboard | Light default, lime/coral accents |
+| Slideshow | Stays dark (projector) |
+| QR cards | Default **botanical** (bright); **elegant** dark charcoal |
+| Email | Light card, lime pill CTA |
+| PWA | `theme_color` `#161616`, `background_color` `#f7f7f2` |
 
-## 6. Product surfaces
+## Typography
 
-- **Guest upload:** dark camera UI, lime shutter ring
-- **Host dashboard:** dark shell, lime active tabs
-- **Slideshow / gallery:** black stage, lime QR frame unchanged (B/W QR)
-- **QR cards:** default template dark + lime border; QR always black on white inside
-- **PWA:** `theme_color` `#0b0b0b`, icons on dark + lime mark
-
-## 7. Motion
-
-- Subtle fade-up on scroll (respect `prefers-reduced-motion`)
-- No pink blobs or gradient mesh on marketing shell
-
-## 8. Screenshots (reference capture)
-
-Stored under `/opt/cursor/artifacts/studiova-*.png` during v9 design pass.
+Manrope + Noto Sans Georgian (unchanged from v9).

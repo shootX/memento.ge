@@ -3,6 +3,7 @@ import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
 import { PLANS } from "@/lib/plans";
 import { LandingQrPlayground } from "@/components/marketing/landing-qr-playground";
+import { cn } from "@/lib/cn";
 
 const wa = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "995555123456";
 
@@ -10,24 +11,44 @@ function SectionHead({
   num,
   label,
   title,
+  dark,
 }: {
   num: string;
   label: string;
   title: string;
+  dark?: boolean;
 }) {
   return (
     <div className="mb-10 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
       <div>
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--muted)]">
+        <p
+          className={cn(
+            "text-xs font-bold uppercase tracking-[0.2em]",
+            dark ? "text-[var(--muted-on-dark)]" : "text-[var(--muted)]",
+          )}
+        >
           {num} · {label}
         </p>
-        <h2 className="mt-2 font-display text-3xl font-extrabold tracking-tight md:text-4xl">
+        <h2
+          className={cn(
+            "mt-2 font-display text-3xl font-extrabold tracking-tight md:text-4xl",
+            dark ? "text-white" : "text-[var(--fg)]",
+          )}
+        >
           {title}
         </h2>
       </div>
     </div>
   );
 }
+
+const chipStyles = [
+  "bg-[var(--accent)] text-[var(--accent-on)]",
+  "bg-[var(--accent-coral)] text-white",
+  "bg-[var(--accent-cool)] text-[#0a1628]",
+];
+
+const statAccents = ["var(--accent)", "var(--accent-coral)", "var(--accent-cool)"];
 
 const features = [
   "ლაივ სლაიდშოუ ეკრანზე",
@@ -90,7 +111,7 @@ export function LandingV9() {
                   <span className="text-2xl text-[var(--accent)] md:text-3xl" aria-hidden>
                     ✱
                   </span>
-                  <p className="text-lg leading-snug text-[var(--fg-2)] md:text-xl">
+                  <p className="text-lg leading-snug text-[var(--fg-2-on-dark)] md:text-xl">
                     <span className="font-semibold text-[var(--accent)]">ქორწილის ყველა ფოტო</span> — ერთ ალბომში,{" "}
                     <span className="font-semibold text-[var(--accent)]">QR-ით</span>
                   </p>
@@ -117,7 +138,7 @@ export function LandingV9() {
         </div>
       </section>
 
-      <section className="section-y border-t border-[var(--border-soft)] bg-[var(--bg-elevated)]">
+      <section className="section-y section-light">
         <div className="container-page">
           <SectionHead num="01" label="როგორ მუშაობს" title="QR → ატვირთვა → ლაივ ალბომი" />
           <ol className="grid gap-8 md:grid-cols-3">
@@ -138,9 +159,12 @@ export function LandingV9() {
               { n: "3", l: "ენა", sub: "ka · en · ru" },
               { n: "0", l: "აპლიკაცია", sub: "ჩამოსატვირთი" },
               { n: "1", l: "QR", sub: "ყველა სტუმრისთვის" },
-            ].map((s) => (
+            ].map((s, i) => (
               <div key={s.l}>
-                <p className="font-display text-5xl font-extrabold text-[var(--accent)] md:text-6xl">
+                <p
+                  className="font-display text-5xl font-extrabold md:text-6xl"
+                  style={{ color: statAccents[i % statAccents.length] }}
+                >
                   {s.n}
                 </p>
                 <p className="mt-1 font-bold">{s.l}</p>
@@ -154,17 +178,23 @@ export function LandingV9() {
         </div>
       </section>
 
-      <section className="section-y">
+      <section className="section-y section-lime">
         <div className="container-page">
           <SectionHead num="02" label="გალერეა" title="არჩეული ღონისძიებები" />
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {gallery.map((g) => (
-              <figure key={g.src} className="group relative aspect-[4/5] overflow-hidden rounded-[var(--radius-md)]">
+            {gallery.map((g, gi) => (
+              <figure key={g.src} className="group relative aspect-[4/5] overflow-hidden rounded-[var(--radius-md)] shadow-[var(--shadow-playful)]">
                 <Image src={g.src} alt="" fill className="object-cover transition duration-500 group-hover:scale-105" sizes="400px" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#161616]/90 via-[var(--accent-coral)]/20 to-[var(--accent-cool)]/15" />
                 <figcaption className="absolute bottom-4 left-4 flex flex-wrap gap-2">
-                  {g.tags.map((tag) => (
-                    <span key={tag} className="rounded-full border border-white/20 bg-black/40 px-3 py-1 text-xs font-semibold backdrop-blur-sm">
+                  {g.tags.map((tag, ti) => (
+                    <span
+                      key={tag}
+                      className={cn(
+                        "rounded-full px-3 py-1 text-xs font-bold shadow-sm",
+                        chipStyles[(gi + ti) % chipStyles.length],
+                      )}
+                    >
                       {tag}
                     </span>
                   ))}
@@ -175,52 +205,69 @@ export function LandingV9() {
         </div>
       </section>
 
-      <section className="section-y bg-[var(--bg-elevated)]">
+      <section className="section-y section-light">
         <div className="container-page">
           <SectionHead num="03" label="ფუნქციები" title="რას გთავაზობთ" />
           <ul className="divide-y divide-[var(--border-soft)] border-y border-[var(--border-soft)]">
-            {features.map((f) => (
+            {features.map((f, i) => (
               <li key={f} className="flex items-center justify-between py-6 text-lg font-semibold md:text-xl">
                 {f}
-                <span className="text-[var(--accent)]">→</span>
+                <span style={{ color: statAccents[i % statAccents.length] }}>→</span>
               </li>
             ))}
           </ul>
         </div>
       </section>
 
-      <section className="section-y">
+      <section className="section-y section-dark">
         <div className="container-page">
-          <SectionHead num="04" label="რატომ მემენტო" title="რატომ ჩვენ" />
+          <SectionHead num="04" label="რატომ მემენტო" title="რატომ ჩვენ" dark />
           <div className="grid gap-10 md:grid-cols-3">
             {[
               { n: "98%", l: "სტუმრები ატვირთავენ QR-ით", d: "დემო UX მეტრიკა" },
               { n: "24/7", l: "ონლაინ ალბომი", d: "ღონისძიების შემდეგაც" },
               { n: "100%", l: "ქართული ინტერფეისი", d: "ka პირველ რიგში" },
-            ].map((s) => (
-              <div key={s.l} className="card-chunky bg-[var(--surface)] p-8">
-                <p className="font-display text-4xl font-extrabold text-[var(--accent)]">{s.n}</p>
-                <p className="mt-3 font-bold">{s.l}</p>
-                <p className="mt-1 text-sm text-[var(--muted)]">{s.d}</p>
+            ].map((s, i) => (
+              <div key={s.l} className="card-chunky p-8">
+                <p
+                  className="font-display text-4xl font-extrabold"
+                  style={{ color: statAccents[i % statAccents.length] }}
+                >
+                  {s.n}
+                </p>
+                <p className="mt-3 font-bold text-white">{s.l}</p>
+                <p className="mt-1 text-sm text-[var(--muted-on-dark)]">{s.d}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="section-y bg-[var(--bg-elevated)]">
+      <section className="section-y section-lime">
         <div className="container-page">
           <SectionHead num="05" label="გამოხმაურებები" title="მაგალითი წყვილები" />
           <p className="-mt-6 mb-8 text-sm text-[var(--muted)]">საჩვენებელი ისტორიები · არა რეალური რევიუ</p>
           <div className="grid gap-6 md:grid-cols-2">
-            {testimonials.map((t) => (
-              <blockquote key={t.names} className="card-chunky overflow-hidden p-0">
+            {testimonials.map((t, i) => (
+              <blockquote
+                key={t.names}
+                className={cn(
+                  "card-chunky overflow-hidden p-0 ring-2 ring-offset-2 ring-offset-[var(--bg-lime-wash)]",
+                  i === 0 ? "ring-[var(--accent-coral)]" : "ring-[var(--accent-cool)]",
+                )}
+              >
                 <div className="relative h-48">
                   <Image src={t.img} alt="" fill className="object-cover" sizes="600px" />
+                  <div className="absolute inset-0 bg-gradient-to-tr from-[var(--accent-coral)]/30 to-[var(--accent-cool)]/25" />
                 </div>
                 <div className="p-6">
                   <p className="text-[var(--fg-2)]">&ldquo;{t.quote}&rdquo;</p>
-                  <footer className="mt-3 font-bold text-[var(--accent)]">{t.names}</footer>
+                  <footer
+                    className="mt-3 font-bold"
+                    style={{ color: statAccents[(i + 1) % statAccents.length] }}
+                  >
+                    {t.names}
+                  </footer>
                 </div>
               </blockquote>
             ))}
@@ -228,7 +275,7 @@ export function LandingV9() {
         </div>
       </section>
 
-      <section className="section-y" id="pricing" data-testid="landing-pricing">
+      <section className="section-y section-light" id="pricing" data-testid="landing-pricing">
         <div className="container-page">
           <SectionHead num="06" label="ფასები" title="ფასები" />
           <div className="grid gap-6 md:grid-cols-3 md:items-stretch">
@@ -272,13 +319,13 @@ export function LandingV9() {
         </div>
       </section>
 
-      <section className="section-y border-t border-[var(--border-soft)]">
+      <section className="section-y section-lime border-t border-[var(--border-soft)]">
         <div className="container-page">
           <LandingQrPlayground />
         </div>
       </section>
 
-      <section className="section-y bg-[var(--bg-elevated)]">
+      <section className="section-y section-light">
         <div className="container-page">
           <SectionHead num="07" label="პარტნიორები" title="ფოტოგრაფებისთვის" />
           <p className="max-w-2xl text-[var(--muted)]">
@@ -293,7 +340,7 @@ export function LandingV9() {
         </div>
       </section>
 
-      <section className="section-y">
+      <section className="section-y section-light">
         <div className="container-page max-w-3xl">
           <SectionHead num="08" label="კითხვები" title="ხშირი კითხვები" />
           <div className="space-y-3">
@@ -309,12 +356,12 @@ export function LandingV9() {
         </div>
       </section>
 
-      <footer className="section-y border-t border-[var(--border-soft)] bg-black">
+      <footer className="section-y section-dark border-t border-[var(--border-on-dark)]">
         <div className="container-page flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--muted)]">09 · კონტაქტი</p>
-            <h2 className="mt-2 font-display text-3xl font-extrabold">დაგვიკავშირდით</h2>
-            <p className="mt-2 text-[var(--muted)]">hello@memento.ge · WhatsApp</p>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--muted-on-dark)]">09 · კონტაქტი</p>
+            <h2 className="mt-2 font-display text-3xl font-extrabold text-white">დაგვიკავშირდით</h2>
+            <p className="mt-2 text-[var(--muted-on-dark)]">hello@memento.ge · WhatsApp</p>
           </div>
           <Link href="/onboarding" className="pill-cta">
             <span>უფასო დაწყება</span>
@@ -323,7 +370,7 @@ export function LandingV9() {
             </span>
           </Link>
         </div>
-        <p className="container-page mt-12 text-xs text-[var(--muted)]">© {new Date().getFullYear()} Memento · memento.ge</p>
+        <p className="container-page mt-12 text-xs text-[var(--muted-on-dark)]">© {new Date().getFullYear()} Memento · memento.ge</p>
       </footer>
     </main>
   );

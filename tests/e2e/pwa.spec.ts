@@ -7,7 +7,8 @@ test("web app manifest", async ({ request }) => {
   expect(res.ok()).toBeTruthy();
   const manifest = await res.json();
   expect(manifest.name).toContain("მემენტო");
-  expect(manifest.theme_color).toBe("#0b0b0b");
+  expect(manifest.theme_color).toBe("#161616");
+  expect(manifest.background_color).toBe("#f7f7f2");
   expect(manifest.icons?.length).toBeGreaterThan(5);
   const maskable = manifest.icons.some(
     (i: { purpose?: string }) => i.purpose?.includes("maskable"),

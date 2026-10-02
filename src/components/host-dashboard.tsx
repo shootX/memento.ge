@@ -53,8 +53,8 @@ type GuestMsg = {
 };
 
 const templates = [
-  { id: "elegant", label: "გრადიენტი", emoji: "🌈" },
-  { id: "botanical", label: "სტიკერი", emoji: "✨" },
+  { id: "botanical", label: "ფერადი", emoji: "✨" },
+  { id: "elegant", label: "მუქი · ნეონი", emoji: "🌙" },
   { id: "minimal", label: "ფოტო", emoji: "📷" },
 ] as const;
 
@@ -127,7 +127,7 @@ export function HostDashboard({
   const [loading, setLoading] = useState(!bootstrap);
   const [tab, setTab] = useState<Tab>(parseTab(initialTab));
   const [activeTemplate, setActiveTemplate] =
-    useState<(typeof templates)[number]["id"]>("elegant");
+    useState<(typeof templates)[number]["id"]>("botanical");
   const [lightbox, setLightbox] = useState<LightboxItem | null>(null);
   const [newPulse, setNewPulse] = useState(false);
 

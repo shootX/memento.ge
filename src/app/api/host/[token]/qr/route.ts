@@ -24,7 +24,7 @@ export async function GET(req: Request, { params }: Params) {
   if (!event) return jsonError(404, "Not found");
 
   const url = new URL(req.url);
-  const template = (url.searchParams.get("template") ?? "elegant") as CardTemplate;
+  const template = (url.searchParams.get("template") ?? "botanical") as CardTemplate;
   const format = url.searchParams.get("format") ?? "pdf";
   const size = (url.searchParams.get("size") ?? "a6") as CardSize;
   const download = url.searchParams.get("download") === "1";
