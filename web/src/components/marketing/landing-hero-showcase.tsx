@@ -58,7 +58,7 @@ export function LandingHeroShowcase() {
               </div>
               <div className="hero-phone-scene hero-phone-scene-4 flex flex-col bg-[var(--bg)] p-2">
                 <div className="rounded-xl bg-[var(--surface-dark)] p-1">
-                  <p className="mb-1 text-center text-[9px] font-bold text-pink-300">ლაივ სლაიდშოუ</p>
+                  <p className="mb-1 text-center text-[9px] font-bold text-[var(--accent)]">ლაივ სლაიდშოუ</p>
                   <Image
                     src="/seed-samples/wedding-6.jpg"
                     alt=""

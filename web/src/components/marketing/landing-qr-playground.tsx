@@ -76,24 +76,24 @@ export function LandingQrPlayground() {
 
       {tpl.preview === "bright" && (
         <div
-          className="card-chunky relative mx-auto aspect-[3/4] w-full max-w-sm overflow-hidden border border-[var(--accent-coral)]/40 bg-[var(--bg-lime-wash)] p-6"
+          className="card-chunky relative mx-auto aspect-[3/4] w-full max-w-sm overflow-hidden border border-[var(--accent-sky)]/40 bg-[var(--bg-lime-wash)] p-6"
           data-testid="qr-card-preview"
         >
           <span className="absolute left-4 top-4 text-2xl font-bold text-[var(--accent)]" aria-hidden>
             ✦
           </span>
-          <span className="absolute right-4 top-6 text-2xl font-bold text-[var(--accent-coral)]" aria-hidden>
-            ♥
+          <span className="absolute right-4 top-6 text-2xl font-bold text-[var(--accent-amber)]" aria-hidden>
+            ✦
           </span>
-          <span className="absolute bottom-6 right-5 text-2xl font-bold text-[var(--accent-cool)]" aria-hidden>
+          <span className="absolute bottom-6 right-5 text-2xl font-bold text-[var(--accent-sky)]" aria-hidden>
             ✦
           </span>
           <div className="flex h-full flex-col items-center justify-between rounded-2xl border-2 border-[var(--accent)]/50 bg-white/90 p-6 text-center shadow-inner">
             <p className="font-display text-xl font-bold text-[var(--fg)]">ნინო &amp; გიორგი</p>
-            <p className="text-sm font-semibold text-[var(--accent-coral)]">14 ივნისი, 2026</p>
-            <QrImage src={qrSrc} ringClass="border-[var(--accent-cool)]" />
+            <p className="text-sm font-semibold text-[var(--accent-amber)]">14 ივნისი, 2026</p>
+            <QrImage src={qrSrc} ringClass="border-[var(--accent-sky)]" />
             <p className="text-xs font-bold text-[var(--muted)]">QR · ატვირთე ფოტო</p>
-            <p className="font-display text-sm font-bold text-[var(--accent-coral)]">memento.ge</p>
+            <p className="font-display text-sm font-bold text-[var(--fg)]">memento.ge</p>
           </div>
         </div>
       )}
@@ -115,7 +115,7 @@ export function LandingQrPlayground() {
 
       {tpl.preview === "photo" && (
         <div
-          className="card-chunky relative mx-auto aspect-[3/4] w-full max-w-sm overflow-hidden bg-[#1a0a2e] p-4"
+          className="card-chunky relative mx-auto aspect-[3/4] w-full max-w-sm overflow-hidden bg-[var(--bg-charcoal)] p-4"
           data-testid="qr-card-preview"
         >
           <div className="relative mb-3 h-[38%] overflow-hidden rounded-xl">
@@ -126,11 +126,11 @@ export function LandingQrPlayground() {
               className="object-cover"
               sizes="320px"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#1a0a2e] to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-charcoal)] to-transparent" />
           </div>
           <div className="flex flex-col items-center gap-3 px-2 pb-2 text-center">
             <p className="font-display text-lg font-bold text-white">ნინო &amp; გიორგი</p>
-            <p className="text-xs text-[#a855f7]">14 ივნისი, 2026</p>
+            <p className="text-xs text-[var(--accent-sky)]">14 ივნისი, 2026</p>
             <QrImage src={qrSrc} dark />
             <p className="text-xs font-bold text-white/90">დაასკანერე · გაგვიზიარე ფოტო ✨</p>
           </div>
@@ -153,7 +153,7 @@ function QrImage({
     <div
       className={cn(
         "grid h-36 w-36 place-items-center rounded-2xl border-4 bg-white p-2",
-        dark ? "border-[#a855f7]/60" : ringClass ?? "border-[var(--accent)]/40",
+        dark ? "border-[var(--accent-sky)]/60" : ringClass ?? "border-[var(--accent)]/40",
       )}
       data-testid="qr-preview"
     >
