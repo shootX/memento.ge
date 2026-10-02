@@ -1,14 +1,19 @@
-import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { api } from '@/src/api/client';
 import type { GuestEventInfo } from '@/src/api/types';
-import { Badge, Field, GhostButton, PrimaryButton, Screen, Subtitle, Title } from '@/src/components/ui';
+import { LanguageSwitcher } from '@/src/components/LanguageSwitcher';
+import { GuestEventSkeleton } from '@/src/components/Skeleton';
+import { GuestHero } from '@/src/components/guest/GuestHero';
+import { ShotCounter } from '@/src/components/guest/ShotCounter';
+import { ShutterButton } from '@/src/components/guest/ShutterButton';
+import { Field, GhostButton, Screen } from '@/src/components/ui';
 import { formatGeorgianDate } from '@/src/lib/dates';
-import { useGuestStore } from '@/src/stores/guest-store';
+import { guestStore } from '@/src/stores/guest-store';
 import { colors } from '@/src/theme/colors';
 
 export default function GuestEventScreen() {
@@ -22,7 +27,7 @@ export default function GuestEventScreen() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const gk = await useGuestStore.getState().getGuestKey(slug);
+      const gk = await guestStore.getGuestKey(slug);
       if (cancelled) return;
       setGuestKey(gk);
       try {
@@ -39,10 +44,15 @@ export default function GuestEventScreen() {
     };
   }, [slug]);
 
+  const locale = (i18n.language === 'en' || i18n.language === 'ru' ? i18n.language : 'ka') as
+    | 'ka'
+    | 'en'
+    | 'ru';
+
   if (loading) {
     return (
-      <Screen style={styles.center}>
-        <ActivityIndicator color={colors.lime} size="large" />
+      <Screen style={{ paddingHorizontal: 0 }}>
+        <GuestEventSkeleton />
       </Screen>
     );
   }
@@ -50,85 +60,87 @@ export default function GuestEventScreen() {
   if (!info) {
     return (
       <Screen>
-        <Title>ღონისძიება ვერ მოიძებნა</Title>
+        <Text style={styles.errTitle}>ღონისძიება ვერ მოიძებნა</Text>
         <GhostButton label={t('retry')} onPress={() => router.replace('/scan')} />
       </Screen>
     );
   }
 
-  const locale = (i18n.language === 'en' || i18n.language === 'ru' ? i18n.language : 'ka') as
-    | 'ka'
-    | 'en'
-    | 'ru';
+  const openCamera = () => {
+    void guestStore.setGuestName(slug, name);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    router.push({ pathname: '/e/[slug]/camera', params: { slug, guestName: name, guestKey } });
+  };
 
   return (
-    <Screen style={{ paddingHorizontal: 0 }}>
-      <ScrollView contentContainerStyle={styles.scroll}>
-        {info.coverUrl ? (
-          <Image source={{ uri: info.coverUrl }} style={styles.cover} contentFit="cover" />
-        ) : (
-          <View style={[styles.cover, styles.coverFallback]} />
-        )}
-        <View style={styles.body}>
-          <Badge color={colors.sky}>ღონისძიება</Badge>
-          <Title>{info.coupleNames}</Title>
-          <Subtitle>{formatGeorgianDate(info.eventDate, locale)}</Subtitle>
+    <Screen style={styles.screen} testID="guest-ready">
+      <View style={styles.topBar}>
+        <Text style={styles.brand}>{t('appName')}</Text>
+        <LanguageSwitcher />
+      </View>
 
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <GuestHero
+          coverUrl={info.coverUrl}
+          coupleNames={info.coupleNames}
+          dateLabel={formatGeorgianDate(info.eventDate, locale)}
+        />
+
+        <Animated.View entering={FadeInUp.delay(120)} style={styles.content}>
           {info.disposable?.enabled && info.limits.shotsRemaining != null && (
-            <View style={styles.shots}>
-              <Text style={styles.shotsLabel}>{t('shotsLeft')}</Text>
-              <Text style={styles.shotsNum}>{info.limits.shotsRemaining}</Text>
-            </View>
+            <ShotCounter
+              remaining={info.limits.shotsRemaining}
+              total={info.disposable.shotsPerGuest}
+              label={t('shotsLeft')}
+            />
           )}
 
           <Field value={name} onChangeText={setName} placeholder={t('yourName')} />
 
-          <View style={styles.row}>
-            <PrimaryButton
-              label={t('takePhoto')}
-              onPress={() => {
-                void useGuestStore.getState().setGuestName(slug, name);
-                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                router.push({ pathname: '/e/[slug]/camera', params: { slug, guestName: name, guestKey } });
-              }}
-            />
-            <GhostButton
-              label={t('gallery')}
-              onPress={() => {
-                void useGuestStore.getState().setGuestName(slug, name);
-                router.push({ pathname: '/e/[slug]/album', params: { slug, guestName: name, guestKey } });
-              }}
-            />
+          <View style={styles.shutterRow}>
+            <ShutterButton onPress={openCamera} />
           </View>
+          <Text style={styles.shutterHint} numberOfLines={2}>{t('takePhoto')}</Text>
 
-          {info.publicGallery && info.gallerySlug && (
-            <GhostButton
-              label={t('album')}
-              onPress={() => router.push(`/gallery/${info.gallerySlug}`)}
-            />
-          )}
-        </View>
+          <View style={styles.secondary}>
+            <GhostButton label={t('gallery')} onPress={openCamera} />
+            {info.publicGallery && info.gallerySlug && (
+              <Pressable
+                onPress={() => router.push(`/gallery/${info.gallerySlug}`)}
+                style={styles.albumLink}
+              >
+                <Text style={styles.albumText} numberOfLines={1}>{t('album')} →</Text>
+              </Pressable>
+            )}
+          </View>
+        </Animated.View>
       </ScrollView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  center: { justifyContent: 'center', alignItems: 'center' },
-  scroll: { paddingBottom: 40 },
-  cover: { width: '100%', height: 200 },
-  coverFallback: { backgroundColor: colors.surface },
-  body: { padding: 20, gap: 12 },
-  shots: {
-    marginTop: 8,
-    padding: 16,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.lime,
-    backgroundColor: '#c4ff0d12',
+  screen: { paddingHorizontal: 0, paddingTop: 8 },
+  topBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    paddingHorizontal: 20,
+    marginBottom: 4,
   },
-  shotsLabel: { color: colors.lime, fontWeight: '800', fontSize: 12 },
-  shotsNum: { color: colors.fg, fontSize: 42, fontWeight: '900' },
-  row: { gap: 10, marginTop: 8 },
+  brand: { color: colors.lime, fontWeight: '900', fontSize: 18 },
+  scroll: { paddingBottom: 120 },
+  content: { paddingHorizontal: 20, gap: 14, marginTop: 16 },
+  shutterRow: { alignItems: 'center', marginTop: 8 },
+  shutterHint: {
+    textAlign: 'center',
+    color: colors.muted,
+    fontWeight: '700',
+    fontSize: 14,
+    paddingHorizontal: 12,
+  },
+  secondary: { gap: 10, marginTop: 4 },
+  albumLink: { alignSelf: 'center', paddingVertical: 8 },
+  albumText: { color: colors.sky, fontWeight: '800', fontSize: 15 },
+  errTitle: { color: colors.fg, fontSize: 22, fontWeight: '800', marginBottom: 12 },
 });

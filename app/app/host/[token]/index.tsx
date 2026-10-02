@@ -1,25 +1,29 @@
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
-  ActivityIndicator,
   Alert,
-  FlatList,
   Pressable,
+  ScrollView,
   Share,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 import { api } from '@/src/api/client';
+import { useAuthStore } from '@/src/stores/auth-store';
 import { formatGeorgianDate } from '@/src/lib/dates';
-import { Badge, GhostButton, PrimaryButton, Screen, Title } from '@/src/components/ui';
+import { Skeleton } from '@/src/components/Skeleton';
+import { Badge, GhostButton, PrimaryButton, Title } from '@/src/components/ui';
 import { colors } from '@/src/theme/colors';
 
 export default function HostDashboardScreen() {
   const { token } = useLocalSearchParams<{ token: string }>();
   const { t } = useTranslation();
+  const bearer = useAuthStore((s) => s.accessToken);
 
   const hostQ = useQuery({
     queryKey: ['host', token],
@@ -37,17 +41,22 @@ export default function HostDashboardScreen() {
 
   if (hostQ.isLoading) {
     return (
-      <Screen style={styles.center}>
-        <ActivityIndicator color={colors.lime} />
-      </Screen>
+      <View style={styles.loading} testID="host-skeleton">
+        <Skeleton style={{ height: 200, borderRadius: 0 }} />
+        <View style={{ padding: 20, gap: 12 }}>
+          <Skeleton style={{ height: 24, width: '40%' }} />
+          <Skeleton style={{ height: 32, width: '80%' }} />
+          <Skeleton style={{ height: 80, width: '100%' }} />
+        </View>
+      </View>
     );
   }
 
   if (!host) {
     return (
-      <Screen>
+      <View style={styles.loading}>
         <Title>ლინკი ვერ მოიძებნა</Title>
-      </Screen>
+      </View>
     );
   }
 
@@ -57,71 +66,94 @@ export default function HostDashboardScreen() {
       {
         text: t('delete'),
         style: 'destructive',
-        onPress: () => void api.deleteHostMedia(token, id, host.csrfToken).then(() => mediaQ.refetch()),
+        onPress: () =>
+          void api.deleteHostMedia(token, id, host.csrfToken, bearer).then(() => mediaQ.refetch()),
       },
     ]);
   };
 
-  return (
-    <Screen style={{ paddingHorizontal: 0 }}>
-      {host.coverUrl && <Image source={{ uri: host.coverUrl }} style={styles.cover} contentFit="cover" />}
-      <View style={styles.body}>
-        <Badge color={host.isPaid ? colors.success : colors.amber}>
-          {host.isPaid ? 'აქტიური' : 'გადაუხდელი'}
-        </Badge>
-        <Title>{host.coupleNames}</Title>
-        <Text style={styles.meta}>
-          {formatGeorgianDate(host.eventDate)} · {host.usage.uploadCount}/{host.usage.maxUploads}
-        </Text>
+  const usagePct = Math.min(100, (host.usage.uploadCount / host.usage.maxUploads) * 100);
 
+  return (
+    <ScrollView style={styles.root} contentContainerStyle={styles.scroll} testID="host-ready">
+      <View style={styles.hero}>
+        <Image source={{ uri: host.coverUrl ?? undefined }} style={styles.cover} contentFit="cover" />
+        <LinearGradient colors={['transparent', colors.bg]} style={styles.heroGrad} />
+        <View style={styles.heroText}>
+          <Badge color={host.isPaid ? colors.success : colors.amber}>
+            {host.isPaid ? 'აქტიური' : 'გადაუხდელი'}
+          </Badge>
+          <Text style={styles.couple} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.8}>
+            {host.coupleNames}
+          </Text>
+          <Text style={styles.meta} numberOfLines={1}>
+            {formatGeorgianDate(host.eventDate)} · {host.usage.uploadCount}/{host.usage.maxUploads}
+          </Text>
+          <View style={styles.usageTrack}>
+            <View style={[styles.usageFill, { width: `${usagePct}%` }]} />
+          </View>
+        </View>
+      </View>
+
+      <Animated.View entering={FadeInUp} style={styles.body}>
         <View style={styles.actions}>
           {!host.isPaid && (
             <PrimaryButton label={t('pay')} onPress={() => router.push(`/host/${token}/pay`)} />
           )}
-          <GhostButton
-            label={t('slideshow')}
-            onPress={() => router.push(`/host/${token}/slideshow`)}
-          />
+          <GhostButton label={t('slideshow')} onPress={() => router.push(`/host/${token}/slideshow`)} />
           <GhostButton
             label="QR"
             onPress={() => Share.share({ message: host.guestUrl, url: host.guestUrl })}
           />
-          <GhostButton
-            label={t('share')}
-            onPress={() => Share.share({ message: host.hostUrl, url: host.hostUrl })}
-          />
         </View>
 
         <Text style={styles.section}>{t('album')}</Text>
-        <FlatList
-          data={mediaQ.data ?? []}
-          numColumns={2}
-          keyExtractor={(i) => i.id}
-          scrollEnabled={false}
-          columnWrapperStyle={{ gap: 10 }}
-          contentContainerStyle={{ gap: 10 }}
-          ListEmptyComponent={<Text style={styles.empty}>{t('emptyAlbum')}</Text>}
-          renderItem={({ item }) => (
-            <Pressable style={styles.tile} onLongPress={() => deleteMedia(item.id)}>
+        <View style={styles.grid}>
+          {(mediaQ.data ?? []).map((item) => (
+            <Pressable key={item.id} style={styles.tile} onLongPress={() => deleteMedia(item.id)}>
               <Image source={{ uri: item.thumbUrl ?? item.url }} style={styles.img} contentFit="cover" />
-              {item.guestName && <Text style={styles.guest}>{item.guestName}</Text>}
+              {item.guestName && (
+                <Text style={styles.guest} numberOfLines={1}>{item.guestName}</Text>
+              )}
             </Pressable>
+          ))}
+          {(mediaQ.data ?? []).length === 0 && (
+            <Text style={styles.empty}>{t('emptyAlbum')}</Text>
           )}
-        />
-      </View>
-    </Screen>
+        </View>
+      </Animated.View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  center: { justifyContent: 'center', alignItems: 'center' },
-  cover: { width: '100%', height: 180 },
-  body: { padding: 20, gap: 10 },
-  meta: { color: colors.muted },
-  actions: { gap: 8, marginVertical: 8 },
-  section: { color: colors.fg, fontWeight: '800', marginTop: 8 },
-  empty: { color: colors.muted, textAlign: 'center', padding: 20 },
-  tile: { flex: 1, borderRadius: 16, overflow: 'hidden', backgroundColor: colors.surface },
+  root: { flex: 1, backgroundColor: colors.bg },
+  scroll: { paddingBottom: 40 },
+  loading: { flex: 1, backgroundColor: colors.bg },
+  hero: { height: 280, position: 'relative' },
+  cover: { ...StyleSheet.absoluteFill },
+  heroGrad: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '70%' },
+  heroText: { position: 'absolute', left: 20, right: 20, bottom: 20 },
+  couple: { color: colors.fg, fontSize: 28, fontWeight: '900', marginTop: 10, lineHeight: 34 },
+  meta: { color: colors.muted, marginTop: 6, fontWeight: '600' },
+  usageTrack: {
+    height: 6,
+    backgroundColor: colors.border,
+    borderRadius: 999,
+    marginTop: 12,
+    overflow: 'hidden',
+  },
+  usageFill: { height: '100%', backgroundColor: colors.lime },
+  body: { padding: 20, gap: 12 },
+  actions: { gap: 8 },
+  section: { color: colors.fg, fontWeight: '800', fontSize: 18, marginTop: 8 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  tile: {
+    width: '48%',
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: colors.surface,
+  },
   img: { width: '100%', aspectRatio: 3 / 4 },
   guest: {
     position: 'absolute',
@@ -132,6 +164,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     padding: 6,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.55)',
   },
+  empty: { color: colors.muted, textAlign: 'center', padding: 24, width: '100%' },
 });

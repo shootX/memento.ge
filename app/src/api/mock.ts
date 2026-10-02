@@ -63,7 +63,7 @@ export const mockApi = {
   sendMagicLink: async () => ({ ok: true }),
   verifyCode: async (code: string) => {
     if (code === '000000') throw new Error('invalid');
-    return { accessToken: 'mock-bearer-token', user: mockUser };
+    return { accessToken: 'mock-bearer-token', expiresIn: 2592000, user: mockUser };
   },
   dashboardEvents: async (): Promise<{ events: DashboardEvent[] }> => ({
     events: [

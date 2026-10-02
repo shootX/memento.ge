@@ -1,3 +1,7 @@
+# Memento Mobile — Backend API Needs (historical)
+
+> **Implemented on backend** — see [`MOBILE-API.md`](./MOBILE-API.md) for the canonical contract the app uses.
+
 # Memento Mobile — Backend API Needs
 
 The mobile app reuses the existing Next.js backend at `https://qr.socialsave.cc` (production: `https://memento.ge`).  

@@ -4,6 +4,7 @@ import * as Linking from 'expo-linking';
 import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { api } from '@/src/api/client';
 import { parseEventSlugFromUrl } from '@/src/lib/slug';
 import { useAuthStore } from '@/src/stores/auth-store';
 import { colors } from '@/src/theme/colors';
@@ -13,6 +14,21 @@ const queryClient = new QueryClient();
 function useDeepLinks() {
   useEffect(() => {
     const handle = (url: string) => {
+      try {
+        const u = new URL(url.includes('://') ? url : `https://${url}`);
+        if (u.pathname.includes('/auth/callback')) {
+          const token = u.searchParams.get('token');
+          if (token) {
+            void api.exchangeMagicToken(token).then(async (session) => {
+              await useAuthStore.getState().setSession(session.accessToken, session.user.email);
+              router.replace('/host/events');
+            });
+          }
+          return;
+        }
+      } catch {
+        /* ignore */
+      }
       const slug = parseEventSlugFromUrl(url);
       if (slug) router.push(`/e/${slug}`);
     };

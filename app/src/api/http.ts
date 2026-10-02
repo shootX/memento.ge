@@ -18,6 +18,7 @@ export type RequestOptions = {
   json?: unknown;
   csrfToken?: string;
   bearerToken?: string | null;
+  hostToken?: string | null;
   credentials?: RequestCredentials;
 };
 
@@ -33,6 +34,8 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
   }
   if (options.bearerToken) {
     headers.Authorization = `Bearer ${options.bearerToken}`;
+  } else if (options.hostToken) {
+    headers.Authorization = `HostToken ${options.hostToken}`;
   }
 
   const res = await fetch(url, {

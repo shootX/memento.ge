@@ -5,6 +5,12 @@ export type AuthUser = {
   email: string;
 };
 
+export type AuthSession = {
+  accessToken: string;
+  expiresIn?: number;
+  user: AuthUser;
+};
+
 export type GuestEventInfo = {
   coupleNames: string;
   eventDate: string;
@@ -74,6 +80,7 @@ export type DashboardEvent = {
   eventDate: string;
   isPaid: boolean;
   hostUrl?: string;
+  guestUrl?: string;
 };
 
 export type CreateEventResponse = {
@@ -82,8 +89,17 @@ export type CreateEventResponse = {
   error?: string;
 };
 
-export type ApiErrorBody = {
-  error?: string;
-  code?: string;
-  maxBytes?: number;
+export type PaymentSession = {
+  checkoutUrl: string;
+  paymentId: string;
+};
+
+export type PaymentStatus = {
+  status: 'pending' | 'paid' | 'failed';
+  isPaid: boolean;
+};
+
+export type PushSubscribeInput = {
+  platform: 'ios' | 'android';
+  expoPushToken: string;
 };

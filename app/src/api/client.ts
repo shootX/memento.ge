@@ -1,7 +1,9 @@
 import { config } from '@/src/config';
 import { apiFetch } from '@/src/api/http';
+import { hostMutationAuth } from '@/src/api/host-auth';
 import { mockApi } from '@/src/api/mock';
 import type {
+  AuthSession,
   AuthUser,
   CreateEventResponse,
   DashboardEvent,
@@ -9,12 +11,16 @@ import type {
   GuestbookMessage,
   HostBootstrap,
   HostMediaItem,
+  PaymentSession,
+  PaymentStatus,
+  PushSubscribeInput,
 } from '@/src/api/types';
 
 export type MementoClient = {
-  getAuthMe: (bearerToken?: string | null) => Promise<{ user: AuthUser | null }>;
+  getAuthMe: (bearerToken: string) => Promise<{ user: AuthUser | null }>;
   sendMagicLink: (email: string) => Promise<{ warning?: string }>;
-  verifyLoginCode: (email: string, code: string) => Promise<{ accessToken: string; user: AuthUser }>;
+  exchangeMagicToken: (token: string) => Promise<AuthSession>;
+  verifyLoginCode: (email: string, code: string) => Promise<AuthSession>;
   listMyEvents: (bearerToken: string) => Promise<DashboardEvent[]>;
   createEvent: (input: {
     coupleNames: string;
@@ -30,83 +36,103 @@ export type MementoClient = {
     coupleNames?: string;
     items: { id?: string; url: string; thumbUrl?: string; guestName?: string }[];
   }>;
-  postGuestbook: (
-    slug: string,
-    body: { guestName?: string; body: string },
-  ) => Promise<void>;
+  postGuestbook: (slug: string, body: { guestName?: string; body: string }) => Promise<void>;
   getHost: (token: string) => Promise<HostBootstrap>;
   getHostMedia: (token: string) => Promise<HostMediaItem[]>;
   getHostGuestbook: (token: string) => Promise<GuestbookMessage[]>;
-  deleteHostMedia: (token: string, mediaId: string, csrfToken: string) => Promise<void>;
+  deleteHostMedia: (
+    token: string,
+    mediaId: string,
+    csrfToken: string,
+    bearerToken?: string | null,
+  ) => Promise<void>;
   patchHostMedia: (
     token: string,
     mediaId: string,
     csrfToken: string,
     highlight: boolean,
+    bearerToken?: string | null,
   ) => Promise<void>;
   patchHostSettings: (
     token: string,
     csrfToken: string,
     settings: Record<string, unknown>,
+    bearerToken?: string | null,
+  ) => Promise<void>;
+  createPaymentSession: (
+    hostToken: string,
+    returnUrl: string,
+    bearerToken?: string | null,
+  ) => Promise<PaymentSession>;
+  getPaymentStatus: (
+    hostToken: string,
+    paymentId: string,
+    bearerToken?: string | null,
+  ) => Promise<PaymentStatus>;
+  subscribePush: (
+    hostToken: string,
+    input: PushSubscribeInput,
+    bearerToken?: string | null,
+    csrfToken?: string,
   ) => Promise<void>;
   getPaymentUrl: (hostToken: string) => string;
   getSlideshowUrl: (hostToken: string) => string;
   getQrImageUrl: (hostToken: string, template: string) => string;
 };
 
-function shouldMock(path: 'auth' | 'dashboard' | 'all'): boolean {
-  if (config.useMockApi) return true;
-  return path === 'auth' || path === 'dashboard';
+function mockEnabled() {
+  return config.useMockApi;
 }
 
 export function createLiveClient(): MementoClient {
   return {
     async getAuthMe(bearerToken) {
-      if (shouldMock('auth') && !bearerToken) return mockApi.authMe();
-      try {
-        return await apiFetch('/api/auth/me', {
-          bearerToken: bearerToken ?? undefined,
-          credentials: bearerToken ? 'omit' : 'include',
-        });
-      } catch {
-        if (bearerToken) return { user: null };
-        return mockApi.authMe();
-      }
+      if (mockEnabled()) return mockApi.authMe();
+      return apiFetch('/api/auth/me', { bearerToken });
     },
 
     async sendMagicLink(email) {
-      if (shouldMock('auth')) {
+      if (mockEnabled()) {
         await mockApi.sendMagicLink();
         return {};
       }
-      return apiFetch('/api/auth/magic-link', { method: 'POST', json: { email } });
+      return apiFetch('/api/auth/magic-link', {
+        method: 'POST',
+        json: {
+          email,
+          client: 'mobile',
+          redirectUri: config.authRedirectUri,
+        },
+      });
+    },
+
+    async exchangeMagicToken(token) {
+      if (mockEnabled()) return mockApi.verifyCode('123456');
+      return apiFetch<AuthSession>('/api/auth/mobile/exchange', {
+        method: 'POST',
+        json: { token },
+      });
     },
 
     async verifyLoginCode(email, code) {
-      if (shouldMock('auth')) return mockApi.verifyCode(code);
-      return apiFetch('/api/auth/mobile/verify-code', {
+      if (mockEnabled()) return mockApi.verifyCode(code);
+      return apiFetch<AuthSession>('/api/auth/mobile/verify-code', {
         method: 'POST',
         json: { email, code },
       });
     },
 
     async listMyEvents(bearerToken) {
-      if (shouldMock('dashboard')) {
-        const r = await mockApi.dashboardEvents();
-        return r.events;
-      }
-      try {
-        const r = await apiFetch<{ events: DashboardEvent[] }>('/api/dashboard/events', {
-          bearerToken,
-        });
-        return r.events ?? [];
-      } catch {
-        const r = await mockApi.dashboardEvents();
-        return r.events;
-      }
+      if (mockEnabled()) return (await mockApi.dashboardEvents()).events;
+      const r = await apiFetch<{ events: DashboardEvent[] }>('/api/dashboard/events', {
+        bearerToken,
+      });
+      return r.events ?? [];
     },
 
     async createEvent(input) {
+      if (mockEnabled()) return mockApi.createEvent();
+
       const form = new FormData();
       form.append('coupleNames', input.coupleNames);
       form.append('eventDate', new Date(input.eventDate).toISOString());
@@ -120,32 +146,22 @@ export function createLiveClient(): MementoClient {
         } as unknown as Blob);
       }
 
-      if (shouldMock('dashboard') && !input.bearerToken) {
-        return mockApi.createEvent();
-      }
-
-      try {
-        return await apiFetch<CreateEventResponse>('/api/events', {
-          method: 'POST',
-          body: form,
-          bearerToken: input.bearerToken,
-          credentials: input.bearerToken ? 'omit' : 'include',
-        });
-      } catch (e) {
-        if (config.useMockApi) return mockApi.createEvent();
-        throw e;
-      }
+      return apiFetch<CreateEventResponse>('/api/events', {
+        method: 'POST',
+        body: form,
+        bearerToken: input.bearerToken ?? undefined,
+      });
     },
 
     async getGuestEvent(slug, guestKey) {
-      if (config.useMockApi && slug === 'demo') return mockApi.guestInfo(slug);
+      if (mockEnabled()) return mockApi.guestInfo(slug);
       return apiFetch<GuestEventInfo>(
         `/api/guest/${encodeURIComponent(slug)}?guestKey=${encodeURIComponent(guestKey)}`,
       );
     },
 
     async getGallery(slug, password) {
-      if (config.useMockApi) return mockApi.gallery();
+      if (mockEnabled()) return mockApi.gallery();
       if (password) {
         await apiFetch(`/api/gallery/${encodeURIComponent(slug)}`, {
           method: 'POST',
@@ -156,7 +172,7 @@ export function createLiveClient(): MementoClient {
     },
 
     async postGuestbook(slug, body) {
-      if (config.useMockApi) return;
+      if (mockEnabled()) return;
       await apiFetch(`/api/guest/${encodeURIComponent(slug)}/guestbook`, {
         method: 'POST',
         json: body,
@@ -164,15 +180,12 @@ export function createLiveClient(): MementoClient {
     },
 
     async getHost(token) {
-      if (config.useMockApi && token.startsWith('mock')) return mockApi.hostGet();
+      if (mockEnabled()) return mockApi.hostGet();
       return apiFetch<HostBootstrap>(`/api/host/${encodeURIComponent(token)}`);
     },
 
     async getHostMedia(token) {
-      if (config.useMockApi && token.startsWith('mock')) {
-        const r = await mockApi.hostMedia();
-        return r.items;
-      }
+      if (mockEnabled()) return (await mockApi.hostMedia()).items;
       const r = await apiFetch<{ items: HostMediaItem[] }>(
         `/api/host/${encodeURIComponent(token)}/media`,
       );
@@ -180,39 +193,70 @@ export function createLiveClient(): MementoClient {
     },
 
     async getHostGuestbook(token) {
-      if (config.useMockApi && token.startsWith('mock')) {
-        const r = await mockApi.hostGuestbook();
-        return r.items;
-      }
+      if (mockEnabled()) return (await mockApi.hostGuestbook()).items;
       const r = await apiFetch<{ items: GuestbookMessage[] }>(
         `/api/host/${encodeURIComponent(token)}/guestbook`,
       );
       return r.items ?? [];
     },
 
-    async deleteHostMedia(token, mediaId, csrfToken) {
-      if (config.useMockApi && token.startsWith('mock')) return;
+    async deleteHostMedia(token, mediaId, csrfToken, bearerToken) {
+      if (mockEnabled()) return;
       await apiFetch(`/api/host/${encodeURIComponent(token)}/media/${mediaId}`, {
         method: 'DELETE',
-        csrfToken,
+        ...hostMutationAuth(token, bearerToken, csrfToken),
       });
     },
 
-    async patchHostMedia(token, mediaId, csrfToken, highlight) {
-      if (config.useMockApi && token.startsWith('mock')) return;
+    async patchHostMedia(token, mediaId, csrfToken, highlight, bearerToken) {
+      if (mockEnabled()) return;
       await apiFetch(`/api/host/${encodeURIComponent(token)}/media/${mediaId}`, {
         method: 'PATCH',
-        csrfToken,
+        ...hostMutationAuth(token, bearerToken, csrfToken),
         json: { highlight },
       });
     },
 
-    async patchHostSettings(token, csrfToken, settings) {
-      if (config.useMockApi && token.startsWith('mock')) return;
+    async patchHostSettings(token, csrfToken, settings, bearerToken) {
+      if (mockEnabled()) return;
       await apiFetch(`/api/host/${encodeURIComponent(token)}/settings`, {
         method: 'PATCH',
-        csrfToken,
+        ...hostMutationAuth(token, bearerToken, csrfToken),
         json: settings,
+      });
+    },
+
+    async createPaymentSession(hostToken, returnUrl, bearerToken) {
+      if (mockEnabled()) {
+        return {
+          checkoutUrl: `${config.apiUrl}/host/${hostToken}/pay?source=app`,
+          paymentId: 'mock-pay-1',
+        };
+      }
+      return apiFetch<PaymentSession>(
+        `/api/host/${encodeURIComponent(hostToken)}/payment/session`,
+        {
+          method: 'POST',
+          ...hostMutationAuth(hostToken, bearerToken),
+          json: { returnUrl },
+        },
+      );
+    },
+
+    async getPaymentStatus(hostToken, paymentId, bearerToken) {
+      if (mockEnabled()) return { status: 'pending', isPaid: false };
+      return apiFetch<PaymentStatus>(
+        `/api/host/${encodeURIComponent(hostToken)}/payment/status?paymentId=${encodeURIComponent(paymentId)}`,
+        hostMutationAuth(hostToken, bearerToken),
+      );
+    },
+
+    async subscribePush(hostToken, input, bearerToken, csrfToken) {
+      if (mockEnabled()) return;
+      await apiFetch(`/api/host/${encodeURIComponent(hostToken)}/push/subscribe`, {
+        method: 'POST',
+        ...hostMutationAuth(hostToken, bearerToken, csrfToken),
+        json: input,
       });
     },
 

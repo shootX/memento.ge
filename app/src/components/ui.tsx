@@ -1,12 +1,28 @@
 import { Pressable, StyleSheet, Text, TextInput, View, type ViewStyle } from 'react-native';
 import { colors } from '@/src/theme/colors';
 
-export function Screen({ children, style }: { children: React.ReactNode; style?: ViewStyle }) {
-  return <View style={[styles.screen, style]}>{children}</View>;
+export function Screen({
+  children,
+  style,
+  testID,
+}: {
+  children: React.ReactNode;
+  style?: ViewStyle;
+  testID?: string;
+}) {
+  return (
+    <View style={[styles.screen, style]} testID={testID}>
+      {children}
+    </View>
+  );
 }
 
 export function Title({ children }: { children: React.ReactNode }) {
-  return <Text style={styles.title}>{children}</Text>;
+  return (
+    <Text style={styles.title} numberOfLines={3} adjustsFontSizeToFit minimumFontScale={0.85}>
+      {children}
+    </Text>
+  );
 }
 
 export function Subtitle({ children }: { children: React.ReactNode }) {
@@ -72,6 +88,7 @@ export function Field({
       secureTextEntry={secureTextEntry}
       style={styles.input}
       autoCapitalize="none"
+      multiline={false}
     />
   );
 }
@@ -121,6 +138,8 @@ const styles = StyleSheet.create({
     color: colors.limeOn,
     fontWeight: '800',
     fontSize: 16,
+    lineHeight: 22,
+    textAlign: 'center',
   },
   ghostBtn: {
     borderRadius: 999,
@@ -133,6 +152,8 @@ const styles = StyleSheet.create({
   ghostBtnText: {
     color: colors.fg,
     fontWeight: '700',
+    lineHeight: 20,
+    textAlign: 'center',
   },
   input: {
     backgroundColor: colors.bgElevated,
@@ -143,6 +164,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     color: colors.fg,
     fontSize: 16,
+    lineHeight: 22,
+    minHeight: 52,
     marginTop: 8,
   },
   badge: {

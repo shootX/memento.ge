@@ -2,8 +2,10 @@ const DEFAULT_API_URL = 'https://qr.socialsave.cc';
 
 export const config = {
   apiUrl: (process.env.EXPO_PUBLIC_API_URL ?? DEFAULT_API_URL).replace(/\/$/, ''),
+  /** In-memory API fixtures — off by default; set EXPO_PUBLIC_API_MOCK=true for local demo. */
   useMockApi: process.env.EXPO_PUBLIC_API_MOCK === 'true',
   deepLinkHost: 'memento.ge',
+  authRedirectUri: 'memento://auth/callback',
 };
 
 export const PLAN_TIERS = {
