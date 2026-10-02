@@ -61,22 +61,9 @@ function formatFallback(d: Date, locale: AppLocale): string {
   return `${day} ${month}, ${year}`;
 }
 
-/** Long event date in ka-GE / en-US / ru-RU style, without relying on full ICU. */
+/** Long event date — always manual tables (Chromium ka-GE can show "2026 M10 17"). */
 export function formatEventDate(date: Date | string, locale: AppLocale = "ka"): string {
   const d = typeof date === "string" ? new Date(date) : date;
   if (Number.isNaN(d.getTime())) return "";
-
-  const tag = localeToBcp47(locale);
-  try {
-    const formatted = d.toLocaleDateString(tag, { dateStyle: "long" });
-    if (locale === "ka" && /\b(October|January|February|March|April|May|June|July|August|September|November|December)\b/.test(formatted)) {
-      return formatFallback(d, locale);
-    }
-    if (locale === "ru" && /\b(October|January)\b/i.test(formatted)) {
-      return formatFallback(d, locale);
-    }
-    return formatted;
-  } catch {
-    return formatFallback(d, locale);
-  }
+  return formatFallback(d, locale);
 }

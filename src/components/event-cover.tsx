@@ -23,7 +23,7 @@ export function EventCover({
   const [useFallback, setUseFallback] = useState(!coverUrl);
 
   return (
-    <div className="relative h-44 w-full overflow-hidden bg-[var(--surface-warm)]" data-testid="guest-cover">
+    <div className="relative h-28 w-full overflow-hidden bg-[var(--surface-warm)] sm:h-40" data-testid="guest-cover">
       {!useFallback && coverUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img

@@ -16,7 +16,7 @@ describe("formatEventDate", () => {
 
   it("uses en-US style for English", () => {
     const s = formatEventDate(d, "en");
-    expect(s).toMatch(/October 2, 2026|2 October 2026/);
+    expect(s).toBe("October 2, 2026");
   });
 
   it("uses ru-RU genitive month", () => {

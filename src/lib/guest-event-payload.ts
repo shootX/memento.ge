@@ -32,6 +32,8 @@ export type GuestEventPayload = {
     remainingUploads: number;
     shotsRemaining: number | null;
   };
+  publicGallery: boolean;
+  gallerySlug: string;
   coverUrl: string | null;
 };
 
@@ -90,6 +92,8 @@ export async function buildGuestEventPayload(
       remainingUploads: Math.max(0, plan.maxUploads - event.uploadCount),
       shotsRemaining,
     },
+    publicGallery: event.publicGallery,
+    gallerySlug: event.customSlug ?? event.guestSlug,
     coverUrl,
   };
 }

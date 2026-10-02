@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { validateCustomSlug } from "@/lib/guest-slug";
 import { PushSettings } from "@/components/pwa/push-settings";
 
 export function HostSettings({
@@ -29,8 +30,15 @@ export function HostSettings({
   const [galleryPassword, setGalleryPassword] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
   const [saved, setSaved] = useState(false);
+  const [slugError, setSlugError] = useState<string | null>(null);
 
   const save = async () => {
+    setSlugError(null);
+    const check = validateCustomSlug(slug);
+    if (!check.ok) {
+      setSlugError(check.message);
+      return;
+    }
     const res = await fetch(`/api/host/${token}/settings`, {
       method: "PATCH",
       headers: {
@@ -116,8 +124,12 @@ export function HostSettings({
           className="mt-1 w-full rounded-lg border px-3 py-2"
           placeholder="nino-giorgi-2026"
           value={slug}
-          onChange={(e) => setSlug(e.target.value)}
+          onChange={(e) => {
+            setSlug(e.target.value);
+            setSlugError(null);
+          }}
         />
+        {slugError && <p className="mt-1 text-xs font-semibold text-red-600">{slugError}</p>}
       </label>
 
       <label className="block text-sm">

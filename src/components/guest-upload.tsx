@@ -11,6 +11,13 @@ import { Camera, CheckCircle2, Loader2 } from "lucide-react";
 import { EventCover } from "@/components/event-cover";
 import { useMotionSafe } from "@/lib/motion";
 import { enqueueUpload } from "@/lib/offline-upload-queue";
+import {
+  isFinalUploadHttpStatus,
+  parseUploadErrorBody,
+  runPool,
+  shouldCompressImagesForUpload,
+} from "@/lib/guest-upload-http";
+import Link from "next/link";
 import { cn } from "@/lib/cn";
 import type { GuestEventPayload } from "@/lib/guest-event-payload";
 
@@ -27,19 +34,64 @@ type FileProgress = {
 class GuestUploadError extends Error {
   readonly code?: string;
   readonly maxBytes?: number;
-  readonly validation: boolean;
+  readonly final: boolean;
 
-  constructor(message: string, opts?: { code?: string; maxBytes?: number; validation?: boolean }) {
+  constructor(
+    message: string,
+    opts?: { code?: string; maxBytes?: number; final?: boolean },
+  ) {
     super(message);
     this.code = opts?.code;
     this.maxBytes = opts?.maxBytes;
-    this.validation = opts?.validation ?? false;
+    this.final = opts?.final ?? false;
   }
 }
 
 function isHeicFile(file: File): boolean {
   const t = file.type.toLowerCase();
   return t === "image/heic" || t === "image/heif" || /\.heic$/i.test(file.name) || /\.heif$/i.test(file.name);
+}
+
+function uploadOnceXhr(
+  slug: string,
+  file: File,
+  guestName: string,
+  guestKey: string,
+  onProgress: (p: number) => void,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const form = new FormData();
+    form.append("file", file);
+    if (guestName) form.append("guestName", guestName);
+    form.append("guestKey", guestKey);
+
+    const xhr = new XMLHttpRequest();
+    xhr.upload.addEventListener("progress", (e) => {
+      if (e.lengthComputable && e.total > 0) {
+        onProgress(Math.min(99, Math.round((e.loaded / e.total) * 100)));
+      }
+    });
+    xhr.addEventListener("load", () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        onProgress(100);
+        resolve();
+        return;
+      }
+      const data = parseUploadErrorBody(xhr.responseText);
+      reject(
+        new GuestUploadError(data.error ?? "Upload failed", {
+          code: data.code,
+          maxBytes: data.maxBytes,
+          final: isFinalUploadHttpStatus(xhr.status),
+        }),
+      );
+    });
+    xhr.addEventListener("error", () => {
+      reject(new GuestUploadError("Network error", { final: false }));
+    });
+    xhr.open("POST", `/api/guest/${slug}/upload`);
+    xhr.send(form);
+  });
 }
 
 async function uploadWithRetry(
@@ -53,31 +105,10 @@ async function uploadWithRetry(
   let attempt = 0;
   while (attempt <= maxRetries) {
     try {
-      onProgress(10);
-      const form = new FormData();
-      form.append("file", file);
-      if (guestName) form.append("guestName", guestName);
-      form.append("guestKey", guestKey);
-      const res = await fetch(`/api/guest/${slug}/upload`, {
-        method: "POST",
-        body: form,
-      });
-      onProgress(90);
-      if (!res.ok) {
-        const data = (await res.json().catch(() => ({}))) as {
-          error?: string;
-          code?: string;
-          maxBytes?: number;
-        };
-        throw new GuestUploadError(data.error ?? "Upload failed", {
-          code: data.code,
-          maxBytes: data.maxBytes,
-          validation: Boolean(data.code),
-        });
-      }
-      onProgress(100);
+      await uploadOnceXhr(slug, file, guestName, guestKey, onProgress);
       return;
     } catch (e) {
+      if (e instanceof GuestUploadError && e.final) throw e;
       attempt += 1;
       if (attempt > maxRetries) throw e;
       await new Promise((r) => setTimeout(r, 800 * attempt));
@@ -159,80 +190,83 @@ export function GuestUpload({
     async (files: FileList | File[]) => {
       if (!info?.canUpload) return;
       const maxBytes = info.limits.maxBytesPerFile;
-      const list = Array.from(files).slice(0, 20);
-      const prepared: File[] = [];
+      const list = Array.from(files);
+      const compress = shouldCompressImagesForUpload();
+      const prepared: { file: File; errorMessage?: string }[] = [];
 
       for (const f of list) {
         if (f.size > maxBytes) {
-          const msg = uploadErrorMessage(locale, "FILE_TOO_LARGE", maxBytes);
-          setQueue([
-            {
-              file: f,
-              status: "error",
-              progress: 0,
-              errorMessage: msg,
-              preview: f.type.startsWith("image/") ? URL.createObjectURL(f) : undefined,
-            },
-          ]);
-          setAllDone(true);
-          return;
+          prepared.push({
+            file: f,
+            errorMessage: uploadErrorMessage(locale, "FILE_TOO_LARGE", maxBytes),
+          });
+          continue;
         }
-        if (f.type.startsWith("image/") && !isHeicFile(f) && f.size > 2 * 1024 * 1024) {
+        if (
+          compress &&
+          f.type.startsWith("image/") &&
+          !isHeicFile(f) &&
+          f.size > 2 * 1024 * 1024
+        ) {
           try {
             const compressed = await imageCompression(f, {
-              maxSizeMB: 2,
-              maxWidthOrHeight: 2048,
+              maxSizeMB: 8,
+              maxWidthOrHeight: 4096,
               useWebWorker: true,
             });
-            prepared.push(compressed);
+            prepared.push({ file: compressed });
           } catch {
-            prepared.push(f);
+            prepared.push({ file: f });
           }
         } else {
-          prepared.push(f);
+          prepared.push({ file: f });
         }
       }
 
-      const initial: FileProgress[] = prepared.map((file) => ({
+      const initial: FileProgress[] = prepared.map(({ file, errorMessage }) => ({
         file,
-        status: "pending",
+        status: errorMessage ? "error" : "pending",
         progress: 0,
-        preview: file.type.startsWith("image/")
-          ? URL.createObjectURL(file)
-          : undefined,
+        errorMessage,
+        preview:
+          file.type.startsWith("image/") || isHeicFile(file)
+            ? URL.createObjectURL(file)
+            : undefined,
       }));
       setQueue(initial);
       setAllDone(false);
+      setUploadDeferred(false);
 
       const offline = typeof navigator !== "undefined" && !navigator.onLine;
       if (offline) setUploadDeferred(true);
 
-      for (let i = 0; i < prepared.length; i++) {
-        const file = prepared[i];
+      const uploadOne = async (entry: { file: File; errorMessage?: string }, i: number) => {
+        if (entry.errorMessage) return;
+
         if (offline) {
           await enqueueUpload({
             slug,
             guestName,
             guestKey,
-            fileName: file.name,
-            mimeType: file.type || "application/octet-stream",
-            blob: file,
+            fileName: entry.file.name,
+            mimeType: entry.file.type || "application/octet-stream",
+            blob: entry.file,
           });
           setQueue((q) =>
             q.map((item, idx) =>
               idx === i ? { ...item, status: "done", progress: 100 } : item,
             ),
           );
-          continue;
+          return;
         }
 
         setQueue((q) =>
           q.map((item, idx) =>
-            idx === i ? { ...item, status: "uploading" } : item,
+            idx === i ? { ...item, status: "uploading", progress: 0 } : item,
           ),
         );
         try {
-          await uploadWithRetry(slug, file, guestName, guestKey, (p) => {
+          await uploadWithRetry(slug, entry.file, guestName, guestKey, (p) => {
             setQueue((q) =>
               q.map((item, idx) => (idx === i ? { ...item, progress: p } : item)),
             );
@@ -243,23 +277,23 @@ export function GuestUpload({
             ),
           );
         } catch (e) {
-          if (e instanceof GuestUploadError && e.validation) {
+          if (e instanceof GuestUploadError && e.final) {
             const msg = uploadErrorMessage(locale, e.code, e.maxBytes ?? maxBytes);
             setQueue((q) =>
               q.map((item, idx) =>
                 idx === i ? { ...item, status: "error", progress: 0, errorMessage: msg } : item,
               ),
             );
-            continue;
+            return;
           }
           setUploadDeferred(true);
           await enqueueUpload({
             slug,
             guestName,
             guestKey,
-            fileName: file.name,
-            mimeType: file.type || "application/octet-stream",
-            blob: file,
+            fileName: entry.file.name,
+            mimeType: entry.file.type || "application/octet-stream",
+            blob: entry.file,
           });
           setQueue((q) =>
             q.map((item, idx) =>
@@ -267,7 +301,10 @@ export function GuestUpload({
             ),
           );
         }
-      }
+      };
+
+      await runPool(prepared, 3, (entry, i) => uploadOne(entry, i));
+
       setAllDone(true);
       window.dispatchEvent(new CustomEvent("memento-queue-flush"));
     },
@@ -296,10 +333,9 @@ export function GuestUpload({
   const closed = !info.canUpload;
   const disposable = info.disposable?.enabled;
   const shotsLeft = info.limits.shotsRemaining;
+  const doneCount = queue.filter((q) => q.status === "done").length;
   const showWeakConnectionBanner =
-    browserOffline ||
-    uploadDeferred ||
-    queue.some((item) => item.status === "error");
+    browserOffline || (uploadDeferred && queue.some((q) => q.status === "done"));
 
   return (
     <div
@@ -336,6 +372,14 @@ export function GuestUpload({
             <p className="mt-2 text-sm text-[var(--muted)]" suppressHydrationWarning>
               {formatEventDate(info.eventDate, locale)}
             </p>
+            {info.publicGallery && (
+              <Link
+                href={`/gallery/${info.gallerySlug}`}
+                className="mt-3 inline-block text-sm font-bold text-[var(--accent)] underline-offset-2 hover:underline"
+              >
+                {t(locale, "viewPublicAlbum")} →
+              </Link>
+            )}
           </div>
         </motion.div>
 
@@ -509,7 +553,7 @@ export function GuestUpload({
           </motion.div>
         ) : (
           <>
-            <p className="mt-5 font-bold">{t(locale, "uploadTitle")}</p>
+            <p className="mt-5 font-bold md:mt-5">{t(locale, "uploadTitle")}</p>
             <p className="text-sm text-[var(--text-muted)]">{t(locale, "uploadSubtitle")}</p>
 
             <label className="mt-3 block text-sm font-medium">
@@ -522,27 +566,21 @@ export function GuestUpload({
               />
             </label>
 
-            <label className="mt-8 flex flex-col items-center gap-4">
-              <span className="guest-shutter flex h-32 w-32 cursor-pointer items-center justify-center rounded-full btn-gradient transition active:scale-95">
-                <Camera className="h-14 w-14 text-[var(--accent-on)]" />
-              </span>
-              <span className="text-center text-lg font-bold">{t(locale, "dropHere")}</span>
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp,image/heic,image/heif,video/mp4,video/quicktime,video/webm"
-                multiple={!disposable}
-                className="hidden"
-                onChange={(e) => e.target.files && processFiles(e.target.files)}
-              />
-            </label>
-
             {queue.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mt-8"
+                className="mt-6"
               >
-                <p className="type-label mb-3">{t(locale, "albumQueue")}</p>
+                <p className="type-label mb-3">
+                  {t(locale, "albumQueue")}{" "}
+                  <span className="text-[var(--fg)]">
+                    {t(locale, "uploadProgress", {
+                      current: doneCount,
+                      total: queue.length,
+                    })}
+                  </span>
+                </p>
                 <ul className="grid grid-cols-3 gap-2">
                   {queue.map((item, i) => (
                     <li
@@ -585,6 +623,21 @@ export function GuestUpload({
                 </ul>
               </motion.div>
             )}
+
+            <label className="fixed bottom-0 left-0 right-0 z-40 flex flex-col items-center gap-2 border-t border-[var(--border-soft)] bg-[var(--bg-page)]/95 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-md md:static md:mt-8 md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
+              <span className="guest-shutter flex h-24 w-24 cursor-pointer items-center justify-center rounded-full btn-gradient transition active:scale-95 md:h-32 md:w-32">
+                <Camera className="h-12 w-12 text-[var(--accent-on)] md:h-14 md:w-14" />
+              </span>
+              <span className="text-center text-base font-bold md:text-lg">{t(locale, "dropHere")}</span>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/heic,image/heif,video/mp4,video/quicktime,video/webm"
+                multiple={!disposable}
+                className="hidden"
+                onChange={(e) => e.target.files && processFiles(e.target.files)}
+              />
+            </label>
+            <div className="h-36 md:hidden" aria-hidden />
           </>
         )}
 

@@ -7,7 +7,15 @@
 ### Magic link
 
 1. `POST /api/auth/magic-link` — one-time token hash in DB, 15 min TTL.
-2. `GET /api/auth/verify` — token consumed, `Session` + httpOnly cookie `memento_user` (30 days, `sameSite: lax`).
+2. `GET /api/auth/verify` — token consumed, `Session` + httpOnly cookie `memento_user` (30 days, `sameSite: lax`). Redirects use `NEXT_PUBLIC_APP_URL` (`publicAppUrl()`), not the incoming request host.
+
+**Production:** `devLink` is never returned from `/api/auth/magic-link` unless `DEV_SHOW_MAGIC_LINK=1`. Links are logged server-side when email is not configured.
+
+**Incident response:** revoke outstanding tokens and sessions:
+
+```bash
+npx tsx scripts/invalidate-auth-tokens.ts
+```
 
 ### Google OAuth
 

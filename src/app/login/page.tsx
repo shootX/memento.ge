@@ -8,7 +8,6 @@ import { ColorfulShell } from "@/components/colorful-shell";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
-  const [devLink, setDevLink] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [googleEnabled, setGoogleEnabled] = useState(false);
@@ -30,7 +29,6 @@ export default function LoginPage() {
       body: JSON.stringify({ email }),
     });
     const data = await res.json();
-    setDevLink(data.devLink ?? null);
     setWarning(data.warning ?? null);
     setSent(true);
     setLoading(false);
@@ -58,14 +56,6 @@ export default function LoginPage() {
             </Button>
             {warning && (
               <p className="rounded-xl bg-amber-50 p-3 text-xs text-amber-900">{warning}</p>
-            )}
-            {devLink && (
-              <p className="text-xs break-all text-[var(--muted)]">
-                ადმინისთვის:{" "}
-                <a href={devLink} className="font-semibold underline">
-                  {devLink}
-                </a>
-              </p>
             )}
           </div>
         ) : (

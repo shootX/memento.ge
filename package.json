@@ -12,7 +12,7 @@
     "db:migrate": "prisma migrate deploy",
     "db:migrate:dev": "prisma migrate dev",
     "db:push": "prisma db push",
-    "email:worker": "tsx scripts/email-worker.ts",
+    "auth:invalidate": "tsx scripts/invalidate-auth-tokens.ts",
     "seed:demo": "tsx scripts/seed-demo.ts",
     "ensure:demo": "STORAGE_BACKEND=local LOCAL_STORAGE_PATH=./data/test-uploads tsx scripts/ensure-demo-event.ts",
     "seed:full": "tsx scripts/seed-full.ts",

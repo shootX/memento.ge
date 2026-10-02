@@ -9,13 +9,13 @@ import { ValidationError } from "@/lib/upload-validation";
 
 export { consumeApi, consumeLogin, consumeUpload };
 
-export function jsonError(status: number, message: string) {
-  return NextResponse.json({ error: message }, { status });
+export function jsonError(status: number, message: string, code?: string) {
+  return NextResponse.json(code ? { error: message, code } : { error: message }, { status });
 }
 
 export function handleApiError(err: unknown) {
   if (err instanceof RateLimitError) {
-    return jsonError(429, "Too many requests");
+    return jsonError(429, "Too many requests", "RATE_LIMITED");
   }
   if (err instanceof ValidationError) {
     return NextResponse.json(
