@@ -44,11 +44,11 @@ function SectionHead({
 
 const chipStyles = [
   "bg-[var(--accent)] text-[var(--accent-on)]",
-  "bg-[var(--accent-coral)] text-white",
-  "bg-[var(--accent-cool)] text-[#0a1628]",
+  "bg-[var(--accent-amber)] text-[var(--accent-on)]",
+  "bg-[var(--accent-sky)] text-[#0a1628]",
 ];
 
-const statAccents = ["var(--accent)", "var(--accent-coral)", "var(--accent-cool)"];
+const statAccents = ["var(--accent)", "var(--accent-amber)", "var(--accent-sky)"];
 
 const features = [
   "ლაივ სლაიდშოუ ეკრანზე",
@@ -187,7 +187,7 @@ export function LandingV9() {
             {gallery.map((g, gi) => (
               <figure key={g.src} className="group relative aspect-[4/5] overflow-hidden rounded-[var(--radius-md)] shadow-[var(--shadow-playful)]">
                 <Image src={g.src} alt="" fill className="object-cover transition duration-500 group-hover:scale-105" sizes="400px" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#161616]/90 via-[var(--accent-coral)]/20 to-[var(--accent-cool)]/15" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#161616]/90 via-[var(--accent-sky)]/18 to-[var(--accent)]/12" />
                 <figcaption className="absolute bottom-4 left-4 flex flex-wrap gap-2">
                   {g.tags.map((tag, ti) => (
                     <span
@@ -255,12 +255,12 @@ export function LandingV9() {
                 key={t.names}
                 className={cn(
                   "card-chunky overflow-hidden p-0 ring-2 ring-offset-2 ring-offset-[var(--bg-lime-wash)]",
-                  i === 0 ? "ring-[var(--accent-coral)]" : "ring-[var(--accent-cool)]",
+                  i === 0 ? "ring-[var(--accent-amber)]" : "ring-[var(--accent-sky)]",
                 )}
               >
                 <div className="relative h-48">
                   <Image src={t.img} alt="" fill className="object-cover" sizes="600px" />
-                  <div className="absolute inset-0 bg-gradient-to-tr from-[var(--accent-coral)]/30 to-[var(--accent-cool)]/25" />
+                  <div className="absolute inset-0 bg-gradient-to-tr from-[var(--accent-amber)]/25 to-[var(--accent-sky)]/22" />
                 </div>
                 <div className="p-6">
                   <p className="text-[var(--fg-2)]">&ldquo;{t.quote}&rdquo;</p>

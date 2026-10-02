@@ -1,14 +1,12 @@
-/* Memento · v10 Studiova + lime (lighter, colourful) */
+/* Memento · v11 Studiova + lime (no pink — lime, sky, amber) */
 
 :root {
-  /* Charcoal (dark bands — ~30% less full-black page) */
   --bg-charcoal: #161616;
   --bg-charcoal-elevated: #1c1c1e;
 
-  /* Light surfaces (default app + alternating landing sections) */
   --bg-warm: #f7f7f2;
   --bg-lime-wash: #f4ffe0;
-  --bg-blush-wash: #fff5f8;
+  --bg-sky-wash: #e8f7ff;
 
   --bg: var(--bg-warm);
   --bg-page: var(--bg-warm);
@@ -33,12 +31,12 @@
   --border-on-dark: rgba(255, 255, 255, 0.12);
   --border-soft-on-dark: rgba(255, 255, 255, 0.08);
 
-  /* Primary + secondary accents */
   --accent: #c4ff0d;
   --accent-line: #c1ff72;
   --accent-mid: #c4ff0d;
-  --accent-cool: #5cc8ff;
-  --accent-coral: #ff5c8a;
+  --accent-sky: #5cc8ff;
+  --accent-amber: #ffb020;
+  --accent-cool: var(--accent-sky);
   --accent-on: #121212;
   --accent-hover: #d4ff33;
   --accent-active: #b0e600;
@@ -51,16 +49,20 @@
   --gradient-soft: linear-gradient(
     160deg,
     rgba(196, 255, 13, 0.14) 0%,
-    rgba(92, 200, 255, 0.08) 50%,
-    rgba(255, 92, 138, 0.1) 100%
+    rgba(92, 200, 255, 0.1) 55%,
+    rgba(255, 176, 32, 0.08) 100%
   );
   --gradient-guest: linear-gradient(
     165deg,
     #f4ffe0 0%,
-    #f7f7f2 42%,
-    #fff5f8 100%
+    #f7f7f2 48%,
+    #e8f7ff 100%
   );
-  --gradient-card-warm: linear-gradient(145deg, rgba(255, 92, 138, 0.35), rgba(92, 200, 255, 0.25));
+  --gradient-card-warm: linear-gradient(
+    145deg,
+    rgba(196, 255, 13, 0.25),
+    rgba(92, 200, 255, 0.22)
+  );
 
   --font-display: var(--font-manrope), var(--font-noto-sans), system-ui, sans-serif;
   --font-body: var(--font-noto-sans), var(--font-manrope), system-ui, sans-serif;
@@ -117,12 +119,12 @@
   --motion-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
 
-  /* Legacy aliases */
+  /* Legacy aliases (no pink) */
   --bg-card: var(--surface);
   --bg-dark: #0a0a0a;
-  --pink: var(--accent-coral);
-  --orange: var(--accent-coral);
-  --violet: var(--accent-cool);
+  --pink: var(--accent);
+  --orange: var(--accent-amber);
+  --violet: var(--accent-sky);
   --mint: var(--success);
   --sun: var(--warn);
   --text-ink: var(--fg);
@@ -133,7 +135,7 @@
   --color-cream: var(--bg-warm);
   --color-gold: var(--accent);
   --color-forest: var(--accent);
-  --color-blush: var(--bg-blush-wash);
+  --color-blush: var(--bg-sky-wash);
   --radius-chunky: var(--radius-md);
 }
 

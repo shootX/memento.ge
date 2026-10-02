@@ -1,32 +1,30 @@
-# Memento · v10 Studiova + lime (lighter)
+# Memento · v11 Studiova + lime (no pink)
 
-Visual reference: Studiova dark+lime, adapted with **~30% less full-black** and **secondary accents**.
+Lime primary CTA, sky + amber accents only — no coral/pink/violet sunset palette.
 
-## Atmosphere
+## Palette
 
-- **Default app shell:** warm off-white `#f7f7f2`, dark text `#121212`
-- **Dark bands (hero, 04 why-us, footer):** charcoal `#161616` / `#1c1c1e` — not pure `#0b0b0b`
-- **Light alternating sections:** `#f7f7f2`, `#f4ffe0` (lime wash)
-- **Primary CTA:** lime `#c4ff0d` · text on lime: `#121212`
-- **Secondary accents:** coral `#ff5c8a`, sky `#5cc8ff` (chips, stats, gallery washes)
-- **WCAG AA:** no white on lime; dark text on lime buttons
+| Role | Token | Hex |
+| --- | --- | --- |
+| Primary CTA | `--accent` | `#c4ff0d` |
+| Secondary | `--accent-sky` | `#5cc8ff` |
+| Tertiary | `--accent-amber` | `#ffb020` |
+| Page (light) | `--bg-warm` | `#f7f7f2` |
+| Lime band | `--bg-lime-wash` | `#f4ffe0` |
+| Sky band | `--bg-sky-wash` | `#e8f7ff` |
+| Dark bands | `--bg-charcoal` | `#161616` |
+| Text on lime | `--accent-on` | `#121212` |
 
-## Tokens
-
-See `tokens.css` for `--bg-charcoal`, `--bg-warm`, `--bg-lime-wash`, `--accent-coral`, `--accent-cool`.
+**Banned in product UI:** `#ff5c8a`, `#ff2d8a`, `#ff6b35`, `#a855f7`, Tailwind `pink-*` / `rose-*`, token `--accent-coral`.
 
 ## Surfaces
 
-| Surface | Mode |
-| --- | --- |
-| Landing | Alternating light / charcoal sections |
-| Guest upload | Gradient `#f4ffe0 → #f7f7f2 → #fff5f8`, lime shutter |
-| Host dashboard | Light default, lime/coral accents |
-| Slideshow | Stays dark (projector) |
-| QR cards | Default **botanical** (bright); **elegant** dark charcoal |
-| Email | Light card, lime pill CTA |
-| PWA | `theme_color` `#161616`, `background_color` `#f7f7f2` |
+- Landing: alternating light / charcoal; chips & stats use lime, amber, sky
+- Guest: lime→sky gradient page; shots card lime/charcoal/sky gradient
+- QR default (botanical): light gradient, dark `memento.ge`, no heart icon
+- Slideshow: dark stage (unchanged)
+- PWA: theme `#161616`, background `#f7f7f2`
 
-## Typography
+## Tests
 
-Manrope + Noto Sans Georgian (unchanged from v9).
+`tests/no-pink-palette.test.ts` greps `tokens.css` and `src/**` for banned values.

@@ -7,9 +7,9 @@
   --color-bg-page: var(--bg);
   --color-ink: var(--fg);
   --color-muted: var(--muted);
-  --color-pink: var(--accent-coral);
-  --color-orange: var(--accent-coral);
-  --color-violet: var(--accent-cool);
+  --color-pink: var(--accent);
+  --color-orange: var(--accent-amber);
+  --color-violet: var(--accent-sky);
   --radius-chunky: var(--radius-md);
 }
 
@@ -189,7 +189,7 @@ body {
 .blob-2 {
   width: 280px;
   height: 280px;
-  background: var(--accent-coral);
+  background: var(--accent-amber);
   bottom: 10%;
   left: -80px;
   animation-delay: -4s;
@@ -221,9 +221,9 @@ body {
 .guest-shots-card {
   background: linear-gradient(
     135deg,
-    rgba(255, 92, 138, 0.88) 0%,
-    #161616 42%,
-    rgba(92, 200, 255, 0.45) 100%
+    rgba(196, 255, 13, 0.42) 0%,
+    #161616 46%,
+    rgba(92, 200, 255, 0.48) 100%
   );
 }
 

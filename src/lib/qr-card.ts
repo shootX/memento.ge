@@ -28,13 +28,13 @@ const palettes: Record<CardTemplate, Palette> = {
     bg: "#f4ffe0",
     fg: "#141414",
     accent: "#c4ff0d",
-    accent2: "#ff5c8a",
+    accent2: "#ffb020",
     sticker: true,
   },
   minimal: {
-    bg: "#1a0a2e",
+    bg: "#161616",
     fg: "#ffffff",
-    accent: "#a855f7",
+    accent: "#5cc8ff",
     dark: true,
   },
 };
@@ -66,11 +66,11 @@ function cardSvg(opts: {
     opts.template === "elegant"
       ? `<rect width="100%" height="100%" fill="${p.bg}"/><rect x="40" y="40" width="${w - 80}" height="${h - 80}" rx="48" fill="none" stroke="${p.accent}" stroke-width="4" opacity="0.55"/>`
       : opts.template === "botanical"
-        ? `<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f4ffe0"/><stop offset="55%" stop-color="#fff5f8"/><stop offset="100%" stop-color="#e8f7ff"/></linearGradient></defs><rect width="100%" height="100%" fill="url(#g)"/>`
+        ? `<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f4ffe0"/><stop offset="55%" stop-color="#f7f7f2"/><stop offset="100%" stop-color="#e8f7ff"/></linearGradient></defs><rect width="100%" height="100%" fill="url(#g)"/>`
         : `<rect width="100%" height="100%" fill="${p.bg}"/>`;
 
   const stickers = p.sticker
-    ? `<text x="8%" y="12%" font-size="80" fill="${p.accent}">✦</text><text x="85%" y="18%" font-size="70" fill="#ff5c8a">♥</text><text x="78%" y="88%" font-size="90" fill="#5cc8ff">✦</text>`
+    ? `<text x="8%" y="12%" font-size="80" fill="${p.accent}">✦</text><text x="85%" y="18%" font-size="70" fill="#ffb020">✦</text><text x="78%" y="88%" font-size="90" fill="#5cc8ff">✦</text>`
     : "";
 
   const couple = opts.partnerName
