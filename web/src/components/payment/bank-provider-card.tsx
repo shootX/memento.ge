@@ -4,7 +4,7 @@ import { cn } from "@/lib/cn";
 import { BankBrandLogo, type BankBrandId } from "@/components/payment/bank-brand-logo";
 import { PaymentMethodMarks } from "@/components/payment/payment-wallet-marks";
 import type { PaymentUiLocale } from "@/lib/payment-ui-copy";
-import { getPaymentUiCopy } from "@/lib/payment-ui-copy";
+import { bankDisplayName, getPaymentUiCopy } from "@/lib/payment-ui-copy";
 
 const brandStyles: Record<
   BankBrandId,
@@ -39,6 +39,7 @@ export function BankProviderCard({
 }) {
   const c = getPaymentUiCopy(locale);
   const s = brandStyles[bank];
+  const name = bankDisplayName(bank, locale);
 
   return (
     <button
@@ -56,7 +57,10 @@ export function BankProviderCard({
       data-testid={`pay-provider-${bank}`}
       aria-pressed={selected}
     >
-      <BankBrandLogo bank={bank} className="mb-3" />
+      <div className="mb-3 flex items-center gap-3">
+        <BankBrandLogo bank={bank} className="h-9 shrink-0" />
+        <p className="font-display text-base font-bold leading-tight text-[var(--fg)]">{name}</p>
+      </div>
       <p className="text-xs font-semibold text-[var(--muted)] md:text-sm">{c.payMethodsLine}</p>
       <PaymentMethodMarks className="mt-2 flex flex-wrap items-center gap-2" />
     </button>
