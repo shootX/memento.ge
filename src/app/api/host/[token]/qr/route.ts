@@ -32,7 +32,16 @@ export async function GET(req: Request, { params }: Params) {
   if (!templates.has(template)) return jsonError(400, "Invalid template");
   if (!cardSizes.has(size)) return jsonError(400, "Invalid size");
 
-  const guestUrl = `${process.env.NEXT_PUBLIC_APP_URL}/e/${event.guestSlug}`;
+  const guestUrl = `${process.env.NEXT_PUBLIC_APP_URL}/e/${event.customSlug ?? event.guestSlug}`;
+  let photoBuffer: Buffer | null = null;
+  if (event.coverPhotoKey) {
+    try {
+      const { getObject } = await import("@/lib/storage");
+      photoBuffer = await getObject(event.coverPhotoKey);
+    } catch {
+      photoBuffer = null;
+    }
+  }
   const partner = event.partnerOrgId
     ? await (await import("@/lib/prisma")).prisma.partnerOrg.findUnique({
         where: { id: event.partnerOrgId },
@@ -46,6 +55,7 @@ export async function GET(req: Request, { params }: Params) {
     size,
     brandColor: partner?.whiteLabel ? partner.primaryColor : undefined,
     partnerName: partner?.whiteLabel ? partner.name : undefined,
+    photoBuffer,
   };
 
   if (format === "png") {
