@@ -123,6 +123,7 @@ export function getPaymentUiCopy(locale: PaymentUiLocale): Copy {
 }
 
 export function resolvePaymentUiLocale(value: string | null | undefined): PaymentUiLocale {
+  /** Explicit query/body only — never read marketing cookies here. */
   if (value === "en" || value === "ru" || value === "ka") return value;
   return "ka";
 }

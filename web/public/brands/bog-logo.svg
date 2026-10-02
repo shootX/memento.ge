@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 132 36" role="img" aria-label="Bank of Georgia">
+  <rect x="0" y="2" width="32" height="32" rx="8" fill="#FF5F00"/>
+  <path
+    fill="#FFFFFF"
+    d="M16 9.5c-3.6 0-6.5 2.6-6.5 6.1 0 2.2 1.2 4.1 3 5.1V26h3.5v-4.8c2.5-.9 4.2-3.2 4.2-5.9 0-3.5-2.9-6.3-6.2-6.3Zm0 3c1.8 0 3.2 1.4 3.2 3.2 0 1.8-1.4 3.2-3.2 3.2-1.8 0-3.2-1.4-3.2-3.2 0-1.8 1.4-3.2 3.2-3.2Z"
+  />
+  <text x="42" y="23" font-family="system-ui,-apple-system,Segoe UI,Arial,sans-serif" font-size="15" font-weight="700" fill="#262A36">Bank of</text>
+  <text x="42" y="33" font-family="system-ui,Arial,sans-serif" font-size="11" font-weight="700" fill="#FF5F00" letter-spacing="0.06em">GEORGIA</text>
+</svg>

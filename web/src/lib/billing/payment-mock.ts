@@ -24,7 +24,7 @@ export function mockCheckoutUrl(
   });
   if (opts?.hostToken) q.set("hostToken", opts.hostToken);
   if (opts?.amountGel != null) q.set("amount", String(opts.amountGel));
-  if (opts?.locale && opts.locale !== "ka") q.set("locale", opts.locale);
+  q.set("locale", opts?.locale ?? "ka");
   return `${base}/pay/mock?${q.toString()}`;
 }
 
