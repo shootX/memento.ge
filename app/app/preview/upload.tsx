@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
+import { CameraControlButton } from '@/src/components/guest/CameraControlButton';
 import { ShutterButton } from '@/src/components/guest/ShutterButton';
 import { SEED } from '@/src/constants/images';
 import { colors } from '@/src/theme/colors';
@@ -34,8 +35,8 @@ export default function PreviewUploadScreen() {
         <Text style={styles.sideBtn}>{t('gallery')}</Text>
         <ShutterButton onPress={() => {}} />
         <View style={styles.rightCol}>
-          <Text style={styles.sideBtn}>{t('flip')}</Text>
-          <Text style={[styles.sideBtn, { marginTop: 6 }]}>{t('flashOff')}</Text>
+          <CameraControlButton icon="camera-reverse-outline" label={t('flip')} onPress={() => {}} />
+          <CameraControlButton icon="flash-off-outline" label={t('flashOff')} onPress={() => {}} />
         </View>
       </View>
     </View>
@@ -91,5 +92,5 @@ const styles = StyleSheet.create({
     width: 72,
     textAlign: 'center',
   },
-  rightCol: { width: 72, alignItems: 'center' },
+  rightCol: { flexDirection: 'row', gap: 4, alignItems: 'flex-end' },
 });

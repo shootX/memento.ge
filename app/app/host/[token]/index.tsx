@@ -7,7 +7,6 @@ import {
   Alert,
   Pressable,
   ScrollView,
-  Share,
   StyleSheet,
   Text,
   View,
@@ -17,6 +16,7 @@ import { api } from '@/src/api/client';
 import { useAuthStore } from '@/src/stores/auth-store';
 import { formatGeorgianDate } from '@/src/lib/dates';
 import { Skeleton } from '@/src/components/Skeleton';
+import { GuestQrCard } from '@/src/components/host/GuestQrCard';
 import { Badge, GhostButton, PrimaryButton } from '@/src/components/ui';
 import { SEED } from '@/src/constants/images';
 import { colors } from '@/src/theme/colors';
@@ -112,11 +112,7 @@ export default function HostDashboardScreen() {
         <View style={styles.qrCard}>
           <Text style={styles.qrTitle}>{t('qrCardTitle')}</Text>
           <Text style={styles.qrHint}>{t('qrCardHint')}</Text>
-          <View style={styles.qrBox} />
-          <GhostButton
-            label={t('share')}
-            onPress={() => void Share.share({ message: host.guestUrl, url: host.guestUrl })}
-          />
+          <GuestQrCard guestUrl={host.guestUrl} />
         </View>
 
         {!host.isPaid && (
@@ -181,13 +177,6 @@ const styles = StyleSheet.create({
   },
   qrTitle: { color: colors.fg, fontFamily: fonts.bodyMedium, fontWeight: '800' },
   qrHint: { color: colors.muted, fontSize: 13, fontFamily: fonts.body },
-  qrBox: {
-    height: 120,
-    borderRadius: 12,
-    backgroundColor: colors.bgElevated,
-    borderWidth: 1,
-    borderColor: colors.lime,
-  },
   section: { color: colors.fg, fontFamily: fonts.display, fontSize: 18, marginTop: 8 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   tile: {

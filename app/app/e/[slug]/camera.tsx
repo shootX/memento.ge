@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { PrimaryButton, Screen } from '@/src/components/ui';
+import { CameraControlButton } from '@/src/components/guest/CameraControlButton';
 import { ShutterButton } from '@/src/components/guest/ShutterButton';
 import { SEED } from '@/src/constants/images';
 import { DEMO_GUEST_KEY, isDemoSlug } from '@/src/lib/demo';
@@ -163,22 +164,23 @@ export default function GuestCameraScreen() {
         </Pressable>
         <ShutterButton onPress={() => void takePhoto()} />
         <View style={styles.rightCol}>
-          <Pressable
+          <CameraControlButton
+            icon="camera-reverse-outline"
+            label={t('flip')}
             onPress={() => {
               setFacing((f) => (f === 'back' ? 'front' : 'back'));
               void Haptics.selectionAsync();
             }}
-          >
-            <Text style={styles.sideBtn}>{t('flip')}</Text>
-          </Pressable>
-          <Pressable
+          />
+          <CameraControlButton
+            icon={flash === 'on' ? 'flash-outline' : 'flash-off-outline'}
+            label={flash === 'on' ? t('flashOn') : t('flashOff')}
+            active={flash === 'on'}
             onPress={() => {
               setFlash((f) => (f === 'off' ? 'on' : 'off'));
               void Haptics.selectionAsync();
             }}
-          >
-            <Text style={styles.sideBtn}>{flash === 'on' ? t('flashOn') : t('flashOff')}</Text>
-          </Pressable>
+          />
         </View>
       </View>
 
@@ -244,7 +246,7 @@ const styles = StyleSheet.create({
     width: 72,
     textAlign: 'center',
   },
-  rightCol: { width: 72, alignItems: 'center', gap: 8 },
+  rightCol: { flexDirection: 'row', gap: 4, alignItems: 'flex-end' },
   uploadFab: {
     position: 'absolute',
     bottom: 100,

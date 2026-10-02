@@ -3,6 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
+import { GuestQrCard } from '@/src/components/host/GuestQrCard';
 import { Badge, GhostButton, PrimaryButton } from '@/src/components/ui';
 import { SEED } from '@/src/constants/images';
 import { colors } from '@/src/theme/colors';
@@ -50,8 +51,7 @@ export default function PreviewHostScreen() {
         <View style={styles.qrCard}>
           <Text style={styles.qrTitle}>{t('qrCardTitle')}</Text>
           <Text style={styles.qrHint}>{t('qrCardHint')}</Text>
-          <View style={styles.qrBox} />
-          <GhostButton label={t('share')} onPress={() => {}} />
+          <GuestQrCard guestUrl="https://memento.ge/e/demo" />
         </View>
 
         <PrimaryButton label={t('pay')} onPress={() => {}} />
@@ -103,13 +103,6 @@ const styles = StyleSheet.create({
   },
   qrTitle: { color: colors.fg, fontFamily: fonts.bodyMedium, fontWeight: '800' },
   qrHint: { color: colors.muted, fontSize: 13, fontFamily: fonts.body },
-  qrBox: {
-    height: 120,
-    borderRadius: 12,
-    backgroundColor: colors.bgElevated,
-    borderWidth: 1,
-    borderColor: colors.lime,
-  },
   section: { color: colors.fg, fontFamily: fonts.display, fontSize: 18, marginTop: 8 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   tile: {
