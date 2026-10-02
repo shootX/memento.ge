@@ -8,6 +8,7 @@ import { publicAppUrl } from "@/lib/app-url";
 import { clientIp, consumeLogin, jsonError } from "@/lib/api-utils";
 import { isEmailDeliveryConfigured } from "@/lib/site-config";
 import { shouldExposeDevMagicLink } from "@/lib/dev-magic-link";
+import { rememberE2eMagicLink } from "@/lib/e2e-magic-link-store";
 
 const schema = z.object({ email: z.string().email().max(200) });
 
@@ -23,6 +24,8 @@ export async function POST(req: Request) {
   const token = newToken(24);
   const expiresAt = new Date(Date.now() + 15 * 60_000);
 
+  const verifyUrl = `${publicAppUrl()}/api/auth/verify?token=${token}`;
+
   await prisma.magicLinkToken.create({
     data: {
       email: normalized,
@@ -31,7 +34,7 @@ export async function POST(req: Request) {
     },
   });
 
-  const verifyUrl = `${publicAppUrl()}/api/auth/verify?token=${token}`;
+  rememberE2eMagicLink(normalized, token, verifyUrl, expiresAt);
   await queueEmail(normalized, "magic_link", { verifyUrl });
 
   const emailOk = isEmailDeliveryConfigured();

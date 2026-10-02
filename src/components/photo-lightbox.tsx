@@ -37,6 +37,7 @@ export function PhotoLightbox({
       {item && (
         <motion.div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4"
+          data-testid="photo-lightbox"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}

@@ -131,6 +131,7 @@ export function HostMediaGrid({
               <button
                 type="button"
                 className="rounded-full bg-white/95 p-2 shadow"
+                data-testid="host-media-delete"
                 aria-label="წაშლა"
                 onClick={(e) => {
                   e.stopPropagation();

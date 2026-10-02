@@ -52,7 +52,7 @@ export function CreateEventForm() {
   };
 
   return (
-    <form onSubmit={submit} className="space-y-5">
+    <form onSubmit={submit} className="space-y-5" data-testid="create-event-form">
       <label className="block text-sm">
         წყვილის სახელები
         <input

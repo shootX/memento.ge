@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Lock } from "lucide-react";
+import Link from "next/link";
 import { BankBrandLogo, type BankBrandId } from "@/components/payment/bank-brand-logo";
 import { getPaymentUiCopy, type PaymentUiLocale } from "@/lib/payment-ui-copy";
 import { cn } from "@/lib/cn";
@@ -19,6 +20,7 @@ export function MockBankCheckout({
   busy,
   onPay,
   onDecline,
+  cancelHref,
 }: {
   provider: BankBrandId;
   locale: PaymentUiLocale;
@@ -26,6 +28,7 @@ export function MockBankCheckout({
   busy: boolean;
   onPay: () => void;
   onDecline: () => void;
+  cancelHref?: string | null;
 }) {
   const c = getPaymentUiCopy(locale);
   const isTbc = provider === "tbc";
@@ -45,6 +48,15 @@ export function MockBankCheckout({
           {c.testModeBadge}
         </span>
         <div className="mx-auto flex max-w-md flex-col gap-2 pt-1">
+          {cancelHref ? (
+            <Link
+              href={cancelHref}
+              className="text-xs font-semibold text-white/80 underline-offset-2 hover:text-white hover:underline"
+              data-testid="mock-pay-cancel"
+            >
+              {c.backToMerchant}
+            </Link>
+          ) : null}
           <BankBrandLogo bank={provider} variant="onDark" className="h-9" />
           <p className="text-[10px] font-semibold text-white/65 sm:text-xs">{c.secureHint}</p>
         </div>
