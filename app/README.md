@@ -40,9 +40,10 @@ npm run lint
 npm test
 ```
 
-## ბექენდის გაფართოებები
+## API კონტრაქტი
 
-იხ. [`docs/API-NEEDS.md`](docs/API-NEEDS.md) — bearer ავთენტიფიკაცია, magic-link deep link, გადახდის callback, push.
+იხ. [`docs/MOBILE-API.md`](docs/MOBILE-API.md) — მობილური ენდპოინტები (`verify-code`, `exchange`, Bearer, HostToken, გადახდა, push).
+Mock მხოლოდ `EXPO_PUBLIC_API_MOCK=true`-ზე.
 
 ---
 
