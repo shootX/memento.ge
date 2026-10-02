@@ -1,0 +1,11 @@
+{
+  "id": "a767a276-cddd-43ec-9db3-9f9b39eee02d",
+  "_links": {
+    "details": {
+      "href": "https://api.bog.ge/payments/v1/receipt/a767a276-cddd-43ec-9db3-9f9b39eee02d"
+    },
+    "redirect": {
+      "href": "https://payment.bog.ge/?order_id=a767a276-cddd-43ec-9db3-9f9b39eee02d"
+    }
+  }
+}

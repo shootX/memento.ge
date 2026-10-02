@@ -9,6 +9,8 @@ export interface CheckoutSessionRequest {
   cancelUrl: string;
   /** Internal Payment row id (merchant reference) */
   paymentId: string;
+  /** BOG payment page language (Accept-Language) */
+  checkoutLocale?: "ka" | "en";
 }
 
 export interface CheckoutSessionResult {

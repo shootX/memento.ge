@@ -59,6 +59,7 @@ export async function POST(req: Request, { params }: Params) {
       paymentId: payment.id,
       successUrl: returnUrl,
       cancelUrl: returnUrl,
+      checkoutLocale: body.locale === "en" ? "en" : "ka",
     });
 
     await prisma.payment.update({
