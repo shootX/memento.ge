@@ -6,6 +6,7 @@ import { verifyHostCsrf } from "@/lib/session";
 import { newToken } from "@/lib/crypto";
 import { hashToken } from "@/lib/user-session";
 import { jsonError } from "@/lib/api-utils";
+import { queueEmail } from "@/lib/email";
 import { shouldExposeDevMagicLink } from "@/lib/dev-magic-link";
 import { publicAppUrl } from "@/lib/app-url";
 
