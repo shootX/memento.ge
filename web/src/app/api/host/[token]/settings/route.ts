@@ -36,6 +36,16 @@ export async function PATCH(req: Request, { params }: Params) {
   }
   if (body.moderateUploads !== undefined) data.moderateUploads = body.moderateUploads;
   if (body.publicGallery !== undefined) data.publicGallery = body.publicGallery;
+  if (body.customSlug !== undefined && body.customSlug) {
+    const taken = await prisma.event.findFirst({
+      where: {
+        OR: [{ customSlug: body.customSlug }, { guestSlug: body.customSlug }],
+        NOT: { id: event.id },
+      },
+    });
+    if (taken) return jsonError(409, "ეს მისამართი უკვე დაკავებულია");
+  }
+
   if (body.customSlug !== undefined) data.customSlug = body.customSlug;
   if (body.galleryPassword !== undefined) {
     data.galleryPasswordHash = body.galleryPassword

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { pwaT, type PwaLocale } from "@/lib/pwa-i18n";
 import { LocaleToggle } from "@/components/locale-toggle";
 import type { Locale } from "@/lib/i18n";
@@ -24,6 +25,7 @@ function isStandalone(): boolean {
 }
 
 export function PwaInstallUi() {
+  const pathname = usePathname() ?? "";
   const [locale, setLocale] = useState<PwaLocale>("ka");
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [showAndroid, setShowAndroid] = useState(false);
@@ -35,9 +37,11 @@ export function PwaInstallUi() {
     const demoIos = params.get("pwa_ios_demo") === "1";
     if (demoAndroid || demoIos) return;
 
-    const dismissed = localStorage.getItem("memento_pwa_install_dismiss");
+    if (!pathname.startsWith("/e/")) return;
 
-    if (isStandalone() || dismissed) return;
+    const dismissed = localStorage.getItem("memento_pwa_install_dismiss");
+    const uploaded = localStorage.getItem("memento_guest_has_uploaded");
+    if (isStandalone() || dismissed || uploaded !== "1") return;
 
     if (isIos()) {
       setShowIos(true);
@@ -51,7 +55,7 @@ export function PwaInstallUi() {
     };
     window.addEventListener("beforeinstallprompt", handler);
     return () => window.removeEventListener("beforeinstallprompt", handler);
-  }, []);
+  }, [pathname]);
 
   const dismiss = () => {
     localStorage.setItem("memento_pwa_install_dismiss", "1");

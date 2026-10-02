@@ -1,53 +1,38 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { getEventByHostToken } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getPlan } from "@/lib/plans";
-import { getUserFromSession } from "@/lib/user-session";
-import { jsonError } from "@/lib/api-utils";
 import { verifyHostCsrf } from "@/lib/session";
+import { jsonError } from "@/lib/api-utils";
+import { getPlan } from "@/lib/plans";
 import { startEventCheckout } from "@/lib/billing/checkout-flow";
 import { appUrl } from "@/lib/site-config";
 import type { CheckoutProvider } from "@/lib/site-config";
 
+type Params = { params: Promise<{ token: string }> };
+
 const schema = z.object({
-  eventId: z.string(),
-  hostToken: z.string().optional(),
   provider: z.enum(["auto", "stripe", "bog", "tbc", "flitt", "manual"]).default("auto"),
 });
 
-export async function POST(req: Request) {
-  const user = await getUserFromSession();
-  let body: z.infer<typeof schema>;
-  try {
-    body = schema.parse(await req.json());
-  } catch {
-    return jsonError(400, "Invalid request");
-  }
-
-  const event = await prisma.event.findUnique({ where: { id: body.eventId } });
-  if (!event) return jsonError(404, "Not found");
-
-  const hostToken = body.hostToken ?? req.headers.get("x-host-token");
-  const csrf = req.headers.get("x-csrf-token");
-  const hostOk =
-    hostToken &&
-    (await verifyHostCsrf(hostToken, csrf)) &&
-    event.hostToken === hostToken;
-
-  if (user && event.ownerUserId && event.ownerUserId !== user.id && !hostOk) {
+export async function POST(req: Request, { params }: Params) {
+  const { token } = await params;
+  if (!(await verifyHostCsrf(token, req.headers.get("x-csrf-token")))) {
     return jsonError(403, "Forbidden");
   }
-  if (!user && !hostOk) {
-    return jsonError(401, "Unauthorized");
+  const event = await getEventByHostToken(token);
+  if (!event) return jsonError(404, "Not found");
+  if (event.isPaid) {
+    return NextResponse.json({ ok: true, alreadyPaid: true });
   }
 
+  const body = schema.parse(await req.json());
   const plan = getPlan(event.planTier);
   const base = appUrl();
 
   const payment = await prisma.payment.create({
     data: {
       eventId: event.id,
-      userId: user?.id,
       amountGel: plan.priceGel,
       provider: "manual",
       status: "pending",
@@ -62,14 +47,9 @@ export async function POST(req: Request) {
     eventId: event.id,
     planTier: event.planTier,
     amountGel: plan.priceGel,
-    customerEmail: user?.email,
     paymentId: payment.id,
-    successUrl: user
-      ? `${base}/dashboard?paid=1`
-      : `${base}/host/${event.hostToken}?paid=1`,
-    cancelUrl: user
-      ? `${base}/dashboard?paid=0`
-      : `${base}/host/${event.hostToken}/pay`,
+    successUrl: `${base}/host/${token}?paid=1`,
+    cancelUrl: `${base}/host/${token}/pay?cancel=1`,
   });
 
   await prisma.payment.update({
@@ -87,6 +67,6 @@ export async function POST(req: Request) {
 
   return NextResponse.json({
     mode: "manual",
-    payPath: `/host/${event.hostToken}/pay`,
+    payPath: `/host/${token}/pay`,
   });
 }

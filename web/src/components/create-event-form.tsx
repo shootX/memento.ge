@@ -1,25 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { PLANS, type PlanTier } from "@/lib/plans";
 import { Loader2 } from "lucide-react";
 
 export function CreateEventForm() {
+  const searchParams = useSearchParams();
   const [coupleNames, setCoupleNames] = useState("");
   const [eventDate, setEventDate] = useState("");
   const [planTier, setPlanTier] = useState<PlanTier>("classic");
   const [cover, setCover] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<{
-    hostUrl: string;
-    guestUrl: string;
-    hostToken: string;
-  } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const plan = searchParams.get("plan");
+    if (plan === "starter" || plan === "classic" || plan === "premium") {
+      setPlanTier(plan);
+    }
+  }, [searchParams]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
     const form = new FormData();
     form.append("coupleNames", coupleNames);
     form.append("eventDate", new Date(eventDate).toISOString());
@@ -28,17 +34,12 @@ export function CreateEventForm() {
     const res = await fetch("/api/events", { method: "POST", body: form });
     const data = await res.json();
     setLoading(false);
-    if (res.ok) {
-      setResult({
-        hostUrl: data.hostUrl,
-        guestUrl: data.guestUrl,
-        hostToken: data.hostToken,
-      });
-      window.location.href = data.hostUrl;
+    if (!res.ok) {
+      setError(data.error ?? "ვერ შეიქმნა");
+      return;
     }
+    window.location.href = `${data.hostUrl}?welcome=1`;
   };
-
-  if (result) return null;
 
   return (
     <form onSubmit={submit} className="space-y-5">
@@ -85,6 +86,7 @@ export function CreateEventForm() {
           onChange={(e) => setCover(e.target.files?.[0] ?? null)}
         />
       </label>
+      {error && <p className="text-sm font-semibold text-red-600">{error}</p>}
       <Button type="submit" disabled={loading} className="w-full">
         {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "ღონისძიების შექმნა"}
       </Button>

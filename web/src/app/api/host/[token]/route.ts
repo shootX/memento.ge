@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { getEventByHostToken, eventIsActive } from "@/lib/auth";
 import { getPlan } from "@/lib/plans";
-import { signMediaAccess } from "@/lib/crypto";
+import { signMediaAccess, signCsrfToken } from "@/lib/crypto";
 import { clientIp, consumeApi, handleApiError, jsonError } from "@/lib/api-utils";
-import { signCsrfToken } from "@/lib/crypto";
+import { appUrl } from "@/lib/site-config";
 
 type Params = { params: Promise<{ token: string }> };
 
@@ -23,6 +23,8 @@ export async function GET(req: Request, { params }: Params) {
     }
 
     const csrfToken = signCsrfToken(token);
+    const base = appUrl();
+    const publicSlug = event.customSlug ?? event.guestSlug;
 
     return NextResponse.json({
       id: event.id,
@@ -40,9 +42,10 @@ export async function GET(req: Request, { params }: Params) {
         maxTotalBytes: plan.maxTotalBytes,
         priceGel: plan.priceGel,
       },
-      guestUrl: `${process.env.NEXT_PUBLIC_APP_URL}/e/${event.guestSlug}`,
+      guestUrl: `${base}/e/${publicSlug}`,
+      hostUrl: `${base}/host/${token}`,
       slideshowToken: event.slideshowToken,
-      slideshowUrl: `${process.env.NEXT_PUBLIC_APP_URL}/slideshow/${event.slideshowToken}`,
+      slideshowUrl: `${base}/slideshow/${event.slideshowToken}`,
       coverUrl,
       csrfToken,
       customSlug: event.customSlug,

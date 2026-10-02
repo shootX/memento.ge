@@ -5,7 +5,8 @@ import { PLANS } from "@/lib/plans";
 import { LandingQrPlayground } from "@/components/marketing/landing-qr-playground";
 import { cn } from "@/lib/cn";
 
-const wa = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "995555123456";
+const wa =
+  process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.replace(/\D/g, "") || "995555123456";
 
 function SectionHead({
   num,
@@ -66,7 +67,7 @@ const testimonials = [
   },
   {
     names: "ანა & დავით",
-    quote: "სლაიდშოუმ ცეკვის დარბაზი ააწვივა.",
+    quote: "სლაიდშოუმ ცეკვის დარბაზი აწვივა.",
     img: "/seed-samples/wedding-6.jpg",
   },
 ];
@@ -305,7 +306,7 @@ export function LandingV9() {
                     <li>{p.retentionDays} დღე ონლაინ</li>
                   </ul>
                   <Link
-                    href="/onboarding"
+                    href={`/onboarding?plan=${p.id}`}
                     className={`mt-8 block text-center rounded-full py-3 text-sm font-bold ${
                       featured
                         ? "bg-[var(--accent)] text-[var(--accent-on)]"
@@ -363,7 +364,24 @@ export function LandingV9() {
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--muted-on-dark)]">09 · კონტაქტი</p>
             <h2 className="mt-2 font-display text-3xl font-extrabold text-white">დაგვიკავშირდით</h2>
-            <p className="mt-2 text-[var(--muted-on-dark)]">hello@memento.ge · WhatsApp</p>
+            <p className="mt-2 text-[var(--muted-on-dark)]">
+              <a href="mailto:hello@memento.ge" className="underline hover:text-white">
+                hello@memento.ge
+              </a>
+              {wa ? (
+                <>
+                  {" · "}
+                  <a
+                    href={`https://wa.me/${wa}?text=${encodeURIComponent("გამარჯობა, მემენტოს შესახებ")}`}
+                    className="underline hover:text-white"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    WhatsApp
+                  </a>
+                </>
+              ) : null}
+            </p>
           </div>
           <Link href="/onboarding" className="pill-cta">
             <span>უფასო დაწყება</span>

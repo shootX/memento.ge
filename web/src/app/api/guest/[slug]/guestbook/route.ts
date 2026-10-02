@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getEventByGuestSlug, eventIsActive } from "@/lib/auth";
+import { getEventByPublicSlug, eventIsActive } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { putObject, buildMediaKey } from "@/lib/storage";
 import { clientIp, consumeApi, handleApiError, jsonError } from "@/lib/api-utils";
@@ -14,7 +14,7 @@ const textSchema = z.object({
 
 export async function GET(_req: Request, { params }: Params) {
   const { slug } = await params;
-  const event = await getEventByGuestSlug(slug);
+  const event = await getEventByPublicSlug(slug);
   if (!event || !eventIsActive(event)) return jsonError(404, "Not found");
 
   const messages = await prisma.guestMessage.findMany({
@@ -29,8 +29,10 @@ export async function POST(req: Request, { params }: Params) {
   try {
     await consumeApi(clientIp(req));
     const { slug } = await params;
-    const event = await getEventByGuestSlug(slug);
-    if (!event || !eventIsActive(event)) return jsonError(403, "Not allowed");
+    const event = await getEventByPublicSlug(slug);
+    if (!event || !eventIsActive(event)) {
+      return jsonError(403, "ალბომი ჯერ არ არის გააქტიურებული");
+    }
 
     const contentType = req.headers.get("content-type") ?? "";
     if (contentType.includes("multipart/form-data")) {

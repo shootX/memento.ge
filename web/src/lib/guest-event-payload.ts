@@ -1,17 +1,22 @@
 import {
   eventAllowsUpload,
   eventIsActive,
-  getEventByGuestSlug,
+  eventInTrialUploads,
+  getEventByPublicSlug,
 } from "@/lib/auth";
 import { getPlan } from "@/lib/plans";
 import { signMediaAccess } from "@/lib/crypto";
 import { prisma } from "@/lib/prisma";
+import { trialUploadLimit } from "@/lib/site-config";
 
 export type GuestEventPayload = {
   coupleNames: string;
   eventDate: string;
   canUpload: boolean;
   isActive: boolean;
+  isPaid: boolean;
+  inTrial: boolean;
+  trialUploadsRemaining: number;
   disposable: {
     enabled: boolean;
     shotsPerGuest: number;
@@ -34,9 +39,10 @@ export async function buildGuestEventPayload(
   slug: string,
   guestKey?: string | null,
 ): Promise<GuestEventPayload | null> {
-  const event = await getEventByGuestSlug(slug);
+  const event = await getEventByPublicSlug(slug);
   if (!event) return null;
 
+  const trial = trialUploadLimit();
   const plan = getPlan(event.planTier);
   let shotsRemaining: number | null = null;
   if (event.disposableEnabled && event.shotsPerGuest > 0 && guestKey) {
@@ -62,6 +68,11 @@ export async function buildGuestEventPayload(
     eventDate: event.eventDate.toISOString(),
     canUpload: eventAllowsUpload(event),
     isActive: eventIsActive(event),
+    isPaid: event.isPaid,
+    inTrial: eventInTrialUploads(event),
+    trialUploadsRemaining: event.isPaid
+      ? 0
+      : Math.max(0, trial - event.uploadCount),
     disposable: {
       enabled: event.disposableEnabled,
       shotsPerGuest: event.shotsPerGuest,

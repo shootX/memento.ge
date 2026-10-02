@@ -100,7 +100,27 @@ Google Cloud Console:
 
 ---
 
-## CI reference
+### 9. qr.socialsave.cc / staging
+
+```env
+NEXT_PUBLIC_APP_URL=https://qr.socialsave.cc
+WHATSAPP_NUMBER=995XXXXXXXXX
+MANUAL_PAY_IBAN=GE...
+MANUAL_PAY_NAME=...
+TRIAL_UPLOADS=20
+EMAIL_PROVIDER=resend
+RESEND_API_KEY=...
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+BOG_CLIENT_ID=...   # optional
+TBC_CLIENT_ID=...   # optional
+```
+
+- **HTTP→HTTPS** — hosting/proxy (Cloudflare, nginx), არა Next კოდი.
+- გადახდის გარეშე: ჰოსტი ხედავს **გადახდა** → საბანკო/WhatsApp; ადმინი `/admin`-ზე აქტივაცია ერთი კლიკით.
+- `WHATSAPP_NUMBER` server-ზე; build-ში `next.config` ასევე აწვდის `NEXT_PUBLIC_WHATSAPP_NUMBER`-ს.
+
+---
 
 Push to `main` runs tests + build + e2e (`.github/workflows/ci.yml`).
 

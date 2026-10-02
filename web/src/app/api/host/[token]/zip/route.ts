@@ -29,9 +29,13 @@ export async function GET(req: Request, { params }: Params) {
   if (!event) return jsonError(404, "Not found");
 
   const media = await prisma.media.findMany({
-    where: { eventId: event.id },
+    where: { eventId: event.id, status: "approved" },
     orderBy: { createdAt: "asc" },
   });
+
+  if (media.length === 0) {
+    return jsonError(404, "ალბომში ფოტო ჯერ არ არის");
+  }
 
   const createArchive = (await import("archiver")) as unknown as (
     format: string,

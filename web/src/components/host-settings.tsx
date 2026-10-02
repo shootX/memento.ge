@@ -31,7 +31,7 @@ export function HostSettings({
   const [saved, setSaved] = useState(false);
 
   const save = async () => {
-    await fetch(`/api/host/${token}/settings`, {
+    const res = await fetch(`/api/host/${token}/settings`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -46,6 +46,11 @@ export function HostSettings({
         galleryPassword: galleryPassword || null,
       }),
     });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      alert(data.error ?? "ვერ შეინახა");
+      return;
+    }
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -70,7 +75,7 @@ export function HostSettings({
 
       <label className="flex items-center gap-3 text-sm">
         <input type="checkbox" checked={disposable} onChange={(e) => setDisposable(e.target.checked)} />
-        Disposable რეჟიმი (ლიმიტი სტუმარზე)
+        ერთჯერადი კადრები სტუმარზე
       </label>
       {disposable && (
         <label className="block text-sm">
@@ -102,7 +107,7 @@ export function HostSettings({
           checked={publicGallery}
           onChange={(e) => setPublicGallery(e.target.checked)}
         />
-        საჯარე გალერეა ღონისძიების შემდეგ
+        საჯარო გალერეა
       </label>
 
       <label className="block text-sm">
@@ -126,7 +131,7 @@ export function HostSettings({
       </label>
 
       <div className="border-t pt-4">
-        <p className="text-sm font-medium">Co-host მოწვევა</p>
+        <p className="text-sm font-medium">თანაჰოსტის მოწვევა</p>
         <div className="mt-2 flex gap-2">
           <input
             type="email"
