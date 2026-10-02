@@ -4,8 +4,10 @@ import { ManualPaymentPanel } from "@/components/manual-payment-panel";
 import { manualPayIban, manualPayName, whatsappUrl, appUrl } from "@/lib/site-config";
 import { getPlan } from "@/lib/plans";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { listPaymentProviderOptions } from "@/lib/billing/payment-providers";
 import { paymentMockEnabled } from "@/lib/billing/payment-mock";
+import { resolvePaymentUiLocale } from "@/lib/payment-ui-copy";
 
 type Props = { params: Promise<{ token: string }> };
 
@@ -17,6 +19,8 @@ export default async function HostPayPage({ params }: Props) {
   const plan = getPlan(bootstrap.planTier);
   const hostUrl = `${appUrl()}/host/${token}`;
   const providers = listPaymentProviderOptions();
+  const cookieStore = await cookies();
+  const locale = resolvePaymentUiLocale(cookieStore.get("memento_locale")?.value);
 
   return (
     <div className="min-h-screen bg-[var(--bg-page)] py-10">
@@ -41,6 +45,7 @@ export default async function HostPayPage({ params }: Props) {
             }
             providers={providers}
             paymentMock={paymentMockEnabled()}
+            locale={locale}
           />
         </div>
       </div>

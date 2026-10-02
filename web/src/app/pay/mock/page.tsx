@@ -1,17 +1,29 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState, Suspense } from "react";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState, Suspense } from "react";
+import { MockBankCheckout } from "@/components/payment/mock-bank-checkout";
+import { MockPayResult } from "@/components/payment/mock-pay-result";
+import type { BankBrandId } from "@/components/payment/bank-brand-logo";
+import {
+  getPaymentUiCopy,
+  resolvePaymentUiLocale,
+  type PaymentUiLocale,
+} from "@/lib/payment-ui-copy";
+
+type Phase = "checkout" | "success" | "fail";
 
 function MockPayInner() {
   const params = useSearchParams();
   const router = useRouter();
   const paymentId = params.get("paymentId");
-  const provider = params.get("provider") as "tbc" | "bog" | null;
+  const provider = params.get("provider") as BankBrandId | null;
   const hostToken = params.get("hostToken");
+  const locale = resolvePaymentUiLocale(params.get("locale"));
+  const amountGel = Number(params.get("amount") ?? "0") || 49;
+
   const [busy, setBusy] = useState(false);
-  const [done, setDone] = useState(false);
+  const [phase, setPhase] = useState<Phase>("checkout");
 
   const complete = async (outcome: "success" | "fail") => {
     if (!paymentId || !provider) return;
@@ -23,48 +35,54 @@ function MockPayInner() {
     });
     setBusy(false);
     if (!res.ok) return;
-    setDone(outcome === "success");
-    if (outcome === "success" && hostToken) {
-      router.push(`/host/${hostToken}?paid=1`);
+    if (outcome === "success") {
+      setPhase("success");
+    } else {
+      setPhase("fail");
     }
   };
 
-  if (!paymentId || !provider) {
-    return <p className="p-8 text-center">Invalid mock session</p>;
+  useEffect(() => {
+    if (phase !== "success" || !hostToken) return;
+    const t = setTimeout(() => {
+      router.push(`/host/${hostToken}?paid=1`);
+    }, 1400);
+    return () => clearTimeout(t);
+  }, [phase, hostToken, router]);
+
+  if (!paymentId || !provider || (provider !== "tbc" && provider !== "bog")) {
+    return (
+      <p className="p-8 text-center text-sm text-[var(--muted)]">
+        {getPaymentUiCopy(locale).invalidSession}
+      </p>
+    );
+  }
+
+  if (phase === "success") {
+    return <MockPayResult provider={provider} locale={locale} outcome="success" />;
+  }
+
+  if (phase === "fail") {
+    return (
+      <MockPayResult
+        provider={provider}
+        locale={locale}
+        outcome="fail"
+        onRetry={() => setPhase("checkout")}
+        cancelHref={hostToken ? `/host/${hostToken}/pay` : null}
+      />
+    );
   }
 
   return (
-    <div
-      className="mx-auto max-w-md card-chunky space-y-6 p-8 mt-16"
-      data-testid="mock-pay-screen"
-    >
-      <p className="type-label">ტესტ გადახდა</p>
-      <h1 className="font-display text-2xl font-bold">
-        {provider === "tbc" ? "TBC ბანკი" : "საქართველოს ბანკი"} (mock)
-      </h1>
-      <p className="text-sm text-[var(--muted)]">
-        Apple Pay / Google Pay / ბარათი — სიმულაცია ლოკალურად.
-      </p>
-      {done ? (
-        <p className="font-bold text-[var(--success)]" data-testid="mock-pay-success">
-          გადახდა წარმატებულია ✓
-        </p>
-      ) : (
-        <div className="flex flex-col gap-2">
-          <Button
-            className="btn-gradient border-0"
-            disabled={busy}
-            onClick={() => void complete("success")}
-            data-testid="mock-pay-success-btn"
-          >
-            წარმატებული გადახდა
-          </Button>
-          <Button variant="outline" disabled={busy} onClick={() => void complete("fail")}>
-            უარყოფა
-          </Button>
-        </div>
-      )}
-    </div>
+    <MockBankCheckout
+      provider={provider}
+      locale={locale}
+      amountGel={amountGel}
+      busy={busy}
+      onPay={() => void complete("success")}
+      onDecline={() => void complete("fail")}
+    />
   );
 }
 

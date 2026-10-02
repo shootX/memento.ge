@@ -13,6 +13,7 @@ type Params = { params: Promise<{ token: string }> };
 
 const schema = z.object({
   provider: z.enum(["auto", "stripe", "bog", "tbc", "flitt", "manual"]).default("auto"),
+  locale: z.enum(["ka", "en", "ru"]).optional(),
 });
 
 export async function POST(req: Request, { params }: Params) {
@@ -66,6 +67,10 @@ export async function POST(req: Request, { params }: Params) {
     if (redirectUrl.includes("/pay/mock")) {
       const u = new URL(redirectUrl);
       u.searchParams.set("hostToken", token);
+      if (body.locale) u.searchParams.set("locale", body.locale);
+      if (!u.searchParams.get("amount")) {
+        u.searchParams.set("amount", String(plan.priceGel));
+      }
       redirectUrl = u.toString();
     }
     return NextResponse.json({ redirectUrl });
