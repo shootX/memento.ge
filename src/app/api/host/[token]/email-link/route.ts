@@ -5,6 +5,7 @@ import { verifyHostCsrf } from "@/lib/session";
 import { jsonError } from "@/lib/api-utils";
 import { queueEmail } from "@/lib/email";
 import { appUrl, isEmailDeliveryConfigured } from "@/lib/site-config";
+import { shouldExposeDevMagicLink } from "@/lib/dev-magic-link";
 
 type Params = { params: Promise<{ token: string }> };
 
@@ -26,8 +27,8 @@ export async function POST(req: Request, { params }: Params) {
     return NextResponse.json({
       ok: true,
       queued: false,
-      warning: "ელფოსტა არ არის კონფიგურირებული — ლინკი ლოგშია.",
-      devLink: hostUrl,
+      warning: "ელფოსტა არ არის კონფიგურირებული.",
+      devLink: shouldExposeDevMagicLink() ? hostUrl : undefined,
     });
   }
 
