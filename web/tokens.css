@@ -38,6 +38,8 @@
   --accent-amber: #ffb020;
   --accent-cool: var(--accent-sky);
   --accent-on: #121212;
+  --lime-badge: #9dcc00;
+  --lime-badge-on: #0a0a0a;
   --accent-hover: #d4ff33;
   --accent-active: #b0e600;
 

@@ -10,10 +10,12 @@ export function CreateEventForm() {
   const searchParams = useSearchParams();
   const [coupleNames, setCoupleNames] = useState("");
   const [eventDate, setEventDate] = useState("");
+  const [ownerEmail, setOwnerEmail] = useState("");
   const [planTier, setPlanTier] = useState<PlanTier>("classic");
   const [cover, setCover] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
 
   useEffect(() => {
     const plan = searchParams.get("plan");
@@ -21,6 +23,13 @@ export function CreateEventForm() {
       setPlanTier(plan);
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((d) => setLoggedIn(Boolean(d.user)))
+      .catch(() => setLoggedIn(false));
+  }, []);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,8 +39,9 @@ export function CreateEventForm() {
     form.append("coupleNames", coupleNames);
     form.append("eventDate", new Date(eventDate).toISOString());
     form.append("planTier", planTier);
+    if (!loggedIn && ownerEmail) form.append("ownerEmail", ownerEmail.trim());
     if (cover) form.append("cover", cover);
-    const res = await fetch("/api/events", { method: "POST", body: form });
+    const res = await fetch("/api/events", { method: "POST", body: form, credentials: "include" });
     const data = await res.json();
     setLoading(false);
     if (!res.ok) {
@@ -63,6 +73,19 @@ export function CreateEventForm() {
           onChange={(e) => setEventDate(e.target.value)}
         />
       </label>
+      {loggedIn === false && (
+        <label className="block text-sm">
+          თქვენი ელფოსტა (ალბომი გამოჩნდება /dashboard-ზე)
+          <input
+            required
+            type="email"
+            className="mt-1 w-full rounded-xl border border-[var(--color-border)] px-4 py-3"
+            value={ownerEmail}
+            onChange={(e) => setOwnerEmail(e.target.value)}
+            placeholder="you@example.com"
+          />
+        </label>
+      )}
       <label className="block text-sm">
         პაკეტი
         <select
@@ -87,7 +110,7 @@ export function CreateEventForm() {
         />
       </label>
       {error && <p className="text-sm font-semibold text-red-600">{error}</p>}
-      <Button type="submit" disabled={loading} className="w-full">
+      <Button type="submit" disabled={loading || loggedIn === null} className="w-full">
         {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "ღონისძიების შექმნა"}
       </Button>
     </form>

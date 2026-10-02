@@ -213,18 +213,24 @@ body {
   color: var(--fg);
 }
 
-.section-lime {
+.section-lime,
+.section-light-on-lime {
   background: var(--bg-lime-wash);
   color: var(--fg);
+  --muted: #3a4234;
 }
 
 .guest-shots-card {
   background: linear-gradient(
     135deg,
-    rgba(196, 255, 13, 0.42) 0%,
+    rgba(157, 204, 0, 0.55) 0%,
     #161616 46%,
     rgba(92, 200, 255, 0.48) 100%
   );
+}
+
+.guest-shots-card .text-\[var\(--accent\)\] {
+  color: #e8ff9a;
 }
 
 .guest-page-bg {

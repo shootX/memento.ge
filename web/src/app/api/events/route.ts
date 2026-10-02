@@ -8,11 +8,13 @@ import { getUserFromSession } from "@/lib/user-session";
 import { auditLog } from "@/lib/audit";
 import { putObject, buildMediaKey } from "@/lib/storage";
 import { validateAndProcessUpload } from "@/lib/upload-validation";
+import { resolveOwnerUserId } from "@/lib/resolve-owner";
 
 const createSchema = z.object({
   coupleNames: z.string().min(2).max(120),
   eventDate: z.string().datetime({ offset: true }).or(z.string().date()),
   planTier: z.enum(["starter", "classic", "premium"]).default("starter"),
+  ownerEmail: z.string().email().max(200).optional(),
 });
 
 export async function POST(req: Request) {
@@ -23,12 +25,15 @@ export async function POST(req: Request) {
     let eventDate: string;
     let planTier: PlanTier = "starter";
     let coverBuffer: Buffer | null = null;
+    let ownerEmailStr: string | null = null;
 
     if (contentType.includes("multipart/form-data")) {
       const form = await req.formData();
       coupleNames = String(form.get("coupleNames") ?? "");
       eventDate = String(form.get("eventDate") ?? "");
       planTier = (String(form.get("planTier") ?? "starter") as PlanTier) || "starter";
+      const ownerEmail = form.get("ownerEmail");
+      ownerEmailStr = ownerEmail ? String(ownerEmail) : null;
       const cover = form.get("cover");
       if (cover instanceof File && cover.size > 0) {
         const buf = Buffer.from(await cover.arrayBuffer());
@@ -46,6 +51,7 @@ export async function POST(req: Request) {
       coupleNames = body.coupleNames;
       eventDate = body.eventDate;
       planTier = body.planTier;
+      ownerEmailStr = body.ownerEmail ?? null;
     }
 
     const parsed = createSchema.safeParse({ coupleNames, eventDate, planTier });
@@ -54,6 +60,7 @@ export async function POST(req: Request) {
     }
 
     const user = await getUserFromSession();
+    const ownerUserId = await resolveOwnerUserId(user?.id, ownerEmailStr);
     const guestSlug = nanoid(21);
     const hostToken = nanoid(32);
     const slideshowToken = nanoid(32);
@@ -70,7 +77,7 @@ export async function POST(req: Request) {
         planTier,
         isPaid: false,
         expiresAt: null,
-        ownerUserId: user?.id ?? null,
+        ownerUserId,
       },
     });
 

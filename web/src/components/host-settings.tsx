@@ -29,6 +29,7 @@ export function HostSettings({
   const [slug, setSlug] = useState(initial.customSlug ?? "");
   const [galleryPassword, setGalleryPassword] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteStatus, setInviteStatus] = useState<{ ok: boolean; msg: string } | null>(null);
   const [saved, setSaved] = useState(false);
   const [slugError, setSlugError] = useState<string | null>(null);
 
@@ -64,6 +65,7 @@ export function HostSettings({
   };
 
   const invite = async () => {
+    setInviteStatus(null);
     const res = await fetch(`/api/host/${token}/invites`, {
       method: "POST",
       headers: {
@@ -72,8 +74,13 @@ export function HostSettings({
       },
       body: JSON.stringify({ email: inviteEmail }),
     });
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setInviteStatus({ ok: false, msg: data.error ?? "მოწვევა ვერ გაიგზავნა" });
+      return;
+    }
     if (data.devLink) alert(`Dev invite: ${data.devLink}`);
+    setInviteStatus({ ok: true, msg: "მოწვევა გაგზავნილია ✓" });
     setInviteEmail("");
   };
 
@@ -100,7 +107,7 @@ export function HostSettings({
       )}
 
       <label className="block text-sm">
-        გამოჩენა (reveal) — ცარიელი = ეგრევე
+        გამოჩენის დრო — ცარიელი = ეგრევე
         <input
           type="datetime-local"
           className="mt-1 w-full rounded-lg border px-3 py-2"
@@ -119,7 +126,7 @@ export function HostSettings({
       </label>
 
       <label className="block text-sm">
-        ალბომის URL (slug)
+        ალბომის მისამართი (URL)
         <input
           className="mt-1 w-full rounded-lg border px-3 py-2"
           placeholder="nino-giorgi-2026"
@@ -144,18 +151,25 @@ export function HostSettings({
 
       <div className="border-t pt-4">
         <p className="text-sm font-medium">თანაჰოსტის მოწვევა</p>
-        <div className="mt-2 flex gap-2">
+        <div className="mt-2 flex flex-col gap-2 sm:flex-row">
           <input
             type="email"
-            className="flex-1 rounded-lg border px-3 py-2 text-sm"
+            className="min-w-0 flex-1 rounded-lg border px-3 py-2 text-sm"
             placeholder="email"
             value={inviteEmail}
             onChange={(e) => setInviteEmail(e.target.value)}
           />
-          <Button type="button" variant="outline" onClick={() => void invite()}>
+          <Button type="button" variant="outline" className="shrink-0 sm:min-w-[7rem]" onClick={() => void invite()}>
             მოწვევა
           </Button>
         </div>
+        {inviteStatus && (
+          <p
+            className={`mt-2 text-sm font-semibold ${inviteStatus.ok ? "text-[var(--success)]" : "text-red-600"}`}
+          >
+            {inviteStatus.msg}
+          </p>
+        )}
       </div>
 
       <PushSettings hostToken={token} csrfToken={csrfToken} />

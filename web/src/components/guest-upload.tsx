@@ -139,6 +139,11 @@ export function GuestUpload({
   const [tab, setTab] = useState<"photos" | "book">("photos");
   const [browserOffline, setBrowserOffline] = useState(false);
   const [uploadDeferred, setUploadDeferred] = useState(false);
+  const [touchUi, setTouchUi] = useState(false);
+
+  useEffect(() => {
+    setTouchUi(window.matchMedia("(pointer: coarse)").matches);
+  }, []);
 
   useEffect(() => {
     const syncOnline = () =>
@@ -628,7 +633,9 @@ export function GuestUpload({
               <span className="guest-shutter flex h-24 w-24 cursor-pointer items-center justify-center rounded-full btn-gradient transition active:scale-95 md:h-32 md:w-32">
                 <Camera className="h-12 w-12 text-[var(--accent-on)] md:h-14 md:w-14" />
               </span>
-              <span className="text-center text-base font-bold md:text-lg">{t(locale, "dropHere")}</span>
+              <span className="text-center text-base font-bold md:text-lg">
+                {t(locale, touchUi ? "dropHereTouch" : "dropHere")}
+              </span>
               <input
                 type="file"
                 accept="image/jpeg,image/png,image/webp,image/heic,image/heif,video/mp4,video/quicktime,video/webm"
