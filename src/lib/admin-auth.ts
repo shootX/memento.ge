@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import { timingSafeEqual } from "crypto";
+import { e2eRateLimitDisabled } from "@/lib/e2e-bypass";
 
 export async function verifyAdminPassword(password: string): Promise<boolean> {
   const hash = process.env.ADMIN_PASSWORD_HASH?.trim();
@@ -10,7 +11,7 @@ export async function verifyAdminPassword(password: string): Promise<boolean> {
   const plain = process.env.ADMIN_PASSWORD;
   if (!plain) return false;
 
-  if (process.env.NODE_ENV === "production") {
+  if (process.env.NODE_ENV === "production" && !e2eRateLimitDisabled()) {
     return false;
   }
 

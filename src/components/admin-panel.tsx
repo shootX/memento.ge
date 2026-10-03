@@ -123,7 +123,10 @@ export function AdminPanel({
 
   return (
     <ColorfulShell>
-      <div className="mx-auto max-w-6xl p-6 sm:p-8" data-testid="admin-ready">
+      <a href="#admin-main" className="skip-link">
+        ადმინის შიგთავსი
+      </a>
+      <div className="mx-auto max-w-6xl p-6 sm:p-8" data-testid="admin-ready" id="admin-main">
         <h1 className="font-display text-4xl font-bold">
           Admin <span className="text-gradient">🛡️</span>
         </h1>

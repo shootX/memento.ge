@@ -106,6 +106,8 @@ curl -s https://YOUR_DOMAIN/api/health
 
 **Cron:** `CRON_SECRET` **აუცილებელია** ყველა env-ში — ცარიელი secret → 401.
 
+**Audit load / a11y (VM):** `source scripts/audit-server-env.sh && npm run start` (requires `E2E_RATE_LIMIT_FREE=1` for load bursts; admin login on `next start` uses plain `ADMIN_PASSWORD` only with that flag). `node scripts/audit-load-test.mjs`, `node scripts/capture-a11y-inner.mjs` (`A11Y_PHASE=before|after`, `A11Y_FOCUS=1` for after). Production DB: `DATABASE_URL=…/memento npx prisma migrate deploy` before idempotency tests.
+
 ---
 
 ## ინციდენტები

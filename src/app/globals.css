@@ -30,6 +30,25 @@ body {
   outline: none;
 }
 
+.skip-link {
+  position: absolute;
+  left: 0.75rem;
+  top: 0.75rem;
+  z-index: 100;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  color: var(--fg);
+  font-weight: 700;
+  box-shadow: 0 0 0 2px var(--accent);
+  transform: translateY(-200%);
+  transition: transform 0.15s ease;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
 .font-display {
   font-family: var(--font-display);
   letter-spacing: var(--tracking-display);

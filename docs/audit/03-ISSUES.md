@@ -15,8 +15,8 @@
 | AUD-008 | i18n | customSlug on /e | product | guestSlug only | medium | Q4 | **needs-decision** |
 | AUD-009 | Partner | payout automation | product | manual | low | — | open |
 | AUD-010 | Data | expired media purge | cron job | none | medium | Q7 | **needs-decision** |
-| AUD-011 | Perf | 300×3MB upload load | p95 | scaled 30× tiny VM test | high | `load-test-summary.md` | **cant-verify** (scaled) |
-| AUD-012 | A11y | inner pages focus/labels | AA | global `:focus-visible`, guest/admin labels | medium | `a11y-after/*.png` | **fixed-in-branch** |
+| AUD-011 | Perf | 300×3MB upload load | p95 | VM burst + outage probe | high | `load-test-summary.md` | **cant-verify** (scaled VM) |
+| AUD-012 | A11y | inner pages focus/labels | AA | skip-link, tablist, labels | medium | 4× before/after PNG pairs | **fixed-in-branch** |
 | AUD-013 | UX | host pay locale | ka | fixed | low | host-payment-locale.test | **fixed-in-branch** |
 | AUD-014 | BOG | dual callback URL | canonical + deprecate log | two paths | low | `bog-callback-deprecation.ts` | **fixed-in-branch** |
 | AUD-015 | Mobile | Expo push send | delivery | storage only | medium | — | open |
@@ -27,12 +27,12 @@
 | AUD-020 | IDOR | cross-event media | deny | OK | — | tenant-isolation | ✅ verified |
 | AUD-021 | Email | SMTP live | deliver | log only | — | — | **cant-verify** |
 | AUD-022 | Backup | pg restore | counts match | PG16 VM | medium | runbook | ✅ verified |
-| AUD-023 | PWA | offline dedupe | client key + DB | duplicate uploads | medium | `guest-upload-idempotency` | **fixed-in-branch** |
+| AUD-023 | PWA | offline dedupe | client key + DB | duplicate uploads | medium | `upload-idempotency.test.ts` | **fixed-in-branch** |
 | AUD-024 | CSRF | host API | token | OK | — | security.test | ✅ verified |
 | AUD-025 | Stripe/Flitt | webhooks | live | no keys | — | — | **cant-verify** |
 | AUD-026 | Ops | duplicate HSTS | single header | app 63072000 + nginx 31536000 prod | medium | prod curl | **fixed-in-branch** (`HSTS_FROM_EDGE=1`) |
 | AUD-027 | Ops | `/api/health` | DB ping JSON | missing prod | medium | `audit-phase2.test.ts` | **fixed-in-branch** |
-| AUD-028 | Perf | marketing no-store | cache/ISR | dynamic home | medium | `revalidate=3600`, middleware Cache-Control | **fixed-in-branch** |
+| AUD-028 | Perf | marketing no-store | cache/ISR | static + revalidate | medium | `ttfb-marketing.md` | **fixed-in-branch** |
 | AUD-029 | Security | prod logs PII/secrets | redact | magic-link, email:log tokens | critical | prod log snapshot | **fixed-in-branch** |
 | AUD-030 | Upload | iPhone HEIC | convert | sharp unsupported format | high | `heic-convert` | **fixed-in-branch** |
 | AUD-031 | Client | confetti import | static | `q is not a function` | medium | guest-upload | **fixed-in-branch** |
