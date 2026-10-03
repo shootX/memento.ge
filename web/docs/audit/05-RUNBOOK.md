@@ -23,15 +23,52 @@ PAYMENT_MOCK=1 npm run dev   # PORT 43123
 
 ---
 
-## Backup
+## Backup (production — owner ops, 2026-10-03 snapshot)
+
+**რეალობა prod-ზე:** ავტომატური DB backup **არ არის** (aaPanel backup dir ცარიელი; cron მხოლოდ SSL). Uploads: `./data/uploads` (~2.5MB) backup-ში **არ შედის**.
+
+**PG18 restore ტესტი (prod, read-only verify):** manual dump → `qr_restore_test` → row counts byte-identical → DB dropped. ✅ AUD-022 PG18.
+
+**Infra risks (owner):**
+- Postgres `listen_addresses='*'`, 5432 ინტერნეტიდან; `pg_hba` remote md5 `carbase` @ 0.0.0.0/0; DB `qr` localhost-only.
+- PM2 ~26 restart = deploys; 4 CPU / 7.8GB RAM ~44%; disk ~18%.
+
+### Daily backup script (recommended on app server)
 
 ```bash
-pg_dump -Fc -h HOST -U USER -d memento -f memento-$(date +%F).dump
+#!/bin/bash
+set -euo pipefail
+PG=/www/server/pgsql/bin/pg_dump
+BACKUP_ROOT=/var/backups/memento
+RETENTION_DAYS=14
+DATE=$(date +%F)
+mkdir -p "$BACKUP_ROOT"/{db,uploads}
+
+$PG -Fc -h 127.0.0.1 -U qr -d qr -f "$BACKUP_ROOT/db/qr-$DATE.dump"
+
+tar -czf "$BACKUP_ROOT/uploads/uploads-$DATE.tar.gz" -C /path/to/app ./data/uploads
+
+find "$BACKUP_ROOT/db" -name 'qr-*.dump' -mtime +$RETENTION_DAYS -delete
+find "$BACKUP_ROOT/uploads" -name 'uploads-*.tar.gz' -mtime +$RETENTION_DAYS -delete
 ```
 
-**შენახვა:** encrypted off-site; R2/S3 ცალკე bucket versioning.
+Cron (root): `0 3 * * * /usr/local/bin/memento-backup.sh >> /var/log/memento-backup.log 2>&1`
+
+### Restore (prod PG18)
+
+```bash
+PG=/www/server/pgsql/bin
+$PG/psql -U postgres -c 'CREATE DATABASE qr_restore_test OWNER qr;'
+$PG/pg_restore -d qr_restore_test --no-owner /var/backups/memento/db/qr-YYYY-MM-DD.dump
+# verify counts, then:
+$PG/psql -U postgres -c 'DROP DATABASE qr_restore_test;'
+```
+
+Uploads restore: `tar -xzf uploads-YYYY-MM-DD.tar.gz -C /path/to/app`
 
 ---
+
+## Backup (VM audit — legacy)
 
 ## Restore (VM-ზე ტესტირებული)
 

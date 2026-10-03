@@ -84,6 +84,27 @@ async function resolveMime(
   return detectedMime ?? declared;
 }
 
+async function decodeImageBuffer(buffer: Buffer, mime: string): Promise<Buffer> {
+  const isHeic =
+    mime === "image/heic" ||
+    mime === "image/heif" ||
+    bufferLooksHeic(buffer);
+  if (!isHeic) return buffer;
+
+  try {
+    const mod = await import("heic-convert");
+    const convert = mod.default ?? mod;
+    const out = await convert({
+      buffer,
+      format: "JPEG",
+      quality: 0.92,
+    });
+    return Buffer.from(out);
+  } catch {
+    throw new ValidationError("HEIC_UNSUPPORTED");
+  }
+}
+
 export async function validateAndProcessUpload(
   buffer: Buffer,
   declaredMime: string,
@@ -112,7 +133,8 @@ export async function validateAndProcessUpload(
 
   if (isImage) {
     try {
-      let img = sharp(buffer, { failOn: "error", unlimited: true });
+      const decoded = await decodeImageBuffer(buffer, mime);
+      let img = sharp(decoded, { failOn: "error", unlimited: true });
       const meta = await img.metadata();
       if (!meta.width || !meta.height) {
         throw new ValidationError("INVALID_IMAGE");

@@ -32,15 +32,17 @@ export async function runPool<T>(
   concurrency: number,
   worker: (item: T, index: number) => Promise<void>,
 ): Promise<void> {
-  let cursor = 0;
-  const n = Math.min(Math.max(1, concurrency), items.length || 1);
-  await Promise.all(
-    Array.from({ length: n }, async () => {
-      while (cursor < items.length) {
-        const index = cursor;
-        cursor += 1;
-        await worker(items[index], index);
-      }
-    }),
-  );
+  let nextIndex = 0;
+  const workers = Math.min(Math.max(1, concurrency), items.length || 1);
+
+  async function runWorker() {
+    for (;;) {
+      const index = nextIndex;
+      nextIndex += 1;
+      if (index >= items.length) return;
+      await worker(items[index]!, index);
+    }
+  }
+
+  await Promise.all(Array.from({ length: workers }, () => runWorker()));
 }

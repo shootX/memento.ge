@@ -18,7 +18,11 @@
 | HSTS duplicate prod | 🔧 `HSTS_FROM_EDGE=1` | `middleware.ts`, DEPLOYMENT |
 | Marketing cache | 🔧 ISR + s-maxage | `(marketing)/layout.tsx` |
 | Full 300×3MB load | ⚠️ | `load-test-summary.md` scaled |
-| Live bank/email | ⚠️ | no credentials |
+| Prod log redaction | 🔧 | `safe-log.test.ts`, instrumentation |
+| HEIC iPhone upload | 🔧 | `heic-convert`, HEIC_UNSUPPORTED |
+| PG18 prod restore | ✅ | owner manual test AUD-022b |
+| Postgres public :5432 | ❓ | owner infra AUD-035 |
+| Automated backup | ❓ | runbook script AUD-036/037 |
 
 ---
 

@@ -8,6 +8,7 @@ import { clientIp, consumeLogin, handleApiError, jsonError } from "@/lib/api-uti
 import { isEmailDeliveryConfigured } from "@/lib/site-config";
 import { shouldExposeDevMagicLink } from "@/lib/dev-magic-link";
 import { rememberE2eMagicLink } from "@/lib/e2e-magic-link-store";
+import { maskEmail, safeLogInfo } from "@/lib/safe-log";
 import { assertAllowedMementoUri } from "@/lib/mobile-uri";
 import {
   buildMagicLinkVerifyUrl,
@@ -64,7 +65,7 @@ export async function POST(req: Request) {
 
     const emailOk = isEmailDeliveryConfigured();
     if (!emailOk && process.env.NODE_ENV !== "production") {
-      console.info("[magic-link] sent to", normalized);
+      safeLogInfo("[magic-link] queued", maskEmail(normalized));
     }
 
     const exposeDev = shouldExposeDevMagicLink() && !emailOk;

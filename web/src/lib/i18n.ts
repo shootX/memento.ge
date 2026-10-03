@@ -1,3 +1,5 @@
+import { uploadErrorMessageKa } from "@/lib/upload-errors";
+
 export type Locale = "ka" | "en" | "ru";
 
 export const LOCALES: Locale[] = ["ka", "en", "ru"];
@@ -160,6 +162,8 @@ export function uploadErrorMessage(
       return t(locale, "unsupportedFormat");
     case "INVALID_IMAGE":
       return t(locale, "invalidImage");
+    case "HEIC_UNSUPPORTED":
+      return uploadErrorMessageKa("HEIC_UNSUPPORTED");
     case "STORAGE_LIMIT":
       return t(locale, "storageLimit");
     case "UPLOADS_NOT_ALLOWED":

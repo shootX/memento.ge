@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ZodError } from "zod";
 import {
   RateLimitError,
   consumeApi,
@@ -23,8 +24,25 @@ export function handleApiError(err: unknown) {
       { status: 400 },
     );
   }
+  if (err instanceof ZodError) {
+    return jsonError(400, "Invalid request", "VALIDATION_ERROR");
+  }
+  if (err instanceof TypeError && /formdata|multipart/i.test(err.message)) {
+    return jsonError(400, "Invalid upload body", "INVALID_FORM_DATA");
+  }
   console.error(err);
   return jsonError(500, "Internal error");
+}
+
+export async function readFormData(req: Request): Promise<FormData | Response> {
+  try {
+    return await req.formData();
+  } catch (e) {
+    if (e instanceof TypeError) {
+      return jsonError(400, "Invalid multipart body", "INVALID_FORM_DATA");
+    }
+    throw e;
+  }
 }
 
 export function clientIp(req: Request): string {

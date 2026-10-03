@@ -1,6 +1,7 @@
 import nodemailer from "nodemailer";
 import { Resend } from "resend";
 import type { EmailLocale } from "@/lib/email/templates";
+import { maskEmail, redactSensitiveText } from "@/lib/safe-log";
 
 export type SendMailInput = {
   to: string;
@@ -15,7 +16,12 @@ export type MailTransport = {
 
 class LogTransport implements MailTransport {
   async send(input: SendMailInput): Promise<void> {
-    console.info("[email:log]", input.to, input.subject, input.text.slice(0, 120));
+    console.info(
+      "[email:log]",
+      maskEmail(input.to),
+      input.subject,
+      redactSensitiveText(input.text.slice(0, 160)),
+    );
   }
 }
 
