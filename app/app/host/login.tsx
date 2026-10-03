@@ -17,15 +17,29 @@ export default function HostLoginScreen() {
   const [code, setCode] = useState('');
   const [step, setStep] = useState<'email' | 'code'>('email');
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
   const setSession = useAuthStore((s) => s.setSession);
 
   const sendLink = async () => {
+    if (busy || !email.trim().includes('@')) {
+      if (!email.trim().includes('@')) setError(t('loginEmailInvalid'));
+      return;
+    }
+    setBusy(true);
     setError(null);
-    await api.sendMagicLink(email.trim());
-    setStep('code');
+    try {
+      await api.sendMagicLink(email.trim());
+      setStep('code');
+    } catch {
+      setError(t('retry'));
+    } finally {
+      setBusy(false);
+    }
   };
 
   const verifyCode = async () => {
+    if (busy || code.trim().length < 6) return;
+    setBusy(true);
     setError(null);
     try {
       const res = await api.verifyLoginCode(email.trim(), code.trim());
@@ -33,6 +47,8 @@ export default function HostLoginScreen() {
       router.replace('/host/events');
     } catch {
       setError(t('invalidCode'));
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -51,13 +67,13 @@ export default function HostLoginScreen() {
               placeholder={t('emailPlaceholder')}
               keyboardType="email-address"
             />
-            <PrimaryButton label={t('sendCode')} onPress={() => void sendLink()} />
+            <PrimaryButton label={t('sendCode')} disabled={busy} onPress={() => void sendLink()} />
           </>
         ) : (
           <>
             <Text style={styles.sent}>{t('magicLinkSent')}: {email}</Text>
             <CodeInput value={code} onChange={setCode} />
-            <PrimaryButton label={t('verifyCode')} onPress={() => void verifyCode()} />
+            <PrimaryButton label={t('verifyCode')} disabled={busy} onPress={() => void verifyCode()} />
             <GhostButton label={t('resendCode')} onPress={() => void sendLink()} />
             {error && <Text style={styles.error}>{error}</Text>}
           </>

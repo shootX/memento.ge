@@ -1,4 +1,5 @@
 import { config } from '@/src/config';
+import { mockApi } from '@/src/api/mock';
 
 export class UploadError extends Error {
   constructor(
@@ -42,6 +43,12 @@ export function uploadGuestFile(
   onProgress: UploadProgressHandler,
   maxRetries = 4,
 ): Promise<void> {
+  if (config.useMockApi) {
+    return mockApi.uploadGuest().then(() => {
+      onProgress(100);
+    });
+  }
+
   const url = `${config.apiUrl}/api/guest/${encodeURIComponent(slug)}/upload`;
 
   const attempt = (retry: number): Promise<void> =>

@@ -46,6 +46,7 @@
   "verifyCode": "Verify",
   "resendCode": "Resend code",
   "invalidCode": "Invalid code",
+  "loginEmailInvalid": "Invalid email",
   "myEvents": "My events",
   "newEvent": "New",
   "coupleNames": "Couple names",

@@ -54,6 +54,14 @@
         }
       ],
       [
+        "expo-media-library",
+        {
+          "photosPermission": "მემენტო ინახავს QR კოდს შენს ფოტოალბომში.",
+          "savePhotosPermission": "მემენტო ინახავს QR კოდს შენს ფოტოალბომში.",
+          "isAccessMediaLocationEnabled": false
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",

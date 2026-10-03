@@ -46,6 +46,7 @@
   "verifyCode": "დადასტურება",
   "resendCode": "კოდის ხელახლა გაგზავნა",
   "invalidCode": "კოდი არასწორია",
+  "loginEmailInvalid": "ელფოსტა არასწორია",
   "myEvents": "ჩემი ღონისძიებები",
   "newEvent": "ახალი",
   "coupleNames": "წყვილის სახელები",

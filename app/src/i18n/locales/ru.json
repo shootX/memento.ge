@@ -46,6 +46,7 @@
   "verifyCode": "Подтвердить",
   "resendCode": "Отправить снова",
   "invalidCode": "Неверный код",
+  "loginEmailInvalid": "Неверный email",
   "myEvents": "Мои события",
   "newEvent": "Новое",
   "coupleNames": "Имена пары",
