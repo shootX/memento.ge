@@ -9,9 +9,10 @@ type Props = {
   onPress: () => void;
   disabled?: boolean;
   testID?: string;
+  label?: string;
 };
 
-export function ShutterButton({ onPress, disabled, testID }: Props) {
+export function ShutterButton({ onPress, disabled, testID, label = 'Shutter' }: Props) {
   const scale = useSharedValue(1);
   const ring = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
 
@@ -19,6 +20,9 @@ export function ShutterButton({ onPress, disabled, testID }: Props) {
     <AnimatedPressable
       testID={testID ?? 'guest-shutter'}
       disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled: !!disabled }}
       onPressIn={() => {
         scale.value = withSpring(0.92, { damping: 14, stiffness: 320 });
       }}

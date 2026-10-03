@@ -14,7 +14,12 @@ type Props = {
 
 export function CameraControlButton({ icon, label, active, onPress }: Props) {
   return (
-    <Pressable onPress={onPress} style={styles.wrap} accessibilityRole="button">
+    <Pressable
+      onPress={onPress}
+      style={styles.wrap}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+    >
       <View style={[styles.circle, active && styles.circleActive]}>
         <Ionicons name={icon} size={22} color={active ? colors.lime : colors.fg} />
       </View>

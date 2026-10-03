@@ -61,9 +61,28 @@ export function PrimaryButton({
   );
 }
 
-export function GhostButton({ label, onPress }: { label: string; onPress: () => void }) {
+export function GhostButton({
+  label,
+  onPress,
+  disabled,
+}: {
+  label: string;
+  onPress: () => void;
+  disabled?: boolean;
+}) {
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.ghostBtn, pressed && styles.pressed]}>
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled: !!disabled }}
+      style={({ pressed }) => [
+        styles.ghostBtn,
+        pressed && styles.pressed,
+        disabled && styles.disabled,
+      ]}
+    >
       <Text style={styles.ghostBtnText}>{label}</Text>
     </Pressable>
   );
@@ -90,6 +109,7 @@ export function Field({
       placeholderTextColor={colors.muted}
       keyboardType={keyboardType}
       secureTextEntry={secureTextEntry}
+      accessibilityLabel={placeholder}
       style={styles.input}
       autoCapitalize="none"
       multiline={false}
@@ -139,6 +159,8 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 20,
     alignItems: 'center',
+    minHeight: 48,
+    justifyContent: 'center',
   },
   primaryBtnText: {
     color: colors.limeOn,
@@ -155,6 +177,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 18,
     alignItems: 'center',
+    minHeight: 48,
+    justifyContent: 'center',
   },
   ghostBtnText: {
     color: colors.fg,
