@@ -21,28 +21,40 @@ function safeEqualString(a: string, b: string): boolean {
   return timingSafeEqual(ab, bb);
 }
 
-/** HMAC-SHA256 hex of raw callback body (optional merchant-configured check). */
+/** HMAC-SHA256 hex of raw callback body. */
 export function tbcWebhookHmacHex(rawBody: string, secret: string): string {
   return createHmac("sha256", secret).update(rawBody).digest("hex");
 }
 
+function hmacSecret(): string | undefined {
+  return (
+    process.env.TBC_WEBHOOK_HMAC_SECRET?.trim() ||
+    process.env.TBC_WEBHOOK_SECRET?.trim() ||
+    undefined
+  );
+}
+
+function isProductionLivePayments(): boolean {
+  return process.env.NODE_ENV === "production" && process.env.PAYMENT_MOCK !== "1";
+}
+
 /**
- * Public TBC webhook auth: never bypassed for PAYMENT_MOCK.
- * Accepts documented bank IPs, Bearer shared secret, or HMAC of raw body.
+ * Public TBC webhook auth — never bypassed for PAYMENT_MOCK.
+ * When TBC_WEBHOOK_SECRET (or HMAC alias) is set, HMAC header is mandatory.
+ * Production live: fail closed unless HMAC valid or source IP is TBC allowlist.
  */
 export function verifyTbcPublicCallbackAuth(req: Request, rawBody: string): boolean {
-  const hmacSecret = process.env.TBC_WEBHOOK_HMAC_SECRET?.trim();
+  const secret = hmacSecret();
   const sig = req.headers.get("x-tbc-signature") ?? req.headers.get("X-TBC-Signature");
-  if (hmacSecret && sig) {
-    return safeEqualString(sig, tbcWebhookHmacHex(rawBody, hmacSecret));
+
+  if (secret) {
+    if (!sig) return false;
+    return safeEqualString(sig, tbcWebhookHmacHex(rawBody, secret));
   }
 
-  const secret = process.env.TBC_WEBHOOK_SECRET?.trim();
-  if (secret) {
-    const auth = req.headers.get("authorization");
-    if (auth === `Bearer ${secret}`) return true;
-    const headerSecret = req.headers.get("x-tbc-webhook-secret");
-    if (headerSecret && safeEqualString(headerSecret, secret)) return true;
+  if (isProductionLivePayments()) {
+    const ip = getClientIp(req);
+    return Boolean(ip && TBC_CALLBACK_IP_ALLOWLIST.has(ip));
   }
 
   const ip = getClientIp(req);

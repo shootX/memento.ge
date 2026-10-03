@@ -1,15 +1,9 @@
 import { NextResponse } from "next/server";
 import { processEmailOutbox, queueExpiryReminders } from "@/lib/email/outbox";
-
-function authorized(req: Request): boolean {
-  const secret = process.env.CRON_SECRET?.trim();
-  if (!secret) return process.env.NODE_ENV !== "production";
-  const header = req.headers.get("authorization");
-  return header === `Bearer ${secret}`;
-}
+import { isCronAuthorized } from "@/lib/cron-auth";
 
 export async function POST(req: Request) {
-  if (!authorized(req)) {
+  if (!isCronAuthorized(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

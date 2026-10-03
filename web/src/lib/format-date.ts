@@ -1,3 +1,5 @@
+import { formatInstantInTbilisi } from "@/lib/tbilisi-time";
+
 export type AppLocale = "ka" | "en" | "ru";
 
 export function localeToBcp47(locale: AppLocale): string {
@@ -61,9 +63,11 @@ function formatFallback(d: Date, locale: AppLocale): string {
   return `${day} ${month}, ${year}`;
 }
 
-/** Long event date — always manual tables (Chromium ka-GE can show "2026 M10 17"). */
+/** Long event date — display calendar day in Asia/Tbilisi; fallback tables if ICU missing. */
 export function formatEventDate(date: Date | string, locale: AppLocale = "ka"): string {
   const d = typeof date === "string" ? new Date(date) : date;
   if (Number.isNaN(d.getTime())) return "";
+  const tb = formatInstantInTbilisi(d, locale, { dateStyle: "long" });
+  if (tb) return tb;
   return formatFallback(d, locale);
 }

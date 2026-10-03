@@ -9,6 +9,7 @@ export type QueuedUpload = {
   slug: string;
   guestName: string;
   guestKey: string;
+  clientUploadKey: string;
   fileName: string;
   mimeType: string;
   blob: Blob;
@@ -30,10 +31,15 @@ function openDb(): Promise<IDBDatabase> {
   });
 }
 
-export async function enqueueUpload(item: Omit<QueuedUpload, "id" | "createdAt" | "retries">) {
+export async function enqueueUpload(
+  item: Omit<QueuedUpload, "id" | "createdAt" | "retries" | "clientUploadKey"> & {
+    clientUploadKey?: string;
+  },
+) {
   const db = await openDb();
   const record: QueuedUpload = {
     ...item,
+    clientUploadKey: item.clientUploadKey ?? crypto.randomUUID(),
     id: crypto.randomUUID(),
     createdAt: Date.now(),
     retries: 0,
@@ -83,6 +89,7 @@ export async function flushUploadQueue(slug?: string): Promise<{ ok: number; fai
       form.append("file", new File([item.blob], item.fileName, { type: item.mimeType }));
       if (item.guestName) form.append("guestName", item.guestName);
       form.append("guestKey", item.guestKey);
+      form.append("clientUploadKey", item.clientUploadKey);
       const res = await fetch(`/api/guest/${item.slug}/upload`, {
         method: "POST",
         body: form,

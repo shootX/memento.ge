@@ -1,6 +1,8 @@
 import { ColorfulShell } from "@/components/colorful-shell";
 import { SiteHeaderNav } from "@/components/site-header-nav";
 
+export const revalidate = 3600;
+
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
   return (
     <ColorfulShell blobs>
