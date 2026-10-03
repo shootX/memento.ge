@@ -164,6 +164,24 @@ async function handler(req, res) {
     return json(res, 200, { locked: false, items: [] });
   }
 
+  const paySessionMatch = path.match(/^\/api\/host\/([^/]+)\/payment\/session$/);
+  if (req.method === 'POST' && paySessionMatch) {
+    const token = paySessionMatch[1];
+    return json(res, 200, {
+      checkoutUrl: `http://127.0.0.1:${port}/checkout/${token}`,
+      paymentId: 'pay-test-1',
+    });
+  }
+
+  const payStatusMatch = path.match(/^\/api\/host\/([^/]+)\/payment\/status$/);
+  if (req.method === 'GET' && payStatusMatch) {
+    const paymentId = url.searchParams.get('paymentId');
+    if (paymentId === 'pay-test-1') {
+      return json(res, 200, { status: 'paid', isPaid: true });
+    }
+    return json(res, 200, { status: 'pending', isPaid: false });
+  }
+
   json(res, 404, { error: 'not found' });
 }
 

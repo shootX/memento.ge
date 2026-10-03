@@ -65,6 +65,23 @@ export function extractHostTokenFromUrl(url: string): string | null {
 }
 
 /** Magic-link callback must use app scheme only. */
+export function parsePayCompleteDeepLink(
+  url: string,
+): { hostToken: string; paymentId?: string } | null {
+  try {
+    const u = new URL(url.includes('://') ? url : `memento://${url}`);
+    if (u.protocol !== 'memento:' || u.hostname !== 'host') return null;
+    const segments = u.pathname.split('/').filter(Boolean);
+    if (segments.length < 2 || segments[1] !== 'pay-complete') return null;
+    const hostToken = segments[0];
+    if (!hostToken || hostToken.length > 128) return null;
+    const paymentId = u.searchParams.get('paymentId')?.trim() || undefined;
+    return { hostToken, paymentId };
+  } catch {
+    return null;
+  }
+}
+
 export function parseMagicLinkToken(url: string): string | null {
   try {
     const u = new URL(url.includes('://') ? url : `memento://${url}`);

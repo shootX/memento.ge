@@ -72,4 +72,11 @@ describe('MOBILE-API contract (local mock server)', () => {
   it('host bootstrap 404', async () => {
     await expect(client.getHost('bad')).rejects.toMatchObject({ status: 404 });
   });
+
+  it('payment session + status', async () => {
+    const session = await client.createPaymentSession('test-host-token', 'memento://x', 'test-bearer');
+    expect(session.paymentId).toBe('pay-test-1');
+    const status = await client.getPaymentStatus('test-host-token', session.paymentId, 'test-bearer');
+    expect(status.isPaid).toBe(true);
+  });
 });

@@ -30,4 +30,14 @@ describe('deep link security', () => {
   it('allows memento.ge links', () => {
     expect(parseEventSlugFromUrl('https://memento.ge/e/nino-giorgi-2026')).toBe('nino-giorgi-2026');
   });
+
+  it('handles pay-complete deep link', () => {
+    expect(
+      resolveDeepLink('memento://host/host-tok/pay-complete?paymentId=pay_1'),
+    ).toEqual({
+      type: 'payComplete',
+      hostToken: 'host-tok',
+      paymentId: 'pay_1',
+    });
+  });
 });

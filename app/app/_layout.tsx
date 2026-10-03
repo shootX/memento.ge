@@ -5,22 +5,40 @@ import {
   NotoSansGeorgian_700Bold,
   useFonts,
 } from '@expo-google-fonts/noto-sans-georgian';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import * as Linking from 'expo-linking';
 import { Stack, router } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Alert } from 'react-native';
+import i18n from '@/src/i18n';
 import { api } from '@/src/api/client';
+import { setUnauthorizedHandler } from '@/src/lib/auth-http';
 import { resolveDeepLink } from '@/src/lib/deep-link';
+import {
+  getPendingPaymentId,
+  pollPaymentStatus,
+  rememberPaymentSession,
+} from '@/src/lib/payment-flow';
+import { queryClient } from '@/src/lib/query-client';
 import { useAuthStore } from '@/src/stores/auth-store';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
-const queryClient = new QueryClient();
+async function refreshHostAfterPayment(hostToken: string, paymentId?: string) {
+  const bearer = useAuthStore.getState().accessToken;
+  const pid = paymentId ?? getPendingPaymentId(hostToken);
+  if (pid) {
+    await pollPaymentStatus(hostToken, pid, bearer).catch(() => undefined);
+  }
+  await queryClient.invalidateQueries({ queryKey: ['host', hostToken] });
+  await queryClient.invalidateQueries({ queryKey: ['my-events'] });
+  router.replace(`/host/${hostToken}`);
+}
 
 function useDeepLinks() {
   useEffect(() => {
@@ -38,6 +56,10 @@ function useDeepLinks() {
           });
         return;
       }
+      if (action.type === 'payComplete') {
+        void refreshHostAfterPayment(action.hostToken, action.paymentId);
+        return;
+      }
       if (action.type === 'guest') {
         router.push(`/e/${action.slug}`);
       }
@@ -50,10 +72,22 @@ function useDeepLinks() {
   }, []);
 }
 
+function useSessionExpiryHandler() {
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      void useAuthStore.getState().clearSession();
+      Alert.alert(i18n.t('sessionExpiredTitle'), i18n.t('sessionExpiredBody'));
+      router.replace('/host/login');
+    });
+    return () => setUnauthorizedHandler(null);
+  }, []);
+}
+
 export default function RootLayout() {
   const { t } = useTranslation();
   const hydrate = useAuthStore((s) => s.hydrate);
   useDeepLinks();
+  useSessionExpiryHandler();
 
   const [loaded] = useFonts({
     NotoSansGeorgian_400Regular,
