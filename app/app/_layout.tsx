@@ -13,7 +13,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/src/api/client';
-import { parseEventSlugFromUrl } from '@/src/lib/slug';
+import { resolveDeepLink } from '@/src/lib/deep-link';
 import { useAuthStore } from '@/src/stores/auth-store';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
@@ -25,23 +25,22 @@ const queryClient = new QueryClient();
 function useDeepLinks() {
   useEffect(() => {
     const handle = (url: string) => {
-      try {
-        const u = new URL(url.includes('://') ? url : `https://${url}`);
-        if (u.pathname.includes('/auth/callback')) {
-          const token = u.searchParams.get('token');
-          if (token) {
-            void api.exchangeMagicToken(token).then(async (session) => {
-              await useAuthStore.getState().setSession(session.accessToken, session.user.email);
-              router.replace('/host/events');
-            });
-          }
-          return;
-        }
-      } catch {
-        /* ignore */
+      const action = resolveDeepLink(url);
+      if (action.type === 'auth') {
+        void api
+          .exchangeMagicToken(action.token)
+          .then(async (session) => {
+            await useAuthStore.getState().setSession(session.accessToken, session.user.email);
+            router.replace('/host/events');
+          })
+          .catch(() => {
+            router.replace('/host/login');
+          });
+        return;
       }
-      const slug = parseEventSlugFromUrl(url);
-      if (slug) router.push(`/e/${slug}`);
+      if (action.type === 'guest') {
+        router.push(`/e/${action.slug}`);
+      }
     };
     void Linking.getInitialURL().then((url) => {
       if (url) handle(url);

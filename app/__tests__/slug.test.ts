@@ -12,6 +12,10 @@ describe('parseEventSlugFromUrl', () => {
   it('parses bare slug', () => {
     expect(parseEventSlugFromUrl('demo')).toBe('demo');
   });
+
+  it('rejects external host', () => {
+    expect(parseEventSlugFromUrl('https://phish.example/e/demo')).toBeNull();
+  });
 });
 
 describe('extractHostTokenFromUrl', () => {
