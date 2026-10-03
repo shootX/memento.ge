@@ -6,6 +6,8 @@ export const config = {
   useMockApi: process.env.EXPO_PUBLIC_API_MOCK === 'true',
   deepLinkHost: 'memento.ge',
   authRedirectUri: 'memento://auth/callback',
+  /** Screenshot/dev builds set EXPO_PUBLIC_INCLUDE_PREVIEW=true */
+  includePreviewRoutes: process.env.EXPO_PUBLIC_INCLUDE_PREVIEW === 'true',
 };
 
 export const PLAN_TIERS = {
