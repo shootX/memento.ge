@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { api } from '@/src/api/client';
 import { extractHostTokenFromUrl } from '@/src/lib/slug';
 import { formatGeorgianDate } from '@/src/lib/dates';
@@ -13,12 +13,26 @@ export default function HostEventsScreen() {
   const { t } = useTranslation();
   const token = useAuthStore((s) => s.accessToken);
   const email = useAuthStore((s) => s.email);
+  const clearSession = useAuthStore((s) => s.clearSession);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['my-events', token],
     queryFn: () => api.listMyEvents(token ?? ''),
     enabled: !!token,
   });
+
+  const logout = () => {
+    Alert.alert(t('logoutConfirmTitle'), t('logoutConfirmBody'), [
+      { text: t('no'), style: 'cancel' },
+      {
+        text: t('logout'),
+        style: 'destructive',
+        onPress: () => {
+          void clearSession().then(() => router.replace('/host/login'));
+        },
+      },
+    ]);
+  };
 
   return (
     <Screen>
@@ -34,6 +48,8 @@ export default function HostEventsScreen() {
             return (
               <Pressable
                 key={ev.id}
+                accessibilityRole="button"
+                accessibilityLabel={ev.coupleNames}
                 onPress={() => hostToken && router.push(`/host/${hostToken}`)}
               >
                 <Card>
@@ -54,6 +70,7 @@ export default function HostEventsScreen() {
       <View style={styles.actions}>
         <PrimaryButton label={t('newEvent')} onPress={() => router.push('/host/create')} />
         <GhostButton label={t('retry')} onPress={() => void refetch()} />
+        <GhostButton label={t('logout')} onPress={logout} />
       </View>
     </Screen>
   );

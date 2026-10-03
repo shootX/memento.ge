@@ -1,4 +1,5 @@
 import { config } from '@/src/config';
+import { notifyUnauthorized } from '@/src/lib/auth-http';
 
 export class ApiError extends Error {
   constructor(
@@ -48,6 +49,10 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
   const contentType = res.headers.get('content-type') ?? '';
   const isJson = contentType.includes('application/json');
   const data = isJson ? await res.json().catch(() => ({})) : await res.text();
+
+  if (res.status === 401 && options.bearerToken) {
+    notifyUnauthorized();
+  }
 
   if (!res.ok) {
     const msg =

@@ -66,7 +66,12 @@ export default function GalleryScreen() {
       <Screen>
         <Title>{coupleNames}</Title>
         <Text style={styles.lock}>🔒</Text>
-        <Field value={password} onChangeText={setPassword} placeholder="პაროლი" secureTextEntry />
+        <Field
+          value={password}
+          onChangeText={setPassword}
+          placeholder={t('galleryPassword')}
+          secureTextEntry
+        />
         <PrimaryButton label={t('continue')} onPress={() => void load(password)} />
       </Screen>
     );
