@@ -53,3 +53,40 @@ export function isEventExpired(
   if (!expiresAt) return false;
   return isInstantPast(expiresAt, now);
 }
+
+/** UTC instant → `datetime-local` value shown as Asia/Tbilisi wall time. */
+export function utcInstantToDatetimeLocalTbilisi(instant: Date | string): string {
+  const d = typeof instant === "string" ? new Date(instant) : instant;
+  if (Number.isNaN(d.getTime())) return "";
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: TBILISI_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(d);
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "00";
+  return `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}`;
+}
+
+/** Parse `datetime-local` as Asia/Tbilisi wall clock → UTC Date. */
+export function datetimeLocalTbilisiToUtc(value: string): Date | null {
+  const m = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+  if (!m) return null;
+  return tbilisiWallTimeToUtc(
+    Number(m[1]),
+    Number(m[2]),
+    Number(m[3]),
+    Number(m[4]),
+    Number(m[5]),
+  );
+}
+
+export function formatTbilisiDateTimeLabel(instant: Date | string, locale: "ka" | "en" | "ru" = "ka"): string {
+  return formatInstantInTbilisi(instant, locale, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+}

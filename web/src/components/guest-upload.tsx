@@ -354,10 +354,13 @@ export function GuestUpload({
       className="relative min-h-screen overflow-hidden guest-page-bg"
       data-testid="guest-ready"
     >
+      <a href="#guest-main" className="skip-link">
+        ატვირთვის ზონა
+      </a>
       <div className="blob blob-1 opacity-40" aria-hidden />
       <div className="blob blob-2 opacity-35" aria-hidden />
 
-      <div className="relative container-narrow pb-14 pt-6">
+      <div id="guest-main" className="relative container-narrow pb-14 pt-6">
         <div className="mb-6 flex items-center justify-between gap-3">
           <span className="font-display text-lg font-bold text-[var(--fg)]">მემენტო</span>
           <LocaleToggle value={locale} onChange={setLocale} />

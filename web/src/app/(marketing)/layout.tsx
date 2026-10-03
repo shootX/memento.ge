@@ -2,6 +2,7 @@ import { ColorfulShell } from "@/components/colorful-shell";
 import { SiteHeaderNav } from "@/components/site-header-nav";
 
 export const revalidate = 3600;
+export const dynamic = "force-static";
 
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
   return (

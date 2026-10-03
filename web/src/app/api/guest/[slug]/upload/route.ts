@@ -16,8 +16,8 @@ import { processThumbnail } from "@/lib/jobs/thumbnails";
 import { isGalleryRevealed } from "@/lib/tbilisi-time";
 import {
   findExistingUploadByClientKey,
-  normalizeClientUploadKey,
   recordUploadClientKey,
+  resolveUploadIdempotencyKey,
 } from "@/lib/guest-upload-idempotency";
 import { z } from "zod";
 
@@ -45,7 +45,7 @@ export async function POST(req: Request, { params }: Params) {
     const formParsed = await readFormData(req);
     if (formParsed instanceof Response) return formParsed;
     const form = formParsed;
-    const clientUploadKey = normalizeClientUploadKey(form.get("clientUploadKey"));
+    const clientUploadKey = resolveUploadIdempotencyKey(req, form);
     if (clientUploadKey) {
       const existing = await findExistingUploadByClientKey(event.id, clientUploadKey);
       if (existing) {

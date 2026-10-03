@@ -4,7 +4,7 @@
 ✅ შემოწმებულია · 🔧 გამოსწორებულია · ⚠️ ვერ შემოწმდა (მიზეზი)
 
 **Phase 2 (2026-10-03):** ✅/🔧/⚠️/❓ გამოყენება ქვემოთ.  
-**ტესტები:** 89 passed (`npm test`), incl. `audit-phase2.test.ts`.
+**ტესტები:** `npm test` (incl. `tbilisi-time.test.ts`, `upload-idempotency.test.ts`, `guest-reveal-tbilisi.test.ts`, `audit-phase2.test.ts`).
 
 | ფუნქცია | შედეგი | Evidence |
 |---------|--------|----------|
@@ -12,17 +12,19 @@
 | Payment stub public | 🔧 410 + rate limit | `audit-phase2.test.ts` |
 | TBC HMAC when secret set | 🔧 | `audit-phase2.test.ts` |
 | BOG legacy path | 🔧 log deprecate | `bog-callback-deprecation.ts` |
-| Offline upload dedupe | 🔧 clientUploadKey | `guest-upload-idempotency` |
-| Tbilisi revealAt midnight | 🔧 | `tbilisi-time.test` in audit-phase2 |
-| `/api/health` | 🔧 unit test | `audit-phase2.test.ts` (deploy后 smoke) |
+| Upload idempotency | 🔧 header + form key | `upload-idempotency.test.ts` |
+| Tbilisi revealAt / expiresAt | 🔧 UTC store, Tbilisi UI | `tbilisi-time.test.ts`, `guest-reveal-tbilisi.test.ts` |
+| `/api/health` | 🔧 unit + load 200 | `audit-phase2.test.ts`, `load-test-summary.md` |
 | HSTS duplicate prod | 🔧 `HSTS_FROM_EDGE=1` | `middleware.ts`, DEPLOYMENT |
-| Marketing cache | 🔧 ISR + s-maxage | `(marketing)/layout.tsx` |
-| Full 300×3MB load | ⚠️ | `load-test-summary.md` scaled |
+| Marketing cache / TTFB | 🔧 ISR + prod before ~650ms | `ttfb-marketing.md`, `(marketing)/layout.tsx` |
+| Inner a11y (4 pages) | 🔧 | before/after PNG pairs in `PHASE2-REPORT.md` |
+| Full 300×3MB prod load | ⚠️ | `load-test-summary.md` VM limits |
 | Prod log redaction | 🔧 | `safe-log.test.ts`, instrumentation |
 | HEIC iPhone upload | 🔧 | `heic-convert`, HEIC_UNSUPPORTED |
 | PG18 prod restore | ✅ | owner manual test AUD-022b |
 | Postgres public :5432 | ❓ | owner infra AUD-035 |
 | Automated backup | ❓ | runbook script AUD-036/037 |
+| Slow BOG / DB outage | 🔧 unit + VM postgres stop | `bog-callback-timeout.test.ts`, load summary |
 
 ---
 
@@ -37,7 +39,7 @@
 | Guestbook text | POST | ✅ | API route + rate limit |
 | Invalid slug | 404 | ✅ | `getEventByGuestSlug` null |
 | Unpaid event upload | blocked | ✅ | `eventAllowsUpload` |
-| Offline queue dedupe | 🔧 same clientUploadKey | `audit-phase2` + upload route |
+| Offline queue dedupe | 🔧 Idempotency-Key + clientUploadKey | `upload-idempotency.test.ts` |
 
 ## ჰოსტი (Host)
 

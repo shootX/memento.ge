@@ -29,7 +29,7 @@ async function demoMediaStorageOk(eventId: string): Promise<boolean> {
     where: { eventId },
     select: { storageKey: true, thumbKey: true },
   });
-  if (rows.length < 6) return false;
+  if (rows.length !== 6) return false;
   for (const row of rows) {
     if (!(await objectExists(row.storageKey))) return false;
     if (row.thumbKey && !(await objectExists(row.thumbKey))) return false;

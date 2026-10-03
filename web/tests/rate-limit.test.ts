@@ -3,6 +3,8 @@ import { consumeUpload, RateLimitError } from "@/lib/rate-limit";
 
 describe("upload rate limiting", () => {
   it("blocks excessive uploads per IP and slug", async () => {
+    const prev = process.env.E2E_RATE_LIMIT_FREE;
+    delete process.env.E2E_RATE_LIMIT_FREE;
     const ip = `test-ip-${Date.now()}`;
     const slug = "ratelimitslug123456";
     let threw = false;
@@ -17,5 +19,6 @@ describe("upload rate limiting", () => {
       }
     }
     expect(threw).toBe(true);
+    if (prev !== undefined) process.env.E2E_RATE_LIMIT_FREE = prev;
   });
 });

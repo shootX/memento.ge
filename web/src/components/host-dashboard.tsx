@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Download,
@@ -294,8 +294,24 @@ export function HostDashboard({
   const isLive =
     Math.abs(eventDay.getTime() - today.getTime()) < 1000 * 60 * 60 * 24 * 2;
 
+  const onTabKeyDown = (e: KeyboardEvent) => {
+    const ids = tabs.map((t) => t.id);
+    const idx = ids.indexOf(tab);
+    if (idx < 0) return;
+    if (e.key === "ArrowRight") {
+      e.preventDefault();
+      setTab(ids[(idx + 1) % ids.length]!);
+    } else if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      setTab(ids[(idx - 1 + ids.length) % ids.length]!);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[var(--bg-page)]" data-testid="host-ready">
+      <a href="#host-main" className="skip-link">
+        ძირითად შიგთავსზე
+      </a>
       <PhotoLightbox
         item={lightbox}
         onClose={() => setLightbox(null)}
@@ -403,11 +419,18 @@ export function HostDashboard({
       )}
 
       <header className="sticky top-0 z-30 border-b border-[var(--border-soft)] bg-[var(--bg)]/92 backdrop-blur-md">
-        <nav className="container-page flex gap-2 overflow-x-auto py-3">
+        <nav
+          className="container-page flex gap-2 overflow-x-auto py-3"
+          role="tablist"
+          aria-label="Host sections"
+          onKeyDown={onTabKeyDown}
+        >
           {tabs.map((t) => (
             <button
               key={t.id}
               type="button"
+              role="tab"
+              aria-selected={tab === t.id}
               onClick={() => setTab(t.id)}
               className={cn(
                 "flex shrink-0 items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold transition",
@@ -423,7 +446,7 @@ export function HostDashboard({
         </nav>
       </header>
 
-      <main className="container-page section-y pt-6 pb-10">
+      <main id="host-main" className="container-page section-y pt-6 pb-10">
         <div className="mb-8 grid gap-4 sm:grid-cols-3">
           {[
             { label: "ატვირთვები", value: event.usage.uploadCount },

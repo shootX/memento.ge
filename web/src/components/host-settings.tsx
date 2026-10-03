@@ -3,6 +3,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { validateCustomSlug } from "@/lib/guest-slug";
+import {
+  datetimeLocalTbilisiToUtc,
+  utcInstantToDatetimeLocalTbilisi,
+} from "@/lib/tbilisi-time";
 import { PushSettings } from "@/components/pwa/push-settings";
 
 export function HostSettings({
@@ -23,7 +27,7 @@ export function HostSettings({
   const [disposable, setDisposable] = useState(initial.disposableEnabled);
   const [shots, setShots] = useState(initial.shotsPerGuest || 5);
   const [revealAt, setRevealAt] = useState(
-    initial.revealAt ? initial.revealAt.slice(0, 16) : "",
+    initial.revealAt ? utcInstantToDatetimeLocalTbilisi(initial.revealAt) : "",
   );
   const [publicGallery, setPublicGallery] = useState(initial.publicGallery);
   const [slug, setSlug] = useState(initial.customSlug ?? "");
@@ -49,7 +53,9 @@ export function HostSettings({
       body: JSON.stringify({
         disposableEnabled: disposable,
         shotsPerGuest: shots,
-        revealAt: revealAt ? new Date(revealAt).toISOString() : null,
+        revealAt: revealAt
+          ? (datetimeLocalTbilisiToUtc(revealAt)?.toISOString() ?? null)
+          : null,
         publicGallery,
         customSlug: slug || null,
         galleryPassword: galleryPassword || null,
@@ -106,9 +112,13 @@ export function HostSettings({
         </label>
       )}
 
-      <label className="block text-sm">
+      <label className="block text-sm" htmlFor="host-reveal-at">
         გამოჩენის დრო — ცარიელი = ეგრევე
+        <span className="mt-0.5 block text-xs font-normal text-[var(--muted)]">
+          Asia/Tbilisi (UTC+4)
+        </span>
         <input
+          id="host-reveal-at"
           type="datetime-local"
           className="mt-1 w-full rounded-lg border px-3 py-2"
           value={revealAt}

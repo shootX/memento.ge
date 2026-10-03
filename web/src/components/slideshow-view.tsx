@@ -91,16 +91,30 @@ export function SlideshowView({
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "f" || e.key === "F") enterFullscreen();
+      if (waiting || slides.length < 2) return;
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        setIndex((i) => (i + 1) % slides.length);
+      }
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        setIndex((i) => (i - 1 + slides.length) % slides.length);
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [waiting, slides.length]);
 
   return (
     <div
       className="fixed inset-0 overflow-hidden bg-[var(--bg-dark)] text-white"
       data-testid={slides.length > 0 ? "slideshow-ready" : "slideshow-waiting"}
+      role="region"
+      aria-label="Live slideshow"
     >
+      <a href="#slideshow-main" className="skip-link">
+        სლაიდშოუს შიგთავსი
+      </a>
       {waiting && boot?.coverUrl && (
         <>
           <img
@@ -135,7 +149,8 @@ export function SlideshowView({
         <button
           type="button"
           onClick={enterFullscreen}
-          className="pointer-events-auto flex items-center gap-2 rounded-full border border-white/30 bg-black/40 px-4 py-2 text-sm font-bold backdrop-blur-sm"
+          aria-label="სრული ეკრანი (F)"
+          className="pointer-events-auto flex items-center gap-2 rounded-full border border-white/30 bg-black/40 px-4 py-2 text-sm font-bold backdrop-blur-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
           title="Fullscreen (F)"
         >
           <Maximize2 className="h-4 w-4" />
@@ -143,7 +158,7 @@ export function SlideshowView({
         </button>
       </header>
 
-      <div className="absolute inset-0 flex items-center justify-center z-20">
+      <div id="slideshow-main" className="absolute inset-0 flex items-center justify-center z-20">
         {waiting ? (
           <div className="flex max-w-lg flex-col items-center gap-8 px-6 text-center">
             <p className="font-display text-xl text-white/70 md:text-2xl">ველოდებით ფოტოებს…</p>
