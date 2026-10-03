@@ -37,4 +37,13 @@ describe("TBC callback payload", () => {
     expect(result.status).toBe(401);
     delete process.env.PAYMENT_MOCK;
   });
+
+  it("requires HMAC when TBC_WEBHOOK_SECRET is configured", async () => {
+    process.env.TBC_WEBHOOK_SECRET = "sec";
+    process.env.NODE_ENV = "test";
+    const raw = '{"PaymentId":"x"}';
+    const { verifyTbcPublicCallbackAuth } = await import("@/lib/billing/tbc-webhook-auth");
+    expect(verifyTbcPublicCallbackAuth(new Request("http://x"), raw)).toBe(false);
+    delete process.env.TBC_WEBHOOK_SECRET;
+  });
 });

@@ -100,9 +100,15 @@ export function AdminPanel({
       <ColorfulShell className="flex items-center justify-center px-4">
         <div className="card-chunky w-full max-w-sm space-y-4 p-8" data-testid="admin-login">
           <h1 className="text-2xl font-extrabold">Admin 🔐</h1>
+          <label htmlFor="admin-password" className="text-sm font-semibold text-[var(--fg-2)]">
+            პაროლი
+          </label>
           <input
+            id="admin-password"
             type="password"
-            className="w-full rounded-2xl border-2 border-[var(--border)] px-4 py-3"
+            autoComplete="current-password"
+            aria-required
+            className="w-full rounded-2xl border-2 border-[var(--border)] px-4 py-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
@@ -121,7 +127,7 @@ export function AdminPanel({
         <h1 className="font-display text-4xl font-bold">
           Admin <span className="text-gradient">🛡️</span>
         </h1>
-        <nav className="mt-6 flex flex-wrap gap-2">
+        <nav className="mt-6 flex flex-wrap gap-2" aria-label="Admin sections">
           {(
             [
               { id: "events" as const, label: "ღონისძიებები" },

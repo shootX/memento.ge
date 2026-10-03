@@ -13,6 +13,12 @@ import {
 import { buildMediaKey, putObject } from "@/lib/storage";
 import { clientIp, consumeUpload, handleApiError, jsonError } from "@/lib/api-utils";
 import { processThumbnail } from "@/lib/jobs/thumbnails";
+import { isGalleryRevealed } from "@/lib/tbilisi-time";
+import {
+  findExistingUploadByClientKey,
+  normalizeClientUploadKey,
+  recordUploadClientKey,
+} from "@/lib/guest-upload-idempotency";
 import { z } from "zod";
 
 type Params = { params: Promise<{ slug: string }> };
@@ -31,12 +37,27 @@ export async function POST(req: Request, { params }: Params) {
       return jsonError(403, "ატვირთვა დახურულია", "UPLOADS_NOT_ALLOWED");
     }
 
-    if (event.revealAt && event.revealAt > new Date() && event.disposableEnabled) {
+    if (!isGalleryRevealed(event.revealAt, event.disposableEnabled)) {
       return jsonError(403, "გალერეა ჯერ არ არის გახსნილი", "GALLERY_NOT_REVEALED");
     }
 
     const plan = getPlan(event.planTier);
     const form = await req.formData();
+    const clientUploadKey = normalizeClientUploadKey(form.get("clientUploadKey"));
+    if (clientUploadKey) {
+      const existing = await findExistingUploadByClientKey(event.id, clientUploadKey);
+      if (existing) {
+        const prior = await prisma.media.findUnique({ where: { id: existing.mediaId } });
+        if (prior) {
+          return NextResponse.json({
+            id: prior.id,
+            ok: true,
+            status: prior.status,
+            duplicate: true,
+          });
+        }
+      }
+    }
     const file = form.get("file");
     const guestNameRaw = form.get("guestName");
     const guestKeyRaw = form.get("guestKey");
@@ -125,6 +146,10 @@ export async function POST(req: Request, { params }: Params) {
     if (status === "approved") {
       const { notifyBatchedUploads } = await import("@/lib/push-server");
       void notifyBatchedUploads(event.id, event.coupleNames);
+    }
+
+    if (clientUploadKey) {
+      await recordUploadClientKey(event.id, clientUploadKey, media.id);
     }
 
     return NextResponse.json({ id: media.id, ok: true, status });

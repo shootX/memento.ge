@@ -47,10 +47,27 @@ export function middleware(request: NextRequest) {
     "camera=(self), microphone=(self), geolocation=()",
   );
 
-  if (!isDev) {
+  if (!isDev && process.env.HSTS_FROM_EDGE !== "1") {
     response.headers.set(
       "Strict-Transport-Security",
       "max-age=63072000; includeSubDomains; preload",
+    );
+  }
+
+  const marketingCache =
+    pathname === "/" ||
+    pathname === "/pricing" ||
+    pathname === "/faq" ||
+    pathname === "/for-partners" ||
+    /^\/(en|ru)(\/|$)/.test(pathname);
+  if (
+    marketingCache &&
+    request.method === "GET" &&
+    !pathname.startsWith("/api/")
+  ) {
+    response.headers.set(
+      "Cache-Control",
+      "public, s-maxage=3600, stale-while-revalidate=86400",
     );
   }
 

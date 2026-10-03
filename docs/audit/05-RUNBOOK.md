@@ -58,14 +58,16 @@ psql -d memento_audit_restore -c 'SELECT count(*) FROM "Media";'  # → 71
 
 ---
 
-## Cron
+## Health & HSTS (Phase 2)
 
 ```bash
-curl -X POST -H "Authorization: Bearer $CRON_SECRET" \
-  https://YOUR_DOMAIN/api/cron/email
+curl -s https://YOUR_DOMAIN/api/health
+# {"ok":true,"db":"up","version":"0.1.0"}
 ```
 
-`?mode=expiry` — expiry reminder queue.
+**HSTS ორმაგი header (prod):** nginx/Cloudflare ხშირად აგზავნის `max-age=31536000`, Next middleware — `63072000`. Production-ზე დააყენეთ **`HSTS_FROM_EDGE=1`** (`.env`) რომ აპმა აღარ დაამატოს HSTS; ან მოაშორეთ nginx HSTS და დატოვეთ მხოლოდ აპი.
+
+**Cron:** `CRON_SECRET` **აუცილებელია** ყველა env-ში — ცარიელი secret → 401.
 
 ---
 

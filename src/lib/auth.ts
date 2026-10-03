@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import type { Event } from "@/generated/prisma/client";
 import { getPlan } from "@/lib/plans";
 import { trialUploadLimit } from "@/lib/site-config";
+import { isEventExpired } from "@/lib/tbilisi-time";
 
 function isValidPublicSlug(slug: string): boolean {
   if (!slug || slug.length < 3 || slug.length > 64) return false;
@@ -38,7 +39,7 @@ export async function getEventBySlideshowToken(
 
 export function eventIsActive(event: Event): boolean {
   if (!event.isPaid) return false;
-  if (event.expiresAt && event.expiresAt < new Date()) return false;
+  if (isEventExpired(event.expiresAt)) return false;
   return true;
 }
 
@@ -49,7 +50,7 @@ export function eventInTrialUploads(event: Event): boolean {
 }
 
 export function eventAllowsUpload(event: Event): boolean {
-  if (event.expiresAt && event.expiresAt < new Date()) return false;
+  if (isEventExpired(event.expiresAt)) return false;
   const plan = getPlan(event.planTier);
 
   if (event.isPaid) {

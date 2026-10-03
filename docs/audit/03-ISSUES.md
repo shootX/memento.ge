@@ -1,45 +1,48 @@
-# Issue register — Phase 1 აუდიტი
+# Issue register — Phase 1–2 (`audit/phase1`)
 
-**Legend status:** `open` | `fixed-in-branch` | `needs-decision` | `cant-verify`  
-**Severity:** critical / high / medium / low
+**Status:** `open` | `fixed-in-branch` | `needs-decision` | `cant-verify`  
+**Symbols in verification doc:** ✅ შემოწმებულია · 🔧 გამოსწორებულია · ⚠️ ვერ შემოწმდა · ❓ საჭიროა გადაწყვეტა
 
-| ID | Area | სად / პირობა | მოსალოდნელი | ფაქტობრივი | Impact | Sev | Pri | Evidence | Owner | Effort | Status |
-|----|------|--------------|-------------|------------|--------|-----|-----|----------|-------|--------|--------|
-| AUD-001 | Payments | `GET /api/payments/tbc/poll` public, PAYMENT_MOCK | არააქტივაცია auth-ის გარეშე | mock payId poll → activate | ფული/გეგმა უკან | critical | P0 | `audit-tbc-poll-security.test.ts` | dev | S | **fixed-in-branch** |
-| AUD-002 | Payments | BOG callback без signature (prod mock) | 401 | ადრე 200 `{}` | ყალბი paid | critical | P0 | `bog-callback-security.test.ts` (baseline) | dev | M | fixed-in-branch (baseline) |
-| AUD-003 | Payments | Real BOG/TBC keys | live callback | VM-ში keys არა | end-to-end bank | high | P1 | — | owner | — | **cant-verify** |
-| AUD-004 | Cron | `CRON_SECRET` empty, NODE≠production | cron disabled | dev-ში cron ღია | email flood dev | medium | P2 | `cron/email/route.ts` | dev | S | open |
-| AUD-005 | API | `POST /api/payment/stub` | auth/rate limit | public JSON | info leak low | low | P3 | code review | dev | S | open |
-| AUD-006 | Security | npm audit | 0 high prod runtime | 12+ high (eslint/prisma dev chain) | supply chain | high | P2 | `npm audit` | dev | M | open |
-| AUD-007 | Auth | hostToken capability URL | rotation | none | link leak = full access | medium | P2 | Q3 | product | M | needs-decision |
-| AUD-008 | i18n | `/e/customSlug` | works | მხოლოდ guestSlug | confused users | medium | P2 | SETUP.md | product | M | needs-decision |
-| AUD-009 | Partner | commission payout | automated | manual fields only | ops burden | low | P3 | schema | product | L | open |
-| AUD-010 | Data | expired media purge | job | no cron delete | storage cost | medium | P2 | Q7 | dev | L | needs-decision |
-| AUD-011 | Perf | 300 guest upload wedding | p95 SLA | მხოლოდ landing autocannon 50c | unknown upload path | high | P1 | `lighthouse-*.json`, autocannon log | dev | L | **cant-verify** (assumption) |
-| AUD-012 | A11y | focus/contrast | WCAG AA | Lighthouse a11y 96 home | minor gaps inner pages | medium | P2 | `01-landing-390.png`, LH mobile 96 | design | M | open |
-| AUD-013 | UX | host pay locale | ka UI | fixed earlier | — | low | — | host-payment-locale.test | dev | — | fixed-in-branch |
-| AUD-014 | Duplicate | BOG webhook paths | one URL | two routes same handler | ops confusion | low | P3 | PAYMENTS-BOG.md | dev | S | open |
-| AUD-015 | Mobile | Expo push | delivery | storage only | no native push | medium | P2 | API-NEEDS | dev | L | open |
-| AUD-016 | Security | TBC callback auth | bank IP/HMAC | IP allowlist + optional secrets | spoof without IP | medium | P2 | `tbc-webhook-auth.ts` | dev | M | open |
-| AUD-017 | Security | E2E routes | disabled prod | 403 without E2E_SECRET | OK if secret unset | low | — | e2e-bypass.ts | dev | — | ✅ verified |
-| AUD-018 | Security | Admin DB explorer | admin only | cookie session | PII exposure admin | medium | P2 | admin/database | dev | — | ✅ verified |
-| AUD-019 | Upload | SVG/HTML | block | ValidationError tests | XSS reduced | — | — | security.test.ts | dev | — | ✅ verified |
-| AUD-020 | IDOR | media cross-event | deny | tenant-isolation.test | — | — | — | tenant-isolation.test | dev | — | ✅ verified |
-| AUD-021 | Email | real delivery | sink | log/outbox tests | — | — | — | email-outbox.test | dev | — | **cant-verify** |
-| AUD-022 | Backup | pg18 restore | tested | pg16 dump/restore OK counts match | version drift | medium | P2 | `05-RUNBOOK.md`, dump file | ops | S | ✅ verified (PG16) |
-| AUD-023 | PWA | offline upload queue | flush on online | client IDB | duplicate upload edge | medium | P2 | manual | dev | M | open |
-| AUD-024 | CSRF | host mutations | token required | authorizeHostMutation | — | — | — | security.test CSRF | dev | — | ✅ verified |
-| AUD-025 | Stripe/Flitt | webhooks | signature | implemented | — | — | — | billing-webhooks | dev | — | **cant-verify** (no keys) |
+| ID | Area | სად / პირობა | მოსალოდნელი | ფაქტობრივი | Impact | Sev | Evidence | Status |
+|----|------|--------------|-------------|------------|--------|-----|----------|--------|
+| AUD-001 | Payments | public TBC poll | auth required | unauth mock activate | critical | `audit-tbc-poll-security.test.ts` | **fixed-in-branch** |
+| AUD-002 | Payments | BOG unsigned callback | 401 | was 200 `{}` | critical | `bog-callback-security.test.ts` | **fixed-in-branch** |
+| AUD-003 | Payments | live BOG/TBC | E2E | no keys in VM | high | — | **cant-verify** |
+| AUD-004 | Cron | empty CRON_SECRET | refuse | was open in dev | medium | `audit-phase2.test.ts`, `cron-auth.ts` | **fixed-in-branch** |
+| AUD-005 | API | `/api/payment/stub` | protected/removed | public JSON | low | `audit-phase2.test.ts` 410 | **fixed-in-branch** |
+| AUD-006 | npm audit | high CVEs | reduce | dev chain remains | high | `docs/audit/NPM-AUDIT.md` | **fixed-in-branch** (partial) |
+| AUD-007 | Auth | hostToken rotation | product | none | medium | Q3 | **needs-decision** |
+| AUD-008 | i18n | customSlug on /e | product | guestSlug only | medium | Q4 | **needs-decision** |
+| AUD-009 | Partner | payout automation | product | manual | low | — | open |
+| AUD-010 | Data | expired media purge | cron job | none | medium | Q7 | **needs-decision** |
+| AUD-011 | Perf | 300×3MB upload load | p95 | scaled 30× tiny VM test | high | `load-test-summary.md` | **cant-verify** (scaled) |
+| AUD-012 | A11y | inner pages focus/labels | AA | global `:focus-visible`, guest/admin labels | medium | `a11y-after/*.png` | **fixed-in-branch** |
+| AUD-013 | UX | host pay locale | ka | fixed | low | host-payment-locale.test | **fixed-in-branch** |
+| AUD-014 | BOG | dual callback URL | canonical + deprecate log | two paths | low | `bog-callback-deprecation.ts` | **fixed-in-branch** |
+| AUD-015 | Mobile | Expo push send | delivery | storage only | medium | — | open |
+| AUD-016 | TBC | callback auth | HMAC if secret | IP fallback | medium | `audit-phase2.test.ts` | **fixed-in-branch** |
+| AUD-017 | E2E | routes | 403 | OK | low | e2e-bypass | ✅ verified |
+| AUD-018 | Admin | DB explorer | auth | OK | medium | — | ✅ verified |
+| AUD-019 | Upload | SVG block | reject | OK | — | security.test | ✅ verified |
+| AUD-020 | IDOR | cross-event media | deny | OK | — | tenant-isolation | ✅ verified |
+| AUD-021 | Email | SMTP live | deliver | log only | — | — | **cant-verify** |
+| AUD-022 | Backup | pg restore | counts match | PG16 VM | medium | runbook | ✅ verified |
+| AUD-023 | PWA | offline dedupe | client key + DB | duplicate uploads | medium | `guest-upload-idempotency` | **fixed-in-branch** |
+| AUD-024 | CSRF | host API | token | OK | — | security.test | ✅ verified |
+| AUD-025 | Stripe/Flitt | webhooks | live | no keys | — | — | **cant-verify** |
+| AUD-026 | Ops | duplicate HSTS | single header | app 63072000 + nginx 31536000 prod | medium | prod curl | **fixed-in-branch** (`HSTS_FROM_EDGE=1`) |
+| AUD-027 | Ops | `/api/health` | DB ping JSON | missing prod | medium | `audit-phase2.test.ts` | **fixed-in-branch** |
+| AUD-028 | Perf | marketing no-store | cache/ISR | dynamic home | medium | `revalidate=3600`, middleware Cache-Control | **fixed-in-branch** |
 
 ---
 
-## შეჯამება (რიცხვები)
+## შეჯამება
 
 | Severity | სულ | fixed-in-branch | open | needs-decision | cant-verify |
 |----------|-----|-----------------|------|----------------|-------------|
 | critical | 2 | 2 | 0 | 0 | 0 |
-| high | 4 | 0 | 2 | 0 | 2 |
-| medium | 12 | 0 | 7 | 3 | 2 |
-| low | 7 | 1 | 4 | 1 | 1 |
+| high | 4 | 1 | 0 | 0 | 3 |
+| medium | 15 | 9 | 1 | 3 | 2 |
+| low | 8 | 3 | 2 | 1 | 0 |
 
-*Phase 1 branch `audit/phase1` — production-ზე merge მფლობელის approval-ის შემდეგ.*
+*Production merge მხოლოდ owner approval-ით.*

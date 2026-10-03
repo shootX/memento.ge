@@ -56,7 +56,7 @@ Local `./data/uploads` production-ში არ გამოიყენოთ m
 - `NEXT_PUBLIC_APP_URL=https://memento.ge`
 - DNS A/AAAA → host (Fly/Railway/Cloudflare)
 - HTTPS termination at platform or Cloudflare
-- HSTS via middleware (production)
+- HSTS: middleware sets `max-age=63072000` unless `HSTS_FROM_EDGE=1` (use when nginx already sends HSTS — avoids duplicate headers on prod)
 
 ### 6. Web Push (VAPID)
 

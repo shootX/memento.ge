@@ -3,7 +3,22 @@
 **შედეგის სიმბოლოები (მოთხოვნის მიხედვით):**  
 ✅ შემოწმებულია · 🔧 გამოსწორებულია · ⚠️ ვერ შემოწმდა (მიზეზი)
 
-**გარემო:** VM, PostgreSQL local, `PAYMENT_MOCK=1`, production არ შეხებული.
+**Phase 2 (2026-10-03):** ✅/🔧/⚠️/❓ გამოყენება ქვემოთ.  
+**ტესტები:** 89 passed (`npm test`), incl. `audit-phase2.test.ts`.
+
+| ფუნქცია | შედეგი | Evidence |
+|---------|--------|----------|
+| Cron without CRON_SECRET | 🔧 401 | `audit-phase2.test.ts` |
+| Payment stub public | 🔧 410 + rate limit | `audit-phase2.test.ts` |
+| TBC HMAC when secret set | 🔧 | `audit-phase2.test.ts` |
+| BOG legacy path | 🔧 log deprecate | `bog-callback-deprecation.ts` |
+| Offline upload dedupe | 🔧 clientUploadKey | `guest-upload-idempotency` |
+| Tbilisi revealAt midnight | 🔧 | `tbilisi-time.test` in audit-phase2 |
+| `/api/health` | 🔧 unit test | `audit-phase2.test.ts` (deploy后 smoke) |
+| HSTS duplicate prod | 🔧 `HSTS_FROM_EDGE=1` | `middleware.ts`, DEPLOYMENT |
+| Marketing cache | 🔧 ISR + s-maxage | `(marketing)/layout.tsx` |
+| Full 300×3MB load | ⚠️ | `load-test-summary.md` scaled |
+| Live bank/email | ⚠️ | no credentials |
 
 ---
 
@@ -18,8 +33,7 @@
 | Guestbook text | POST | ✅ | API route + rate limit |
 | Invalid slug | 404 | ✅ | `getEventByGuestSlug` null |
 | Unpaid event upload | blocked | ✅ | `eventAllowsUpload` |
-| Offline queue | slow network | ⚠️ | PWA queue — სრული E2E flaky, AUD-023 |
-| Double submit upload | idempotent? | ⚠️ | concurrency test არა Phase 1 |
+| Offline queue dedupe | 🔧 same clientUploadKey | `audit-phase2` + upload route |
 
 ## ჰოსტი (Host)
 

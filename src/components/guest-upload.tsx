@@ -57,6 +57,7 @@ function uploadOnceXhr(
   file: File,
   guestName: string,
   guestKey: string,
+  clientUploadKey: string,
   onProgress: (p: number) => void,
 ): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -64,6 +65,7 @@ function uploadOnceXhr(
     form.append("file", file);
     if (guestName) form.append("guestName", guestName);
     form.append("guestKey", guestKey);
+    form.append("clientUploadKey", clientUploadKey);
 
     const xhr = new XMLHttpRequest();
     xhr.upload.addEventListener("progress", (e) => {
@@ -99,13 +101,14 @@ async function uploadWithRetry(
   file: File,
   guestName: string,
   guestKey: string,
+  clientUploadKey: string,
   onProgress: (p: number) => void,
   maxRetries = 4,
 ) {
   let attempt = 0;
   while (attempt <= maxRetries) {
     try {
-      await uploadOnceXhr(slug, file, guestName, guestKey, onProgress);
+      await uploadOnceXhr(slug, file, guestName, guestKey, clientUploadKey, onProgress);
       return;
     } catch (e) {
       if (e instanceof GuestUploadError && e.final) throw e;
@@ -249,10 +252,12 @@ export function GuestUpload({
         if (entry.errorMessage) return;
 
         if (offline) {
+          const clientUploadKey = crypto.randomUUID();
           await enqueueUpload({
             slug,
             guestName,
             guestKey,
+            clientUploadKey,
             fileName: entry.file.name,
             mimeType: entry.file.type || "application/octet-stream",
             blob: entry.file,
@@ -271,7 +276,8 @@ export function GuestUpload({
           ),
         );
         try {
-          await uploadWithRetry(slug, entry.file, guestName, guestKey, (p) => {
+          const clientUploadKey = crypto.randomUUID();
+          await uploadWithRetry(slug, entry.file, guestName, guestKey, clientUploadKey, (p) => {
             setQueue((q) =>
               q.map((item, idx) => (idx === i ? { ...item, progress: p } : item)),
             );
@@ -292,10 +298,12 @@ export function GuestUpload({
             return;
           }
           setUploadDeferred(true);
+          const clientUploadKey = crypto.randomUUID();
           await enqueueUpload({
             slug,
             guestName,
             guestKey,
+            clientUploadKey,
             fileName: entry.file.name,
             mimeType: entry.file.type || "application/octet-stream",
             blob: entry.file,
@@ -421,11 +429,13 @@ export function GuestUpload({
           </motion.div>
         )}
 
-        <div className="mt-5 flex gap-2">
+        <div className="mt-5 flex gap-2" role="tablist" aria-label="Guest upload sections">
           {(["photos", "book"] as const).map((id) => (
             <button
               key={id}
               type="button"
+              role="tab"
+              aria-selected={tab === id}
               onClick={() => setTab(id)}
               className={cn(
                 "flex-1 rounded-full py-2.5 text-sm font-bold transition",
@@ -629,18 +639,23 @@ export function GuestUpload({
               </motion.div>
             )}
 
-            <label className="fixed bottom-0 left-0 right-0 z-40 flex flex-col items-center gap-2 border-t border-[var(--border-soft)] bg-[var(--bg-page)]/95 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-md md:static md:mt-8 md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
+            <label
+              htmlFor="guest-photo-input"
+              className="fixed bottom-0 left-0 right-0 z-40 flex flex-col items-center gap-2 border-t border-[var(--border-soft)] bg-[var(--bg-page)]/95 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-md md:static md:mt-8 md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none"
+            >
               <span className="guest-shutter flex h-24 w-24 cursor-pointer items-center justify-center rounded-full btn-gradient transition active:scale-95 md:h-32 md:w-32">
-                <Camera className="h-12 w-12 text-[var(--accent-on)] md:h-14 md:w-14" />
+                <Camera className="h-12 w-12 text-[var(--accent-on)] md:h-14 md:w-14" aria-hidden />
               </span>
               <span className="text-center text-base font-bold md:text-lg">
                 {t(locale, touchUi ? "dropHereTouch" : "dropHere")}
               </span>
               <input
+                id="guest-photo-input"
                 type="file"
                 accept="image/jpeg,image/png,image/webp,image/heic,image/heif,video/mp4,video/quicktime,video/webm"
                 multiple={!disposable}
-                className="hidden"
+                className="sr-only focus-visible:not-sr-only"
+                aria-label={t(locale, touchUi ? "dropHereTouch" : "dropHere")}
                 onChange={(e) => e.target.files && processFiles(e.target.files)}
               />
             </label>

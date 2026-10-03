@@ -171,6 +171,7 @@ model Event {
   payments      Payment[]
   referral      PartnerReferral?
   guestQuotas   GuestShotQuota[]
+  uploadIdempotencyKeys GuestUploadIdempotency[]
   pushSubs      PushSubscription[]
   mobilePushRegs MobilePushRegistration[]
   pushPendingUploadCount Int       @default(0)
@@ -257,6 +258,19 @@ model GuestShotQuota {
   used      Int      @default(0)
 
   @@unique([eventId, guestKey])
+}
+
+/** Client-provided upload idempotency key per event (PWA offline flush dedupe). */
+model GuestUploadIdempotency {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  clientKey String
+  mediaId   String
+  createdAt DateTime @default(now())
+
+  @@unique([eventId, clientKey])
+  @@index([eventId])
 }
 
 model GuestMessage {
