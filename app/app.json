@@ -7,11 +7,13 @@
     "icon": "./assets/images/icon.png",
     "scheme": "memento",
     "userInterfaceStyle": "dark",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "ge.memento.app",
-      "associatedDomains": ["applinks:memento.ge", "applinks:www.memento.ge"]
+      "associatedDomains": [
+        "applinks:memento.ge",
+        "applinks:www.memento.ge"
+      ]
     },
     "android": {
       "package": "ge.memento.app",
@@ -26,10 +28,21 @@
           "action": "VIEW",
           "autoVerify": true,
           "data": [
-            { "scheme": "https", "host": "memento.ge", "pathPrefix": "/e" },
-            { "scheme": "memento", "host": "*", "pathPrefix": "/e" }
+            {
+              "scheme": "https",
+              "host": "memento.ge",
+              "pathPrefix": "/e"
+            },
+            {
+              "scheme": "memento",
+              "host": "*",
+              "pathPrefix": "/e"
+            }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -69,7 +82,8 @@
           "backgroundColor": "#0d0d0f"
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-image"
     ],
     "experiments": {
       "typedRoutes": true

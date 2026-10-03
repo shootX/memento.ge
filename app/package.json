@@ -10,12 +10,13 @@
     "web": "expo start --web",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "jest"
+    "test": "jest",
+    "screenshots": "EXPO_PUBLIC_INCLUDE_PREVIEW=true node scripts/screenshots.mjs"
   },
   "dependencies": {
     "@expo-google-fonts/noto-sans-georgian": "^0.4.3",
     "@expo/vector-icons": "^15.1.1",
-    "@react-native-async-storage/async-storage": "^3.1.1",
+    "@react-native-async-storage/async-storage": "2.2.0",
     "@tanstack/react-query": "^5.104.1",
     "@types/qrcode": "^1.5.6",
     "expo": "~57.0.26",
@@ -24,7 +25,7 @@
     "expo-file-system": "^57.0.7",
     "expo-font": "~57.0.4",
     "expo-haptics": "^57.0.3",
-    "expo-image": "~3.0.11",
+    "expo-image": "~57.0.5",
     "expo-image-manipulator": "^57.0.20",
     "expo-image-picker": "^57.0.20",
     "expo-keep-awake": "^57.0.2",
@@ -49,7 +50,7 @@
     "react-native-reanimated": "4.5.1",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
-    "react-native-svg": "^15.15.5",
+    "react-native-svg": "15.15.4",
     "react-native-web": "~0.21.0",
     "react-native-worklets": "0.10.1",
     "zustand": "^5.0.11"
@@ -57,11 +58,11 @@
   "devDependencies": {
     "@react-native/jest-preset": "^0.87.1",
     "@testing-library/react-native": "^13.3.3",
-    "@types/jest": "^30.0.0",
+    "@types/jest": "29.5.14",
     "@types/react": "~19.2.2",
     "eslint": "^9.36.0",
-    "eslint-config-expo": "^10.0.0",
-    "jest": "^30.2.0",
+    "eslint-config-expo": "~57.0.2",
+    "jest": "~29.7.0",
     "jest-expo": "~57.0.0",
     "playwright": "^1.49.0",
     "typescript": "~6.0.3"
