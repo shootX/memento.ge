@@ -3,7 +3,6 @@
 import { formatEventDate } from "@/lib/format-date";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { cn } from "@/lib/cn";
 import { Maximize2 } from "lucide-react";
 
 type Slide = {
@@ -31,7 +30,6 @@ export function SlideshowView({
   const [boot, setBoot] = useState<Bootstrap | null>(initialBoot);
   const [slides, setSlides] = useState<Slide[]>(initialBoot?.items ?? []);
   const [index, setIndex] = useState(0);
-  const [fade, setFade] = useState(true);
   const [newPulse, setNewPulse] = useState(false);
   const seenRef = useRef(new Set<string>());
 
@@ -57,11 +55,7 @@ export function SlideshowView({
   useEffect(() => {
     if (slides.length < 2) return;
     const t = setInterval(() => {
-      setFade(false);
-      setTimeout(() => {
-        setIndex((i) => (i + 1) % slides.length);
-        setFade(true);
-      }, 600);
+      setIndex((i) => (i + 1) % slides.length);
     }, 9000);
     return () => clearInterval(t);
   }, [slides.length]);
@@ -75,11 +69,7 @@ export function SlideshowView({
       setSlides((s) => [...s, data]);
       setNewPulse(true);
       setTimeout(() => setNewPulse(false), 2500);
-      setFade(false);
-      setTimeout(() => {
-        setIndex(slides.length);
-        setFade(true);
-      }, 300);
+      setIndex(slides.length);
     };
     return () => es.close();
   }, [slideshowToken, slides.length]);
@@ -183,10 +173,8 @@ export function SlideshowView({
           <video
             key={current.id}
             src={current.url}
-            className={cn(
-              "max-h-full max-w-full object-contain transition-opacity duration-700",
-              fade ? "opacity-100" : "opacity-0",
-            )}
+            data-testid="slideshow-slide-visible"
+            className="max-h-full max-w-full object-contain"
             autoPlay
             muted
             loop
@@ -194,15 +182,14 @@ export function SlideshowView({
           />
         ) : (
           <div
-            className={cn(
-              "relative h-full w-full transition-opacity duration-700",
-              fade ? "opacity-100" : "opacity-0",
-            )}
+            className="relative h-full w-full"
+            data-testid="slideshow-slide-visible"
           >
             <img
               key={current.id}
               src={current.url}
               alt=""
+              data-testid="slideshow-slide-image"
               className="slideshow-ken-burns max-h-full max-w-full object-contain mx-auto"
             />
           </div>

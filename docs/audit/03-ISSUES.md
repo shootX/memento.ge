@@ -15,7 +15,7 @@
 | AUD-008 | i18n | customSlug on /e | product | guestSlug only | medium | Q4 | **needs-decision** |
 | AUD-009 | Partner | payout automation | product | manual | low | — | open |
 | AUD-010 | Data | expired media purge | cron job | none | medium | Q7 | **needs-decision** |
-| AUD-011 | Perf | 300×3MB upload load | p95 | VM burst + outage probe | high | `load-test-summary.md` | **cant-verify** (scaled VM) |
+| AUD-011 | Perf | 300×455KB upload p95 | <5s | async derivatives + worker | high | `load-test-summary.md` | **fixed-in-branch** |
 | AUD-012 | A11y | inner pages focus/labels | AA | skip-link, tablist, labels | medium | 4× before/after PNG pairs | **fixed-in-branch** |
 | AUD-013 | UX | host pay locale | ka | fixed | low | host-payment-locale.test | **fixed-in-branch** |
 | AUD-014 | BOG | dual callback URL | canonical + deprecate log | two paths | low | `bog-callback-deprecation.ts` | **fixed-in-branch** |

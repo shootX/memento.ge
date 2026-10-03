@@ -1,3 +1,4 @@
+import { performance } from "perf_hooks";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
@@ -6,19 +7,19 @@ import {
 } from "@/lib/auth";
 import { getPlan } from "@/lib/plans";
 import {
-  validateAndProcessUpload,
+  validateUploadIngress,
   extensionForMime,
   ValidationError,
 } from "@/lib/upload-validation";
 import { buildMediaKey, putObject } from "@/lib/storage";
 import { clientIp, consumeUpload, handleApiError, jsonError, readFormData } from "@/lib/api-utils";
-import { processThumbnail } from "@/lib/jobs/thumbnails";
 import { isGalleryRevealed } from "@/lib/tbilisi-time";
 import {
   findExistingUploadByClientKey,
   recordUploadClientKey,
   resolveUploadIdempotencyKey,
 } from "@/lib/guest-upload-idempotency";
+import { enqueueMediaDerivativeJob } from "@/lib/jobs/media-derivatives";
 import { z } from "zod";
 
 type Params = { params: Promise<{ slug: string }> };
@@ -26,10 +27,13 @@ type Params = { params: Promise<{ slug: string }> };
 const nameSchema = z.string().max(80).optional();
 
 export async function POST(req: Request, { params }: Params) {
+  const timings: Record<string, number> = {};
+  const t0 = performance.now();
   try {
     const { slug } = await params;
     const ip = clientIp(req);
     await consumeUpload(ip, slug);
+    timings.rateLimitMs = performance.now() - t0;
 
     const event = await getEventByPublicSlug(slug);
     if (!event) return jsonError(404, "ღონისძიება ვერ მოიძებნა", "NOT_FOUND");
@@ -45,6 +49,8 @@ export async function POST(req: Request, { params }: Params) {
     const formParsed = await readFormData(req);
     if (formParsed instanceof Response) return formParsed;
     const form = formParsed;
+    timings.formMs = performance.now() - t0;
+
     const clientUploadKey = resolveUploadIdempotencyKey(req, form);
     if (clientUploadKey) {
       const existing = await findExistingUploadByClientKey(event.id, clientUploadKey);
@@ -91,44 +97,47 @@ export async function POST(req: Request, { params }: Params) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const validated = await validateAndProcessUpload(
+    timings.readBodyMs = performance.now() - t0;
+
+    const ingress = await validateUploadIngress(
       buffer,
       file.type,
       plan.maxBytesPerFile,
       file.name,
     );
+    timings.ingressMs = performance.now() - t0;
 
-    const newTotal = event.totalBytes + validated.buffer.length;
+    const newTotal = event.totalBytes + buffer.length;
     if (newTotal > plan.maxTotalBytes) {
       throw new ValidationError("STORAGE_LIMIT");
     }
 
     const mediaId = crypto.randomUUID();
-    const ext = extensionForMime(validated.mime);
+    const ext = extensionForMime(ingress.mime);
     const storageKey = buildMediaKey(event.id, mediaId, ext);
-    const thumbKey = `${storageKey.replace(/\.[^.]+$/, "")}_thumb.jpg`;
-    await putObject(storageKey, validated.buffer, validated.mime);
-    if (validated.kind === "image") {
-      await putObject(thumbKey, await processThumbnail(validated.buffer), "image/jpeg");
-    }
+    await putObject(storageKey, buffer, ingress.mime);
+    timings.storageMs = performance.now() - t0;
 
     const status = event.moderateUploads ? "pending" : "approved";
+    const needsDerivatives = ingress.kind === "image";
 
     const media = await prisma.media.create({
       data: {
         id: mediaId,
         eventId: event.id,
         storageKey,
-        thumbKey: validated.kind === "image" ? thumbKey : null,
-        mimeType: validated.mime,
-        size: validated.buffer.length,
+        thumbKey: null,
+        mimeType: ingress.mime,
+        size: buffer.length,
         guestName,
         guestKey,
-        width: validated.kind === "image" ? validated.width : null,
-        height: validated.kind === "image" ? validated.height : null,
+        width: null,
+        height: null,
         status,
+        derivativesReady: !needsDerivatives,
       },
     });
+    timings.dbMs = performance.now() - t0;
 
     if (event.disposableEnabled && event.shotsPerGuest > 0) {
       await prisma.guestShotQuota.update({
@@ -141,9 +150,13 @@ export async function POST(req: Request, { params }: Params) {
       where: { id: event.id },
       data: {
         uploadCount: { increment: 1 },
-        totalBytes: { increment: validated.buffer.length },
+        totalBytes: { increment: buffer.length },
       },
     });
+
+    if (needsDerivatives) {
+      await enqueueMediaDerivativeJob(media.id);
+    }
 
     if (status === "approved") {
       const { notifyBatchedUploads } = await import("@/lib/push-server");
@@ -154,7 +167,20 @@ export async function POST(req: Request, { params }: Params) {
       await recordUploadClientKey(event.id, clientUploadKey, media.id);
     }
 
-    return NextResponse.json({ id: media.id, ok: true, status });
+    timings.totalMs = performance.now() - t0;
+    const res = NextResponse.json({
+      id: media.id,
+      ok: true,
+      status,
+      processing: needsDerivatives && !media.derivativesReady,
+    });
+    res.headers.set(
+      "Server-Timing",
+      Object.entries(timings)
+        .map(([k, v]) => `${k};dur=${v.toFixed(1)}`)
+        .join(", "),
+    );
+    return res;
   } catch (e) {
     return handleApiError(e);
   }

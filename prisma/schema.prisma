@@ -242,12 +242,27 @@ model Media {
   durationSec Float?
   status      String   @default("approved") // pending | approved | rejected
   highlight   Boolean  @default(false)
+  derivativesReady Boolean @default(true)
   createdAt   DateTime @default(now())
 
   reactions MediaReaction[]
+  derivativeJob MediaDerivativeJob?
 
   @@index([eventId, createdAt])
   @@index([eventId, status])
+}
+
+model MediaDerivativeJob {
+  id        String   @id @default(cuid())
+  mediaId   String   @unique
+  media     Media    @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  status    String   @default("pending") // pending | processing | done | failed
+  attempts  Int      @default(0)
+  lastError String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, createdAt])
 }
 
 model GuestShotQuota {

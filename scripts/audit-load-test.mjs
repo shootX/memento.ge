@@ -101,6 +101,8 @@ async function uploadBatch(concurrency, jpeg, label) {
   const ms = [];
   let ok = 0;
   let err = 0;
+  let sampleErr = "";
+  const serverTimings = [];
   const rssBefore = await probeNodeServerRss();
   await Promise.all(
     Array.from({ length: concurrency }, async (_, i) => {
@@ -115,10 +117,13 @@ async function uploadBatch(concurrency, jpeg, label) {
       ms.push(r.ms);
       if (r.ok) ok++;
       else err++;
+      if (!r.ok && !sampleErr) sampleErr = `${r.status}:${r.text?.slice(0, 80)}`;
+      const st = r.headers?.get("server-timing");
+      if (st) serverTimings.push(st);
     }),
   );
   const rssAfter = await probeNodeServerRss();
-  return { ok, err, ms, rssBefore, rssAfter, sizeKb: Math.round(jpeg.length / 1024) };
+  return { ok, err, ms, rssBefore, rssAfter, sizeKb: Math.round(jpeg.length / 1024), sampleErr, serverTimings };
 }
 
 async function main() {
@@ -128,6 +133,15 @@ async function main() {
     `Base: ${BASE}`,
     `HEAD: ${gitHead}`,
     `Date: ${new Date().toISOString()}`,
+    "",
+    "## Upload throughput (AUD-011 HIGH)",
+    "",
+    "### Before (sync sharp + thumb in POST — prior audit run)",
+    "- 300×~455KB: p50 **30739ms**, p95 **30818ms**, ok 300",
+    "- 100×~2.7MB: p50 **22039ms**, p95 **22072ms**, ok 100",
+    "- Bottleneck: `validateAndProcessUpload` (sharp/HEIC) + thumb + storage in request path",
+    "",
+    "### After (ingress save + async `MediaDerivativeJob` worker, UV_THREADPOOL=4)",
     "",
   ];
 
@@ -161,9 +175,10 @@ async function main() {
   const small = await uploadBatch(Number(process.env.LOAD_TEST_SMALL ?? 300), jpeg500, "500kb");
   lines.push(
     `## Upload burst (${small.ok + small.err} concurrent, ~${small.sizeKb}KB JPEG)`,
-    `- ok: ${small.ok} · errors: ${small.err}`,
+    `- ok: ${small.ok} · errors: ${small.err}${small.sampleErr ? ` · sample: \`${small.sampleErr}\`` : ""}`,
     `- p50 ${pct(small.ms, 50).toFixed(0)}ms · p95 ${pct(small.ms, 95).toFixed(0)}ms`,
     `- next RSS MB: before ${small.rssBefore ?? "?"} → after ${small.rssAfter ?? "?"}`,
+    small.serverTimings[0] ? `- Server-Timing (sample): \`${small.serverTimings[0]}\`` : "",
     "",
   );
 
@@ -173,7 +188,7 @@ async function main() {
     const large = await uploadBatch(Number(process.env.LOAD_TEST_LARGE ?? 100), jpeg2500, "2.5mb");
     lines.push(
       `## Upload burst (${large.ok + large.err} concurrent, ~${large.sizeKb}KB JPEG)`,
-      `- ok: ${large.ok} · errors: ${large.err}`,
+      `- ok: ${large.ok} · errors: ${large.err}${large.sampleErr ? ` · sample: \`${large.sampleErr}\`` : ""}`,
       `- p50 ${pct(large.ms, 50).toFixed(0)}ms · p95 ${pct(large.ms, 95).toFixed(0)}ms`,
       `- next RSS MB: before ${large.rssBefore ?? "?"} → after ${large.rssAfter ?? "?"}`,
       "",
