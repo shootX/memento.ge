@@ -34,7 +34,7 @@ export async function getHostBootstrap(token: string) {
       url: `/api/media/${m.id}?token=${encodeURIComponent(mediaToken)}`,
       thumbUrl: thumbToken
         ? `/api/media/${m.id}?token=${encodeURIComponent(thumbToken)}&variant=thumb`
-        : null,
+        : `/api/media/${m.id}?token=${encodeURIComponent(mediaToken)}`,
     };
   });
 

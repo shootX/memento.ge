@@ -35,7 +35,12 @@ await page.locator("[data-testid='host-ready']").waitFor({ timeout: 120_000 });
 await shot(page, "host-dashboard", showFocus ? ".skip-link" : null);
 
 await page.goto(`${base}/slideshow/demo-slideshow-token-memento`, { waitUntil: "domcontentloaded" });
-await page.locator("[data-testid='slideshow-waiting'], [data-testid='slideshow-ready']").first().waitFor({ timeout: 120_000 });
+await page.locator("[data-testid='slideshow-ready']").waitFor({ timeout: 120_000 });
+await page.locator("[data-testid='slideshow-slide-image']").waitFor({ timeout: 120_000 });
+await page.waitForFunction(() => {
+  const img = document.querySelector('[data-testid="slideshow-slide-image"]');
+  return img instanceof HTMLImageElement && img.complete && img.naturalWidth > 0;
+});
 await shot(page, "slideshow", showFocus ? ".skip-link" : null);
 
 await page.goto(`${base}/admin`, { waitUntil: "domcontentloaded" });

@@ -33,7 +33,7 @@ export async function GET(req: Request, { params }: Params) {
         url: `/api/media/${m.id}?token=${encodeURIComponent(mediaToken)}`,
         thumbUrl: thumbToken
           ? `/api/media/${m.id}?token=${encodeURIComponent(thumbToken)}&variant=thumb`
-          : null,
+          : `/api/media/${m.id}?token=${encodeURIComponent(mediaToken)}`,
       };
     });
 

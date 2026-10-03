@@ -31,7 +31,7 @@ export async function getPublicGalleryBootstrap(slug: string) {
       url: `/api/media/${m.id}?token=${encodeURIComponent(signMediaAccess(m.id, exp))}`,
       thumbUrl: m.thumbKey
         ? `/api/media/${m.id}?token=${encodeURIComponent(signMediaAccess(`${m.id}:thumb`, exp))}&variant=thumb`
-        : null,
+        : `/api/media/${m.id}?token=${encodeURIComponent(signMediaAccess(m.id, exp))}`,
       guestName: m.guestName,
     })),
   };

@@ -105,6 +105,35 @@ async function decodeImageBuffer(buffer: Buffer, mime: string): Promise<Buffer> 
   }
 }
 
+export async function validateUploadIngress(
+  buffer: Buffer,
+  declaredMime: string,
+  maxBytes: number,
+  fileName?: string,
+): Promise<{ mime: string; kind: "image" | "video" }> {
+  if (buffer.length > maxBytes) {
+    throw new ValidationError("FILE_TOO_LARGE", maxBytes);
+  }
+  if (buffer.length < 12) {
+    throw new ValidationError("FILE_TOO_SMALL");
+  }
+
+  const mime = await resolveMime(buffer, declaredMime, fileName);
+
+  if (BLOCKED.has(mime) || mime.includes("svg") || mime.includes("html")) {
+    throw new ValidationError("FILE_TYPE_NOT_ALLOWED");
+  }
+
+  const isImage = ALLOWED_IMAGE.has(mime) || bufferLooksHeic(buffer);
+  const isVideo = ALLOWED_VIDEO.has(mime);
+
+  if (!isImage && !isVideo) {
+    throw new ValidationError("UNSUPPORTED_FORMAT");
+  }
+
+  return { mime, kind: isImage ? "image" : "video" };
+}
+
 export async function validateAndProcessUpload(
   buffer: Buffer,
   declaredMime: string,

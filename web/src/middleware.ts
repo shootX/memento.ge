@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { buildCsp } from "@/lib/csp";
+import {
+  isMarketingCachePath,
+  isPrivateAppPath,
+  MARKETING_CACHE_CONTROL,
+} from "@/lib/marketing-cache";
 
 export function middleware(request: NextRequest) {
   const isDev = process.env.NODE_ENV === "development";
@@ -54,21 +59,13 @@ export function middleware(request: NextRequest) {
     );
   }
 
-  const marketingCache =
-    pathname === "/" ||
-    pathname === "/pricing" ||
-    pathname === "/faq" ||
-    pathname === "/for-partners" ||
-    /^\/(en|ru)(\/|$)/.test(pathname);
   if (
-    marketingCache &&
+    isMarketingCachePath(pathname) &&
+    !isPrivateAppPath(pathname) &&
     request.method === "GET" &&
     !pathname.startsWith("/api/")
   ) {
-    response.headers.set(
-      "Cache-Control",
-      "public, s-maxage=3600, stale-while-revalidate=86400",
-    );
+    response.headers.set("Cache-Control", MARKETING_CACHE_CONTROL);
   }
 
   const hostMatch = pathname.match(/^\/host\/([A-Za-z0-9_-]{24,128})(?:\/|$)/);
