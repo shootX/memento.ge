@@ -4,6 +4,7 @@ export type UploadErrorCode =
   | "FILE_TYPE_NOT_ALLOWED"
   | "INVALID_IMAGE"
   | "UNSUPPORTED_FORMAT"
+  | "HEIC_UNSUPPORTED"
   | "STORAGE_LIMIT";
 
 export function maxMegabytesLabel(maxBytes: number): string {
@@ -24,6 +25,8 @@ export function uploadErrorMessageKa(code: UploadErrorCode, maxBytes?: number): 
       return "სურათი ვერ გაიხსნა. სცადეთ სხვა ფოტო.";
     case "UNSUPPORTED_FORMAT":
       return "ფორმატი არ არის მხარდაჭერილი. გამოიყენეთ JPG, PNG, HEIC ან MP4.";
+    case "HEIC_UNSUPPORTED":
+      return "iPhone HEIC ფოტო ვერ გაიხსნა. სცადეთ Settings → Camera → Formats → Most Compatible (JPEG), ან გადაიღეთ თავიდან.";
     case "STORAGE_LIMIT":
       return "ალბომის მეხსიერების ლიმიტი ამოიწურა.";
     default:

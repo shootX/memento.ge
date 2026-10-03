@@ -1,5 +1,6 @@
 "use client";
 
+import confetti from "canvas-confetti";
 import { useCallback, useEffect, useState } from "react";
 import imageCompression from "browser-image-compression";
 import { motion } from "framer-motion";
@@ -184,13 +185,11 @@ export function GuestUpload({
     const done = queue.length > 0 && queue.every((q) => q.status === "done");
     if (!done) return;
     localStorage.setItem("memento_guest_has_uploaded", "1");
-    void import("canvas-confetti").then(({ default: confettiFn }) => {
-      confettiFn({
-        particleCount: 120,
-        spread: 70,
-        origin: { y: 0.65 },
-        colors: ["#c4ff0d", "#a8e600", "#c1ff72", "#ffffff"],
-      });
+    confetti({
+      particleCount: 120,
+      spread: 70,
+      origin: { y: 0.65 },
+      colors: ["#c4ff0d", "#a8e600", "#c1ff72", "#ffffff"],
     });
   }, [allDone, queue, reduce]);
 

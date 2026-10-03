@@ -11,7 +11,7 @@ import {
   ValidationError,
 } from "@/lib/upload-validation";
 import { buildMediaKey, putObject } from "@/lib/storage";
-import { clientIp, consumeUpload, handleApiError, jsonError } from "@/lib/api-utils";
+import { clientIp, consumeUpload, handleApiError, jsonError, readFormData } from "@/lib/api-utils";
 import { processThumbnail } from "@/lib/jobs/thumbnails";
 import { isGalleryRevealed } from "@/lib/tbilisi-time";
 import {
@@ -42,7 +42,9 @@ export async function POST(req: Request, { params }: Params) {
     }
 
     const plan = getPlan(event.planTier);
-    const form = await req.formData();
+    const formParsed = await readFormData(req);
+    if (formParsed instanceof Response) return formParsed;
+    const form = formParsed;
     const clientUploadKey = normalizeClientUploadKey(form.get("clientUploadKey"));
     if (clientUploadKey) {
       const existing = await findExistingUploadByClientKey(event.id, clientUploadKey);

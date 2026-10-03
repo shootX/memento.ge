@@ -57,6 +57,7 @@ Local `./data/uploads` production-ში არ გამოიყენოთ m
 - DNS A/AAAA → host (Fly/Railway/Cloudflare)
 - HTTPS termination at platform or Cloudflare
 - HSTS: middleware sets `max-age=63072000` unless `HSTS_FROM_EDGE=1` (use when nginx already sends HSTS — avoids duplicate headers on prod)
+- **PWA:** `npm run build` generates `public/sw.js` (gitignored — do not commit; deploy always runs build before start)
 
 ### 6. Web Push (VAPID)
 
