@@ -42,6 +42,7 @@ export function uploadGuestFile(
   guestKey: string,
   onProgress: UploadProgressHandler,
   maxRetries = 4,
+  idempotencyKey?: string,
 ): Promise<void> {
   if (config.useMockApi) {
     return mockApi.uploadGuest().then(() => {
@@ -62,6 +63,9 @@ export function uploadGuestFile(
       } as unknown as Blob);
       if (guestName) form.append('guestName', guestName);
       form.append('guestKey', guestKey);
+      if (idempotencyKey) {
+        form.append('idempotencyKey', idempotencyKey);
+      }
 
       xhr.upload.addEventListener('progress', (ev) => {
         if (ev.lengthComputable && ev.total > 0) {
@@ -96,6 +100,9 @@ export function uploadGuestFile(
       });
 
       xhr.open('POST', url);
+      if (idempotencyKey) {
+        xhr.setRequestHeader('Idempotency-Key', idempotencyKey);
+      }
       xhr.send(form);
     });
 
@@ -104,6 +111,7 @@ export function uploadGuestFile(
 
 export type QueueItem = {
   id: string;
+  idempotencyKey: string;
   file: UploadFileInput;
   status: 'pending' | 'uploading' | 'done' | 'error';
   progress: number;
@@ -129,9 +137,17 @@ export async function runUploadQueue(
 
       onUpdate(item.id, { status: 'uploading', progress: 0 });
       try {
-        await uploadGuestFile(slug, item.file, guestName, guestKey, (p) => {
-          onUpdate(item.id, { progress: p });
-        });
+        await uploadGuestFile(
+          slug,
+          item.file,
+          guestName,
+          guestKey,
+          (p) => {
+            onUpdate(item.id, { progress: p });
+          },
+          4,
+          item.idempotencyKey,
+        );
         onUpdate(item.id, { status: 'done', progress: 100 });
       } catch (e) {
         const msg = e instanceof UploadError ? e.message : 'Upload failed';

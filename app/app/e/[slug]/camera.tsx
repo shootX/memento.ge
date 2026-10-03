@@ -1,11 +1,13 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
+import * as Network from 'expo-network';
 import { useLocalSearchParams } from 'expo-router';
-import { useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
+  AppState,
   Platform,
   Pressable,
   StyleSheet,
@@ -18,6 +20,14 @@ import { CameraControlButton } from '@/src/components/guest/CameraControlButton'
 import { ShutterButton } from '@/src/components/guest/ShutterButton';
 import { SEED } from '@/src/constants/images';
 import { DEMO_GUEST_KEY, isDemoSlug } from '@/src/lib/demo';
+import {
+  clearUploadQueue,
+  createIdempotencyKey,
+  loadUploadQueue,
+  saveUploadQueue,
+  snapshotToQueueItems,
+  stageUploadFile,
+} from '@/src/lib/upload-persist';
 import { type QueueItem, runUploadQueue } from '@/src/lib/upload-queue';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
@@ -39,6 +49,7 @@ export default function GuestCameraScreen() {
       ? [
           {
             id: 'p1',
+            idempotencyKey: 'preview-p1',
             file: {
               uri: SEED.photo1,
               name: 'wedding-2.jpg',
@@ -49,6 +60,7 @@ export default function GuestCameraScreen() {
           },
           {
             id: 'p2',
+            idempotencyKey: 'preview-p2',
             file: {
               uri: SEED.photo2,
               name: 'wedding-6.jpg',
@@ -62,21 +74,103 @@ export default function GuestCameraScreen() {
   );
   const [uploading, setUploading] = useState(preview === 'upload');
   const [done, setDone] = useState(false);
+  const uploadingRef = useRef(false);
+  const queueRef = useRef(queue);
+  queueRef.current = queue;
 
+  const guestKeyResolved = guestKey || (isDemoSlug(slug) ? DEMO_GUEST_KEY : '');
   const pending = useMemo(() => queue.filter((q) => q.status !== 'done'), [queue]);
 
-  const enqueueFiles = (assets: ImagePicker.ImagePickerAsset[]) => {
-    const items: QueueItem[] = assets.map((a) => ({
-      id: `${Date.now()}-${a.assetId ?? Math.random()}`,
-      file: {
-        uri: a.uri,
-        name: a.fileName ?? `photo-${Date.now()}.jpg`,
-        mimeType: a.mimeType ?? 'image/jpeg',
-      },
-      status: 'pending',
-      progress: 0,
-    }));
-    setQueue((prev) => [...prev, ...items]);
+  const persistQueue = useCallback(
+    async (items: QueueItem[]) => {
+      if (preview === 'upload') return;
+      await saveUploadQueue(
+        { slug, guestName: guestName ?? '', guestKey: guestKeyResolved },
+        items,
+      );
+    },
+    [slug, guestName, guestKeyResolved, preview],
+  );
+
+  useEffect(() => {
+    if (preview === 'upload') return;
+    void loadUploadQueue(slug).then((snap) => {
+      if (!snap) return;
+      const restored = snapshotToQueueItems(snap);
+      if (restored.length) setQueue(restored);
+    });
+  }, [slug, preview]);
+
+  const startUpload = useCallback(async () => {
+    if (!queueRef.current.length || preview === 'upload' || uploadingRef.current) return;
+    uploadingRef.current = true;
+    setUploading(true);
+    const items = [...queueRef.current];
+    const update = (id: string, patch: Partial<QueueItem>) => {
+      setQueue((prev) => {
+        const next = prev.map((item) => (item.id === id ? { ...item, ...patch } : item));
+        queueRef.current = next;
+        void persistQueue(next);
+        return next;
+      });
+    };
+    const gk = guestKeyResolved;
+    await runUploadQueue(items, slug, guestName ?? '', gk, update, 3);
+    uploadingRef.current = false;
+    setUploading(false);
+    setDone(true);
+    const remaining = queueRef.current.filter((i) => i.status !== 'done');
+    if (remaining.length === 0) await clearUploadQueue(slug);
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  }, [slug, guestName, guestKeyResolved, preview, persistQueue]);
+
+  useEffect(() => {
+    if (preview === 'upload') return;
+    const onActive = (state: string) => {
+      if (state === 'active' && pending.length > 0) void startUpload();
+    };
+    const sub = AppState.addEventListener('change', onActive);
+    return () => sub.remove();
+  }, [pending.length, preview, startUpload]);
+
+  useEffect(() => {
+    if (preview === 'upload') return;
+    const timer = setInterval(() => {
+      void Network.getNetworkStateAsync().then((net) => {
+        if (net.isConnected && net.isInternetReachable !== false && pending.length > 0) {
+          void startUpload();
+        }
+      });
+    }, 8000);
+    return () => clearInterval(timer);
+  }, [pending.length, preview, startUpload]);
+
+  const enqueueFiles = async (assets: ImagePicker.ImagePickerAsset[]) => {
+    const items: QueueItem[] = [];
+    for (const a of assets) {
+      const idempotencyKey = createIdempotencyKey();
+      const stagedUri =
+        preview === 'upload'
+          ? a.uri
+          : await stageUploadFile(a.uri, idempotencyKey);
+      items.push({
+        id: `${Date.now()}-${a.assetId ?? Math.random()}`,
+        idempotencyKey,
+        file: {
+          uri: stagedUri,
+          name: a.fileName ?? `photo-${Date.now()}.jpg`,
+          mimeType: a.mimeType ?? 'image/jpeg',
+        },
+        status: 'pending',
+        progress: 0,
+      });
+    }
+    setQueue((prev) => {
+      const next = [...prev, ...items];
+      queueRef.current = next;
+      void persistQueue(next);
+      return next;
+    });
     setDone(false);
   };
 
@@ -86,7 +180,7 @@ export default function GuestCameraScreen() {
       allowsMultipleSelection: true,
       quality: 1,
     });
-    if (!res.canceled) enqueueFiles(res.assets);
+    if (!res.canceled) await enqueueFiles(res.assets);
   };
 
   const takePhoto = async () => {
@@ -96,7 +190,7 @@ export default function GuestCameraScreen() {
     }
     const photo = await cameraRef.current?.takePictureAsync({ quality: 1 });
     if (photo?.uri) {
-      enqueueFiles([
+      await enqueueFiles([
         {
           uri: photo.uri,
           width: photo.width,
@@ -108,19 +202,6 @@ export default function GuestCameraScreen() {
     }
   };
 
-  const startUpload = async () => {
-    if (!queue.length || preview === 'upload') return;
-    setUploading(true);
-    const update = (id: string, patch: Partial<QueueItem>) => {
-      setQueue((prev) => prev.map((item) => (item.id === id ? { ...item, ...patch } : item)));
-    };
-    const gk = guestKey || (isDemoSlug(slug) ? DEMO_GUEST_KEY : '');
-    await runUploadQueue(queue, slug, guestName ?? '', gk, update, 3);
-    setUploading(false);
-    setDone(true);
-    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-  };
-
   const showCamera = permission?.granted && Platform.OS !== 'web';
 
   if (!showCamera && !permission?.granted) {
@@ -128,7 +209,12 @@ export default function GuestCameraScreen() {
       <Screen testID="camera-permission">
         <Text style={styles.permHint}>{t('cameraPermission')}</Text>
         <PrimaryButton label={t('grantPermission')} onPress={() => void requestPermission()} />
-        <Pressable onPress={() => void pickGallery()} style={styles.permGallery}>
+        <Pressable
+          onPress={() => void pickGallery()}
+          style={styles.permGallery}
+          accessibilityRole="button"
+          accessibilityLabel={t('gallery')}
+        >
           <Text style={styles.sideBtn}>{t('gallery')}</Text>
         </Pressable>
       </Screen>
@@ -159,10 +245,15 @@ export default function GuestCameraScreen() {
       )}
 
       <View style={styles.controls}>
-        <Pressable onPress={() => void pickGallery()}>
+        <Pressable
+          onPress={() => void pickGallery()}
+          style={styles.galleryHit}
+          accessibilityRole="button"
+          accessibilityLabel={t('gallery')}
+        >
           <Text style={styles.sideBtn}>{t('gallery')}</Text>
         </Pressable>
-        <ShutterButton onPress={() => void takePhoto()} />
+        <ShutterButton label={t('takePhoto')} onPress={() => void takePhoto()} />
         <View style={styles.rightCol}>
           <CameraControlButton
             icon="camera-reverse-outline"
@@ -185,7 +276,12 @@ export default function GuestCameraScreen() {
       </View>
 
       {queue.length > 0 && !uploading && !done && preview !== 'upload' && (
-        <Pressable style={styles.uploadFab} onPress={() => void startUpload()}>
+        <Pressable
+          style={styles.uploadFab}
+          onPress={() => void startUpload()}
+          accessibilityRole="button"
+          accessibilityLabel={t('upload')}
+        >
           <Text style={styles.uploadFabText}>{t('upload')}</Text>
         </Pressable>
       )}
@@ -238,6 +334,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     zIndex: 2,
   },
+  galleryHit: { minWidth: 44, minHeight: 44, justifyContent: 'center', alignItems: 'center' },
   sideBtn: {
     color: colors.fg,
     fontFamily: fonts.bodyMedium,
@@ -256,9 +353,11 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 999,
     zIndex: 2,
+    minHeight: 44,
+    justifyContent: 'center',
   },
   uploadFabText: { color: colors.limeOn, fontWeight: '800', fontFamily: fonts.bodyMedium },
   spinner: { position: 'absolute', bottom: 100, alignSelf: 'center' },
   permHint: { color: colors.fg, marginBottom: 12, fontFamily: fonts.bodyMedium, fontWeight: '700' },
-  permGallery: { marginTop: 16, alignSelf: 'center' },
+  permGallery: { marginTop: 16, alignSelf: 'center', minHeight: 44, justifyContent: 'center' },
 });
