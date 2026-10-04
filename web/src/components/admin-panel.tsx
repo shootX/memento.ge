@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ColorfulShell } from "@/components/colorful-shell";
 import { AdminDatabaseExplorer } from "@/components/admin-database-explorer";
+import { AdminPasswordResetForm } from "@/components/admin-password-reset-form";
 import type { AdminDatabaseSnapshot } from "@/lib/admin-database-explorer";
 import { cn } from "@/lib/cn";
 
@@ -190,8 +191,15 @@ export function AdminPanel({
         )}
 
         {tab === "database" && (
-          <div className="mt-8">
+          <div className="mt-8 space-y-8">
             <AdminDatabaseExplorer snapshot={database} />
+            <div className="card-chunky p-6" data-testid="admin-password-reset">
+              <h2 className="text-lg font-bold">Password reset link</h2>
+              <p className="mt-1 text-sm text-[var(--text-muted)]">
+                ერთჯერადი ბმული, როცა ელფოსტა არ მუშაობს (audit log).
+              </p>
+              <AdminPasswordResetForm />
+            </div>
           </div>
         )}
       </div>

@@ -26,6 +26,7 @@ type Copy = {
   navPartners: string;
   navFaq: string;
   login: string;
+  navSignup: string;
   wordmark: string;
   menuAria: string;
 };
@@ -55,6 +56,7 @@ const copy: Record<LandingLocale, Copy> = {
     navPartners: "პარტნიორებს",
     navFaq: "კითხვები",
     login: "შესვლა",
+    navSignup: "რეგისტრაცია",
     wordmark: "მემენტო",
     menuAria: "მენიუ",
   },
@@ -82,6 +84,7 @@ const copy: Record<LandingLocale, Copy> = {
     navPartners: "Partners",
     navFaq: "FAQ",
     login: "Log in",
+    navSignup: "Sign up",
     wordmark: "Memento",
     menuAria: "Menu",
   },
@@ -109,6 +112,7 @@ const copy: Record<LandingLocale, Copy> = {
     navPartners: "Партнёрам",
     navFaq: "Вопросы",
     login: "Войти",
+    navSignup: "Регистрация",
     wordmark: "Memento",
     menuAria: "Меню",
   },

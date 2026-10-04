@@ -1,33 +1,54 @@
 export type AuthLocale = "ka" | "en" | "ru";
 
-const dict: Record<
-  AuthLocale,
-  {
-    loginTitle: string;
-    signupTitle: string;
-    magicSubtitle: string;
-    emailPlaceholder: string;
-    sendLink: string;
-    checkEmail: string;
-    resent: string;
-    orContinue: string;
-    google: string;
-    facebook: string;
-    apple: string;
-    backHome: string;
-    oauthEmailTitle: string;
-    oauthEmailSubtitle: string;
-    signupPrompt: string;
-    loginPrompt: string;
-    signupLink: string;
-    loginLink: string;
-  }
-> = {
+type AuthDict = {
+  loginTitle: string;
+  signupTitle: string;
+  passwordSubtitle: string;
+  magicSubtitle: string;
+  emailPlaceholder: string;
+  namePlaceholder: string;
+  passwordLabel: string;
+  passwordConfirmLabel: string;
+  passwordHintLength: string;
+  loginSubmit: string;
+  signupSubmit: string;
+  loginFailed: string;
+  sendLink: string;
+  checkEmail: string;
+  resent: string;
+  orContinue: string;
+  google: string;
+  facebook: string;
+  apple: string;
+  backHome: string;
+  oauthEmailTitle: string;
+  oauthEmailSubtitle: string;
+  signupPrompt: string;
+  loginPrompt: string;
+  signupLink: string;
+  loginLink: string;
+  forgotPassword: string;
+  forgotTitle: string;
+  forgotSubtitle: string;
+  forgotNoEmail: string;
+  resetTitle: string;
+  resetSubmit: string;
+};
+
+const dict: Record<AuthLocale, AuthDict> = {
   ka: {
     loginTitle: "შესვლა",
     signupTitle: "რეგისტრაცია",
-    magicSubtitle: "მაგიკ ლინკი ელფოსტაზე",
+    passwordSubtitle: "ელფოსტა და პაროლი",
+    magicSubtitle: "ან მაგიკ ლინკით",
     emailPlaceholder: "you@example.com",
+    namePlaceholder: "სახელი (არასავალდებულო)",
+    passwordLabel: "პაროლი",
+    passwordConfirmLabel: "გაიმეორე პაროლი",
+    passwordHintLength: "მინიმუმ 8 სიმბოლო",
+    loginSubmit: "შესვლა",
+    signupSubmit: "რეგისტრაცია",
+    loginFailed: "არასწორი ელფოსტა ან პაროლი",
     sendLink: "ლინკის გაგზავნა",
     checkEmail: "შეამოწმე ელფოსტა 📬",
     resent: "ხელახლა გაგზავნა",
@@ -43,12 +64,27 @@ const dict: Record<
     loginPrompt: "უკვე გაქვს ანგარიში?",
     signupLink: "რეგისტრაცია",
     loginLink: "შესვლა",
+    forgotPassword: "დაგავიწყდა პაროლი?",
+    forgotTitle: "პაროლის აღდგენა",
+    forgotSubtitle: "გამოგიგზავნით ბმულს ელფოსტაზე",
+    forgotNoEmail:
+      "ელფოსტის გაგზავნა არ არის კონფიგურირებული — მიმართეთ ადმინს ერთჯერადი reset ბმულისთვის.",
+    resetTitle: "ახალი პაროლი",
+    resetSubmit: "შენახვა",
   },
   en: {
     loginTitle: "Log in",
     signupTitle: "Sign up",
-    magicSubtitle: "Magic link to your email",
+    passwordSubtitle: "Email and password",
+    magicSubtitle: "Magic link (optional)",
     emailPlaceholder: "you@example.com",
+    namePlaceholder: "Name (optional)",
+    passwordLabel: "Password",
+    passwordConfirmLabel: "Confirm password",
+    passwordHintLength: "At least 8 characters",
+    loginSubmit: "Log in",
+    signupSubmit: "Create account",
+    loginFailed: "Wrong email or password",
     sendLink: "Send link",
     checkEmail: "Check your email 📬",
     resent: "Resend link",
@@ -64,12 +100,26 @@ const dict: Record<
     loginPrompt: "Already have an account?",
     signupLink: "Sign up",
     loginLink: "Log in",
+    forgotPassword: "Forgot password?",
+    forgotTitle: "Reset password",
+    forgotSubtitle: "We will email you a reset link",
+    forgotNoEmail: "Email is not configured — ask admin for a one-time reset link.",
+    resetTitle: "Choose a new password",
+    resetSubmit: "Save password",
   },
   ru: {
     loginTitle: "Вход",
     signupTitle: "Регистрация",
-    magicSubtitle: "Magic link на email",
+    passwordSubtitle: "Email и пароль",
+    magicSubtitle: "Magic link (опционально)",
     emailPlaceholder: "you@example.com",
+    namePlaceholder: "Имя (необязательно)",
+    passwordLabel: "Пароль",
+    passwordConfirmLabel: "Повторите пароль",
+    passwordHintLength: "Минимум 8 символов",
+    loginSubmit: "Войти",
+    signupSubmit: "Создать аккаунт",
+    loginFailed: "Неверный email или пароль",
     sendLink: "Отправить ссылку",
     checkEmail: "Проверьте почту 📬",
     resent: "Отправить снова",
@@ -85,10 +135,16 @@ const dict: Record<
     loginPrompt: "Уже есть аккаунт?",
     signupLink: "Регистрация",
     loginLink: "Вход",
+    forgotPassword: "Забыли пароль?",
+    forgotTitle: "Сброс пароля",
+    forgotSubtitle: "Отправим ссылку на email",
+    forgotNoEmail: "Почта не настроена — попросите админа одноразовую ссылку.",
+    resetTitle: "Новый пароль",
+    resetSubmit: "Сохранить",
   },
 };
 
-export function authT(locale: AuthLocale, key: keyof (typeof dict)["ka"]): string {
+export function authT(locale: AuthLocale, key: keyof AuthDict): string {
   return dict[locale][key] ?? dict.ka[key];
 }
 

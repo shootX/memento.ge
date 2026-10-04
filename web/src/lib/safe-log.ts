@@ -1,7 +1,7 @@
 /** Redact secrets/PII before writing to server logs. */
 
 const TOKEN_QUERY_RE =
-  /([?&\s](?:token|code|hostToken|payId|access_token|refresh_token)=)[^&\s"'<>]+/gi;
+  /([?&\s](?:token|code|hostToken|payId|access_token|refresh_token|password)=)[^&\s"'<>]+/gi;
 const BEARER_RE = /\bBearer\s+[A-Za-z0-9._~+/=-]+/gi;
 
 export function maskEmail(email: string): string {

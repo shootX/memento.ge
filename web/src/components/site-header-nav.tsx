@@ -69,8 +69,21 @@ export function SiteHeaderNav() {
                 "text-sm font-semibold transition",
                 homeHero ? "text-white/85 hover:text-white" : "text-[var(--fg)] hover:text-[var(--accent)]",
               )}
+              data-testid="nav-login"
             >
               {c.login}
+            </Link>
+            <Link
+              href={withMarketingLocalePath(pathname, "/signup")}
+              className={cn(
+                "rounded-full border-2 px-3 py-1.5 text-sm font-bold transition sm:px-4 sm:py-2",
+                homeHero
+                  ? "border-white/40 text-white hover:bg-white/10"
+                  : "border-[var(--border)] text-[var(--fg)] hover:border-[var(--accent)]",
+              )}
+              data-testid="nav-signup"
+            >
+              {c.navSignup}
             </Link>
             <Link
               href={withMarketingLocalePath(pathname, "/onboarding")}
@@ -105,12 +118,20 @@ export function SiteHeaderNav() {
                 {l.label}
               </Link>
             ))}
-            <Link href={withMarketingLocalePath(pathname, "/login")} onClick={() => setOpen(false)}>
+            <Link href={withMarketingLocalePath(pathname, "/login")} onClick={() => setOpen(false)} data-testid="mobile-nav-login">
               {c.login}
             </Link>
             <Link
-              href={withMarketingLocalePath(pathname, "/onboarding")}
+              href={withMarketingLocalePath(pathname, "/signup")}
               className="text-[var(--accent)]"
+              onClick={() => setOpen(false)}
+              data-testid="mobile-nav-signup"
+            >
+              {c.navSignup}
+            </Link>
+            <Link
+              href={withMarketingLocalePath(pathname, "/onboarding")}
+              className="text-white/80"
               onClick={() => setOpen(false)}
             >
               {c.ctaStart} →

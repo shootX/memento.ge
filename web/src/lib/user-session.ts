@@ -19,6 +19,19 @@ export async function createUserSession(userId: string): Promise<string> {
   return token;
 }
 
+export async function rotateUserSession(userId: string): Promise<string> {
+  await prisma.session.deleteMany({ where: { userId } });
+  return createUserSession(userId);
+}
+
+export async function revokeAllUserAuth(userId: string): Promise<void> {
+  await prisma.session.deleteMany({ where: { userId } });
+  await prisma.mobileAccessToken.updateMany({
+    where: { userId, revokedAt: null },
+    data: { revokedAt: new Date() },
+  });
+}
+
 export async function getUserFromSession(): Promise<{
   id: string;
   email: string;
