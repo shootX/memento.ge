@@ -121,6 +121,20 @@ export function LandingV9({ locale = "ka" }: { locale?: LandingLocale }) {
                       <ArrowUpRight className="h-5 w-5" />
                     </span>
                   </Link>
+                  <Link
+                    href={marketingPathForLocale(locale, "/signup")}
+                    className="btn-outline-chunky border-white/25 bg-black/20 text-white backdrop-blur-sm hover:bg-white/10"
+                    data-testid="hero-signup"
+                  >
+                    {locale === "en" ? "Sign up" : locale === "ru" ? "Регистрация" : "რეგისტრაცია"}
+                  </Link>
+                  <Link
+                    href={marketingPathForLocale(locale, "/login")}
+                    className="text-sm font-bold text-white/90 underline decoration-[var(--accent)] underline-offset-4"
+                    data-testid="hero-login"
+                  >
+                    {locale === "en" ? "Log in" : locale === "ru" ? "Войти" : "შესვლა"}
+                  </Link>
                   <a
                     href={`https://wa.me/${wa}?text=${encodeURIComponent("გამარჯობა, მემენტოს შესახებ")}`}
                     target="_blank"

@@ -10,24 +10,38 @@ datasource db {
 // --- Auth & accounts ---
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  name          String?
-  emailVerified DateTime?
-  image         String?
-  role          String    @default("user") // user | admin | partner
-  passwordHash  String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                 String    @id @default(cuid())
+  email              String    @unique
+  name               String?
+  emailVerified      DateTime?
+  image              String?
+  role               String    @default("user") // user | admin | partner
+  passwordHash       String?
+  passwordUpdatedAt  DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
-  sessions           Session[]
-  mobileAccessTokens MobileAccessToken[]
-  oauthAccounts      OAuthAccount[]
-  ownedEvents        Event[]          @relation("EventOwner")
-  coHosts            EventCoHost[]
-  partnerMemberships PartnerMember[]
-  auditLogs          AuditLog[]
-  payments           Payment[]
+  sessions            Session[]
+  mobileAccessTokens  MobileAccessToken[]
+  oauthAccounts       OAuthAccount[]
+  passwordResetTokens PasswordResetToken[]
+  ownedEvents         Event[]          @relation("EventOwner")
+  coHosts             EventCoHost[]
+  partnerMemberships  PartnerMember[]
+  auditLogs           AuditLog[]
+  payments            Payment[]
+}
+
+model PasswordResetToken {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([userId])
 }
 
 model Session {

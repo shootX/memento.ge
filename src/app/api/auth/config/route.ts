@@ -12,5 +12,6 @@ export async function GET() {
     facebook: isFacebookOAuthConfigured(),
     apple: isAppleOAuthConfigured(),
     email: isEmailDeliveryConfigured(),
+    magicLink: isEmailDeliveryConfigured(),
   });
 }

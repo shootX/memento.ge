@@ -1,6 +1,12 @@
-import { AuthEmailForm } from "@/components/auth-email-form";
-import { oauthProviderFlags } from "@/lib/site-config";
+import { AuthPasswordForm } from "@/components/auth-password-form";
+import { isEmailDeliveryConfigured, oauthProviderFlags } from "@/lib/site-config";
 
 export default function LoginPage() {
-  return <AuthEmailForm mode="login" oauthProviders={oauthProviderFlags()} />;
+  return (
+    <AuthPasswordForm
+      mode="login"
+      oauthProviders={oauthProviderFlags()}
+      magicLinkEnabled={isEmailDeliveryConfigured()}
+    />
+  );
 }

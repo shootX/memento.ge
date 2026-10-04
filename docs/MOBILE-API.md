@@ -55,6 +55,33 @@ Same success response as `exchange`.
 
 ---
 
+## Email + password
+
+### `POST /api/auth/mobile/register`
+
+```json
+{
+  "email": "you@example.com",
+  "password": "minimum8chars",
+  "name": "Optional"
+}
+```
+
+Success: same Bearer response as `exchange`. Duplicate/unavailable emails return **409** `SIGNUP_UNAVAILABLE` with a generic message (no enumeration).
+
+### `POST /api/auth/mobile/login`
+
+```json
+{
+  "email": "you@example.com",
+  "password": "your-password"
+}
+```
+
+Success: same Bearer response. Failures return **401** `INVALID_CREDENTIALS` with a generic message. **429** `LOCKED_OUT` after repeated failures.
+
+---
+
 ## Native OAuth (Google / Apple / Facebook)
 
 Rate-limited (same as login).
