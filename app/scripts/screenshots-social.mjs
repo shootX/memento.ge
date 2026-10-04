@@ -8,6 +8,7 @@ const out = '/opt/cursor/artifacts/app-social';
 const routes = [
   ['01-host-login-social', '/host/login', '[data-testid="social-login"]'],
   ['02-oauth-pending', '/preview/oauth-pending', '[data-testid="oauth-pending-link"]'],
+  ['03-host-login-social-ios', '/preview/login-social-ios', '[data-testid="social-apple"]'],
 ];
 
 await mkdir(out, { recursive: true });

@@ -11,7 +11,7 @@ export default function PreviewOAuthPending() {
       <Text style={styles.title}>შესვლა</Text>
       <Card style={styles.card}>
         <OAuthPendingLinkForm
-          pending={{ status: 'pending_link', pendingLinkId: 'preview-pl', email: null }}
+          pending={{ pendingLinkId: 'preview-pl', email: null }}
           onResult={() => {}}
         />
       </Card>

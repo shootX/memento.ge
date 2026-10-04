@@ -3,7 +3,7 @@ import * as Crypto from 'expo-crypto';
 import * as Facebook from 'expo-auth-session/providers/facebook';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { api } from '@/src/api/client';
@@ -19,6 +19,7 @@ import {
   isFacebookSignInConfigured,
   isGoogleSignInConfigured,
 } from '@/src/auth/social-config';
+import { AppleLogoIcon, FacebookFIcon, GoogleGIcon } from '@/src/components/auth/SocialBrandIcons';
 import { CodeInput } from '@/src/components/CodeInput';
 import { Field, GhostButton, PrimaryButton } from '@/src/components/ui';
 import { colors } from '@/src/theme/colors';
@@ -29,12 +30,31 @@ WebBrowser.maybeCompleteAuthSession();
 type Props = {
   disabled?: boolean;
   onResult: (result: OAuthExchangeResult) => void;
+  /** Screenshot preview: show Apple button on web as on iOS. */
+  previewAsIos?: boolean;
 };
 
 async function createNoncePair(): Promise<{ raw: string; hashed: string }> {
   const raw = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
   const hashed = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, raw);
   return { raw, hashed };
+}
+
+function SocialButtonContent({
+  icon,
+  label,
+  labelStyle,
+}: {
+  icon: ReactNode;
+  label: string;
+  labelStyle: object;
+}) {
+  return (
+    <View style={styles.btnRow}>
+      <View style={styles.btnIcon}>{icon}</View>
+      <Text style={labelStyle}>{label}</Text>
+    </View>
+  );
 }
 
 function GoogleSignInButton({
@@ -49,15 +69,11 @@ function GoogleSignInButton({
   onResult: (result: OAuthExchangeResult) => void;
 }) {
   const { t } = useTranslation();
-  const [nonce, setNonce] = useState<string | null>(null);
   const [nonceHash, setNonceHash] = useState<string | null>(null);
   const handledRef = useRef<string | null>(null);
 
   useEffect(() => {
-    void createNoncePair().then(({ raw, hashed }) => {
-      setNonce(raw);
-      setNonceHash(hashed);
-    });
+    void createNoncePair().then(({ hashed }) => setNonceHash(hashed));
   }, []);
 
   const googleConfig = useMemo(
@@ -91,20 +107,16 @@ function GoogleSignInButton({
     if (handledRef.current === key) return;
     if (googleResponse.type === 'success' && googleResponse.params.id_token) {
       handledRef.current = key;
-      void runExchange({
-        provider: 'google',
-        idToken: googleResponse.params.id_token,
-        nonce: nonce ?? undefined,
-      });
+      void runExchange({ provider: 'google', idToken: googleResponse.params.id_token });
     } else if (googleResponse.type === 'cancel' || googleResponse.type === 'dismiss') {
       handledRef.current = key;
       onResult({ kind: 'cancelled' });
     }
-  }, [googleResponse, nonce, onResult, runExchange]);
+  }, [googleResponse, onResult, runExchange]);
 
   const signInGoogle = async () => {
     if (config.useMockApi) {
-      await runExchange({ provider: 'google', idToken: 'mock-google-token', nonce: nonce ?? 'n' });
+      await runExchange({ provider: 'google', idToken: 'mock-google-token' });
       return;
     }
     if (!nonceHash) return;
@@ -121,7 +133,11 @@ function GoogleSignInButton({
       accessibilityLabel={t('signInWithGoogle')}
       testID="social-google"
     >
-      <Text style={styles.googleText}>{t('signInWithGoogle')}</Text>
+      <SocialButtonContent
+        icon={<GoogleGIcon />}
+        label={t('signInWithGoogle')}
+        labelStyle={styles.googleText}
+      />
     </Pressable>
   );
 }
@@ -165,10 +181,7 @@ function FacebookSignInButton({
       const accessToken = facebookResponse.authentication?.accessToken;
       if (!accessToken) return;
       handledRef.current = key;
-      void runExchange({
-        provider: 'facebook',
-        accessToken,
-      });
+      void runExchange({ provider: 'facebook', accessToken });
     } else if (facebookResponse.type === 'cancel' || facebookResponse.type === 'dismiss') {
       handledRef.current = key;
       onResult({ kind: 'cancelled' });
@@ -177,10 +190,7 @@ function FacebookSignInButton({
 
   const signInFacebook = async () => {
     if (config.useMockApi) {
-      await runExchange({
-        provider: 'facebook',
-        accessToken: 'mock-facebook-pending',
-      });
+      await runExchange({ provider: 'facebook', accessToken: 'mock-facebook-pending' });
       return;
     }
     await facebookPrompt();
@@ -196,18 +206,51 @@ function FacebookSignInButton({
       accessibilityLabel={t('signInWithFacebook')}
       testID="social-facebook"
     >
-      <Text style={styles.facebookText}>{t('signInWithFacebook')}</Text>
+      <SocialButtonContent
+        icon={<FacebookFIcon />}
+        label={t('signInWithFacebook')}
+        labelStyle={styles.facebookText}
+      />
     </Pressable>
   );
 }
 
-export function SocialLoginSection({ disabled, onResult }: Props) {
+function PreviewAppleSignInButton({
+  disabled,
+  busy,
+  onPress,
+}: {
+  disabled?: boolean;
+  busy: boolean;
+  onPress: () => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <Pressable
+      style={[styles.appleMockBtn, (disabled || busy) && styles.disabled]}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={t('signInWithApple')}
+      testID="social-apple"
+    >
+      <SocialButtonContent
+        icon={<AppleLogoIcon />}
+        label={t('signInWithApple')}
+        labelStyle={styles.appleMockText}
+      />
+    </Pressable>
+  );
+}
+
+export function SocialLoginSection({ disabled, onResult, previewAsIos }: Props) {
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
 
   const showGoogle = isGoogleSignInConfigured();
-  const showApple = isAppleSignInConfigured();
+  const showApple = isAppleSignInConfigured() || previewAsIos;
   const showFacebook = isFacebookSignInConfigured();
+  const useNativeApple = showApple && Platform.OS === 'ios' && !previewAsIos;
+  const usePreviewApple = showApple && previewAsIos;
 
   const runExchange = async (body: Parameters<typeof api.exchangeMobileOAuth>[0]) => {
     setBusy(true);
@@ -217,12 +260,12 @@ export function SocialLoginSection({ disabled, onResult }: Props) {
   };
 
   const signInApple = async () => {
-    if (config.useMockApi) {
+    if (config.useMockApi || previewAsIos) {
       await runExchange({ provider: 'apple', idToken: 'mock-apple-token' });
       return;
     }
     try {
-      const { raw, hashed } = await createNoncePair();
+      const { hashed } = await createNoncePair();
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
           AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
@@ -234,18 +277,7 @@ export function SocialLoginSection({ disabled, onResult }: Props) {
         onResult({ kind: 'error', message: 'missing_token' });
         return;
       }
-      await runExchange({
-        provider: 'apple',
-        idToken: credential.identityToken,
-        nonce: raw,
-        email: credential.email,
-        fullName: credential.fullName
-          ? {
-              givenName: credential.fullName.givenName,
-              familyName: credential.fullName.familyName,
-            }
-          : null,
-      });
+      await runExchange({ provider: 'apple', idToken: credential.identityToken });
     } catch (e) {
       if ((e as { code?: string }).code === 'ERR_REQUEST_CANCELED') {
         onResult({ kind: 'cancelled' });
@@ -257,22 +289,57 @@ export function SocialLoginSection({ disabled, onResult }: Props) {
 
   if (!showGoogle && !showApple && !showFacebook) return null;
 
-  const mockGoogle = async () => {
+  const mockGoogle = () => {
+    if (!disabled && !busy) void runExchange({ provider: 'google', idToken: 'mock-google-token' });
+  };
+
+  const mockFacebook = () => {
     if (!disabled && !busy) {
-      await runExchange({ provider: 'google', idToken: 'mock-google-token', nonce: 'mock-nonce' });
+      void runExchange({ provider: 'facebook', accessToken: 'mock-facebook-pending' });
     }
   };
 
-  const mockFacebook = async () => {
-    if (!disabled && !busy) {
-      await runExchange({ provider: 'facebook', accessToken: 'mock-facebook-pending' });
-    }
-  };
+  const googleBtn =
+    config.useMockApi ? (
+      <Pressable
+        style={[styles.googleBtn, (disabled || busy) && styles.disabled]}
+        onPress={mockGoogle}
+        accessibilityRole="button"
+        accessibilityLabel={t('signInWithGoogle')}
+        testID="social-google"
+      >
+        <SocialButtonContent
+          icon={<GoogleGIcon />}
+          label={t('signInWithGoogle')}
+          labelStyle={styles.googleText}
+        />
+      </Pressable>
+    ) : (
+      <GoogleSignInButton disabled={disabled} busy={busy} onBusy={setBusy} onResult={onResult} />
+    );
+
+  const facebookBtn =
+    config.useMockApi ? (
+      <Pressable
+        style={[styles.facebookBtn, (disabled || busy) && styles.disabled]}
+        onPress={mockFacebook}
+        accessibilityRole="button"
+        accessibilityLabel={t('signInWithFacebook')}
+        testID="social-facebook"
+      >
+        <SocialButtonContent
+          icon={<FacebookFIcon />}
+          label={t('signInWithFacebook')}
+          labelStyle={styles.facebookText}
+        />
+      </Pressable>
+    ) : (
+      <FacebookSignInButton disabled={disabled} busy={busy} onBusy={setBusy} onResult={onResult} />
+    );
 
   return (
     <View style={styles.wrap} testID="social-login">
-      <Text style={styles.divider}>{t('oauthDivider')}</Text>
-      {showApple && Platform.OS === 'ios' && (
+      {useNativeApple && (
         <AppleAuthentication.AppleAuthenticationButton
           buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
           buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
@@ -283,44 +350,17 @@ export function SocialLoginSection({ disabled, onResult }: Props) {
           }}
         />
       )}
-      {showGoogle &&
-        (config.useMockApi ? (
-          <Pressable
-            style={[styles.googleBtn, (disabled || busy) && styles.disabled]}
-            onPress={() => void mockGoogle()}
-            accessibilityRole="button"
-            accessibilityLabel={t('signInWithGoogle')}
-            testID="social-google"
-          >
-            <Text style={styles.googleText}>{t('signInWithGoogle')}</Text>
-          </Pressable>
-        ) : (
-          <GoogleSignInButton
-            disabled={disabled}
-            busy={busy}
-            onBusy={setBusy}
-            onResult={onResult}
-          />
-        ))}
-      {showFacebook &&
-        (config.useMockApi ? (
-          <Pressable
-            style={[styles.facebookBtn, (disabled || busy) && styles.disabled]}
-            onPress={() => void mockFacebook()}
-            accessibilityRole="button"
-            accessibilityLabel={t('signInWithFacebook')}
-            testID="social-facebook"
-          >
-            <Text style={styles.facebookText}>{t('signInWithFacebook')}</Text>
-          </Pressable>
-        ) : (
-          <FacebookSignInButton
-            disabled={disabled}
-            busy={busy}
-            onBusy={setBusy}
-            onResult={onResult}
-          />
-        ))}
+      {usePreviewApple && (
+        <PreviewAppleSignInButton
+          disabled={disabled}
+          busy={busy}
+          onPress={() => {
+            if (!disabled && !busy) void signInApple();
+          }}
+        />
+      )}
+      {showGoogle && googleBtn}
+      {showFacebook && facebookBtn}
     </View>
   );
 }
@@ -347,7 +387,7 @@ export function OAuthPendingLinkForm({ pending, disabled, onResult }: OAuthPendi
     setBusy(true);
     setError(null);
     try {
-      await api.sendOAuthLinkEmail(pending.pendingLinkId, email.trim());
+      await api.startOAuthLink(pending.pendingLinkId, email.trim());
       setStep('code');
     } catch {
       setError(t('retry'));
@@ -406,15 +446,24 @@ export function OAuthPendingLinkForm({ pending, disabled, onResult }: OAuthPendi
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 10, marginTop: 8 },
-  divider: {
-    textAlign: 'center',
-    color: colors.muted,
-    fontFamily: fonts.body,
-    fontSize: 13,
-    marginVertical: 4,
+  wrap: { gap: 10 },
+  btnRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
   },
+  btnIcon: { width: 22, alignItems: 'center' },
   appleBtn: { width: '100%', height: 48 },
+  appleMockBtn: {
+    minHeight: 48,
+    borderRadius: 12,
+    backgroundColor: '#000',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+  },
+  appleMockText: { color: '#fff', fontWeight: '700', fontFamily: fonts.bodyMedium },
   googleBtn: {
     minHeight: 48,
     borderRadius: 12,

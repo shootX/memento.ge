@@ -77,18 +77,24 @@ describe('MOBILE-API contract (local mock server)', () => {
     const s = await client.exchangeMobileOAuth({
       provider: 'google',
       idToken: 'test-jwt',
-      nonce: 'n',
     });
-    expect('accessToken' in s && s.accessToken).toBe('oauth-bearer');
+    expect(s.accessToken).toBe('oauth-bearer');
   });
 
-  it('mobile oauth facebook pending_link flow', async () => {
-    const pending = await client.exchangeMobileOAuth({
-      provider: 'facebook',
-      accessToken: 'pending-fb',
+  it('mobile oauth rejects bad id token', async () => {
+    await expect(
+      client.exchangeMobileOAuth({ provider: 'google', idToken: 'bad-id-token' }),
+    ).rejects.toMatchObject({ status: 400 });
+  });
+
+  it('mobile oauth facebook link flow', async () => {
+    await expect(
+      client.exchangeMobileOAuth({ provider: 'facebook', accessToken: 'pending-fb' }),
+    ).rejects.toMatchObject({
+      status: 409,
+      body: { code: 'OAUTH_LINK_REQUIRED', pendingLinkId: 'test-pending-1' },
     });
-    expect(pending).toMatchObject({ status: 'pending_link', pendingLinkId: 'test-pending-1' });
-    await client.sendOAuthLinkEmail('test-pending-1', 'link@example.com');
+    await client.startOAuthLink('test-pending-1', 'link@example.com');
     const linked = await client.verifyOAuthLink('test-pending-1', 'link@example.com', '123456');
     expect(linked.accessToken).toBe('oauth-linked-bearer');
   });

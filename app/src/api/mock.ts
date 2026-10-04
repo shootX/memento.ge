@@ -1,3 +1,4 @@
+import { ApiError } from '@/src/api/http';
 import type {
   AuthSession,
   AuthUser,
@@ -97,22 +98,26 @@ export const mockApi = {
     items: [{ id: 'gb1', guestName: 'ანა', body: 'გილოცავთ! 💚', status: 'approved' }],
   }),
   uploadGuest: async () => ({ ok: true }),
-  exchangeMobileOAuth: async (body: MobileOAuthRequest): Promise<AuthSession | { status: 'pending_link'; pendingLinkId: string; email: null }> => {
+  exchangeMobileOAuth: async (body: MobileOAuthRequest): Promise<AuthSession> => {
     if (body.provider === 'facebook' && body.accessToken === 'mock-facebook-pending') {
-      return { status: 'pending_link', pendingLinkId: 'mock-pl-1', email: null };
+      throw new ApiError('OAUTH_LINK_REQUIRED', 409, {
+        code: 'OAUTH_LINK_REQUIRED',
+        pendingLinkId: 'mock-pl-1',
+      });
     }
-    const email =
-      body.email ??
-      (body.provider === 'apple' ? 'apple-id@privaterelay.appleid.com' : mockUser.email);
+    if (body.idToken === 'invalid-token') {
+      throw new ApiError('invalid id token', 400, { error: 'invalid id token' });
+    }
+    const email = body.provider === 'apple' ? 'apple-id@privaterelay.appleid.com' : mockUser.email;
     return {
       accessToken: `mock-oauth-${body.provider}`,
       expiresIn: 2592000,
       user: { id: `oauth-${body.provider}`, email },
     };
   },
-  sendOAuthLinkEmail: async (_pendingLinkId: string, _email: string) => ({ ok: true }),
+  startOAuthLink: async (_pendingLinkId: string, _email: string) => ({ ok: true }),
   verifyOAuthLink: async (_pendingLinkId: string, email: string, code: string): Promise<AuthSession> => {
-    if (code === '000000') throw new Error('invalid');
+    if (code === '000000') throw new ApiError('invalid code', 400, { error: 'invalid code' });
     return { accessToken: 'mock-oauth-linked', expiresIn: 2592000, user: { id: 'oauth-fb', email } };
   },
 };

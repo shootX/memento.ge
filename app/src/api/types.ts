@@ -13,27 +13,18 @@ export type AuthSession = {
 
 export type OAuthProvider = 'apple' | 'google' | 'facebook';
 
-export type OAuthFullName = {
-  givenName?: string | null;
-  familyName?: string | null;
-};
-
 export type MobileOAuthRequest = {
   provider: OAuthProvider;
   idToken?: string;
   accessToken?: string;
-  nonce?: string;
-  fullName?: OAuthFullName | null;
-  email?: string | null;
 };
 
 export type MobileOAuthPendingLink = {
-  status: 'pending_link';
   pendingLinkId: string;
   email?: string | null;
 };
 
-export type MobileOAuthLinkEmailRequest = {
+export type MobileOAuthLinkStartRequest = {
   pendingLinkId: string;
   email: string;
 };

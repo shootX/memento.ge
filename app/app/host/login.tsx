@@ -44,7 +44,7 @@ export default function HostLoginScreen() {
       return;
     }
     if (result.kind === 'error') {
-      setError(t('oauthErrorGeneric'));
+      setError(result.code === 'RATE_LIMITED' ? t('oauthRateLimited') : t('oauthErrorGeneric'));
       return;
     }
     if (result.kind === 'session') {
@@ -120,9 +120,6 @@ export default function HostLoginScreen() {
           </>
         ) : step === 'email' ? (
           <>
-            {showSocial && (
-              <SocialLoginSection disabled={busy} onResult={(r) => void handleOAuthResult(r)} />
-            )}
             <Field
               value={email}
               onChangeText={setEmail}
@@ -130,6 +127,12 @@ export default function HostLoginScreen() {
               keyboardType="email-address"
             />
             <PrimaryButton label={t('sendCode')} disabled={busy} onPress={() => void sendLink()} />
+            {showSocial && (
+              <>
+                <Text style={styles.oauthOr} accessibilityRole="text">{t('oauthOr')}</Text>
+                <SocialLoginSection disabled={busy} onResult={(r) => void handleOAuthResult(r)} />
+              </>
+            )}
             {error && <Text style={styles.error}>{error}</Text>}
             {info && <Text style={styles.info}>{info}</Text>}
           </>
@@ -161,4 +164,11 @@ const styles = StyleSheet.create({
   sent: { color: colors.muted, fontSize: 13, fontFamily: fonts.body },
   error: { color: colors.danger, fontFamily: fonts.bodyMedium },
   info: { color: colors.muted, fontFamily: fonts.body, textAlign: 'center' },
+  oauthOr: {
+    textAlign: 'center',
+    color: colors.muted,
+    fontFamily: fonts.body,
+    fontSize: 13,
+    marginTop: 4,
+  },
 });

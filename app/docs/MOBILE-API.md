@@ -32,50 +32,47 @@ Same response as verify-code.
 
 ### `POST /api/auth/mobile/oauth`
 
-Exchanges a native provider token for a Memento session (or a pending email link).
+Native provider token exchange.
 
-Request body:
-
-```json
-{
-  "provider": "apple" | "google" | "facebook",
-  "idToken": "<JWT from Apple or Google>",
-  "accessToken": "<Facebook user access token>",
-  "nonce": "<raw nonce sent to Google/Apple>",
-  "fullName": { "givenName": "...", "familyName": "..." },
-  "email": "user@example.com"
-}
-```
-
-- **Google / Apple:** send `idToken` and `nonce` (hashed nonce was passed to the provider).
-- **Facebook:** send `accessToken`. Optional `email` when relayed by the client.
-- **Apple first sign-in:** optional `fullName` and `email` from the credential (relay email allowed).
-
-Success — same shape as verify-code:
+**Google**
 
 ```json
-{ "accessToken": "...", "expiresIn": 2592000, "user": { "id": "...", "email": "..." } }
+{ "provider": "google", "idToken": "<JWT>" }
 ```
 
-When Facebook has no verified email (or none), the account is held until email verification:
+**Apple**
 
 ```json
-{
-  "status": "pending_link",
-  "pendingLinkId": "<opaque>",
-  "email": null
-}
+{ "provider": "apple", "idToken": "<JWT>" }
 ```
 
-### `POST /api/auth/mobile/oauth/link-email`
+**Facebook**
 
 ```json
-{ "pendingLinkId": "<from pending_link>", "email": "host@example.com" }
+{ "provider": "facebook", "accessToken": "<user access token>" }
 ```
 
-Response: `{ "ok": true }`
+Success: same JSON shape as `/api/auth/mobile/exchange`.
 
-### `POST /api/auth/mobile/oauth/link-verify`
+Errors:
+
+| Status | Code / body | Meaning |
+|--------|-------------|---------|
+| 400 | invalid or expired ID token | Google / Apple |
+| 409 | `{ "code": "OAUTH_LINK_REQUIRED", "pendingLinkId": "..." }` | Facebook needs email link |
+| 429 | `RATE_LIMITED` | Throttled |
+
+### `POST /api/auth/mobile/oauth/link/start`
+
+After `OAUTH_LINK_REQUIRED`:
+
+```json
+{ "pendingLinkId": "<id>", "email": "host@example.com" }
+```
+
+Sends a 6-digit code to the email. Response: `{ "ok": true }` (or empty 200).
+
+### `POST /api/auth/mobile/oauth/link/verify`
 
 ```json
 { "pendingLinkId": "<id>", "email": "host@example.com", "code": "482913" }

@@ -31,7 +31,8 @@ Facebook Login → Valid OAuth Redirect URIs და native პლატფორ
 ## API
 
 - ბაზა: `EXPO_PUBLIC_API_URL` (ნაგულისხმევი `https://qr.socialsave.cc`)
-- OAuth exchange: `POST /api/auth/mobile/oauth` — იხ. `docs/MOBILE-API.md`
+- OAuth: `POST /api/auth/mobile/oauth` → წარმატება ან `409 OAUTH_LINK_REQUIRED` (Facebook)
+- ბმული: `POST /api/auth/mobile/oauth/link/start`, `POST /api/auth/mobile/oauth/link/verify` — იხ. `docs/MOBILE-API.md`
 
 ## ლოკალური დემო
 

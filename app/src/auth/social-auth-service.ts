@@ -1,26 +1,21 @@
-import type { AuthSession, MobileOAuthPendingLink, MobileOAuthRequest } from '@/src/api/types';
+import type { AuthSession, MobileOAuthRequest } from '@/src/api/types';
 import { ApiError } from '@/src/api/http';
+import { oauthErrorCode, parseOAuthLinkRequired } from '@/src/auth/oauth-errors';
+import type { MobileOAuthPendingLink } from '@/src/api/types';
 
 export type OAuthExchangeResult =
   | { kind: 'session'; session: AuthSession }
   | { kind: 'pending_link'; pending: MobileOAuthPendingLink }
   | { kind: 'cancelled' }
-  | { kind: 'error'; message: string };
-
-export function isPendingLinkResponse(
-  data: unknown,
-): data is MobileOAuthPendingLink {
-  return (
-    typeof data === 'object' &&
-    data !== null &&
-    (data as MobileOAuthPendingLink).status === 'pending_link' &&
-    typeof (data as MobileOAuthPendingLink).pendingLinkId === 'string'
-  );
-}
+  | { kind: 'error'; message: string; code?: string };
 
 export function mapOAuthApiError(err: unknown): OAuthExchangeResult {
+  const code = oauthErrorCode(err);
   if (err instanceof ApiError) {
-    return { kind: 'error', message: err.message };
+    if (code === 'RATE_LIMITED') {
+      return { kind: 'error', message: err.message, code: 'RATE_LIMITED' };
+    }
+    return { kind: 'error', message: err.message, code: code ?? undefined };
   }
   if (err instanceof Error) {
     if (err.message === 'oauth_cancelled') return { kind: 'cancelled' };
@@ -30,8 +25,8 @@ export function mapOAuthApiError(err: unknown): OAuthExchangeResult {
 }
 
 export type OAuthApiClient = {
-  exchangeMobileOAuth: (body: MobileOAuthRequest) => Promise<AuthSession | MobileOAuthPendingLink>;
-  sendOAuthLinkEmail: (pendingLinkId: string, email: string) => Promise<unknown>;
+  exchangeMobileOAuth: (body: MobileOAuthRequest) => Promise<AuthSession>;
+  startOAuthLink: (pendingLinkId: string, email: string) => Promise<unknown>;
   verifyOAuthLink: (pendingLinkId: string, email: string, code: string) => Promise<AuthSession>;
 };
 
@@ -40,12 +35,11 @@ export async function exchangeOAuthToken(
   body: MobileOAuthRequest,
 ): Promise<OAuthExchangeResult> {
   try {
-    const res = await client.exchangeMobileOAuth(body);
-    if (isPendingLinkResponse(res)) {
-      return { kind: 'pending_link', pending: res };
-    }
-    return { kind: 'session', session: res };
+    const session = await client.exchangeMobileOAuth(body);
+    return { kind: 'session', session };
   } catch (err) {
+    const pending = parseOAuthLinkRequired(err);
+    if (pending) return { kind: 'pending_link', pending };
     return mapOAuthApiError(err);
   }
 }

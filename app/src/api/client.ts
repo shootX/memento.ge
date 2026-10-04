@@ -1,4 +1,5 @@
 import { config } from '@/src/config';
+import { serializeMobileOAuthBody } from '@/src/api/oauth';
 import { apiFetch } from '@/src/api/http';
 import { hostMutationAuth } from '@/src/api/host-auth';
 import { mockApi } from '@/src/api/mock';
@@ -6,7 +7,6 @@ import type {
   AuthSession,
   AuthUser,
   MobileOAuthLinkVerifyRequest,
-  MobileOAuthPendingLink,
   MobileOAuthRequest,
   CreateEventResponse,
   DashboardEvent,
@@ -24,8 +24,8 @@ export type MementoClient = {
   sendMagicLink: (email: string) => Promise<{ warning?: string }>;
   exchangeMagicToken: (token: string) => Promise<AuthSession>;
   verifyLoginCode: (email: string, code: string) => Promise<AuthSession>;
-  exchangeMobileOAuth: (body: MobileOAuthRequest) => Promise<AuthSession | MobileOAuthPendingLink>;
-  sendOAuthLinkEmail: (pendingLinkId: string, email: string) => Promise<{ ok: true }>;
+  exchangeMobileOAuth: (body: MobileOAuthRequest) => Promise<AuthSession>;
+  startOAuthLink: (pendingLinkId: string, email: string) => Promise<{ ok: true }>;
   verifyOAuthLink: (
     pendingLinkId: string,
     email: string,
@@ -134,18 +134,19 @@ export function createLiveClient(): MementoClient {
 
     async exchangeMobileOAuth(body) {
       if (mockEnabled()) return mockApi.exchangeMobileOAuth(body);
-      return apiFetch<AuthSession | MobileOAuthPendingLink>('/api/auth/mobile/oauth', {
+      const json = serializeMobileOAuthBody(body);
+      return apiFetch<AuthSession>('/api/auth/mobile/oauth', {
         method: 'POST',
-        json: body,
+        json,
       });
     },
 
-    async sendOAuthLinkEmail(pendingLinkId, email) {
+    async startOAuthLink(pendingLinkId, email) {
       if (mockEnabled()) {
-        await mockApi.sendOAuthLinkEmail(pendingLinkId, email);
+        await mockApi.startOAuthLink(pendingLinkId, email);
         return { ok: true };
       }
-      return apiFetch<{ ok: true }>('/api/auth/mobile/oauth/link-email', {
+      return apiFetch<{ ok: true }>('/api/auth/mobile/oauth/link/start', {
         method: 'POST',
         json: { pendingLinkId, email },
       });
@@ -154,7 +155,7 @@ export function createLiveClient(): MementoClient {
     async verifyOAuthLink(pendingLinkId, email, code) {
       if (mockEnabled()) return mockApi.verifyOAuthLink(pendingLinkId, email, code);
       const payload: MobileOAuthLinkVerifyRequest = { pendingLinkId, email, code };
-      return apiFetch<AuthSession>('/api/auth/mobile/oauth/link-verify', {
+      return apiFetch<AuthSession>('/api/auth/mobile/oauth/link/verify', {
         method: 'POST',
         json: payload,
       });

@@ -58,21 +58,23 @@ async function handler(req, res) {
     const body = await readBody(req);
     if (!body?.provider) return json(res, 400, { error: 'invalid provider' });
     if (body.provider === 'facebook' && body.accessToken === 'pending-fb') {
-      return json(res, 200, {
-        status: 'pending_link',
+      return json(res, 409, {
+        code: 'OAUTH_LINK_REQUIRED',
         pendingLinkId: 'test-pending-1',
-        email: null,
       });
+    }
+    if (body.idToken === 'bad-id-token') {
+      return json(res, 400, { error: 'invalid id token' });
     }
     if (!body.idToken && !body.accessToken) return json(res, 400, { error: 'missing token' });
     return json(res, 200, {
       accessToken: 'oauth-bearer',
       expiresIn: 3600,
-      user: { id: 'oauth-1', email: body.email ?? 'oauth@example.com' },
+      user: { id: 'oauth-1', email: 'oauth@example.com' },
     });
   }
 
-  if (req.method === 'POST' && path === '/api/auth/mobile/oauth/link-email') {
+  if (req.method === 'POST' && path === '/api/auth/mobile/oauth/link/start') {
     const body = await readBody(req);
     if (!body?.pendingLinkId || !body?.email?.includes('@')) {
       return json(res, 400, { error: 'invalid' });
@@ -80,7 +82,7 @@ async function handler(req, res) {
     return json(res, 200, { ok: true });
   }
 
-  if (req.method === 'POST' && path === '/api/auth/mobile/oauth/link-verify') {
+  if (req.method === 'POST' && path === '/api/auth/mobile/oauth/link/verify') {
     const body = await readBody(req);
     if (body?.code !== '123456') return json(res, 400, { error: 'invalid code' });
     return json(res, 200, {
