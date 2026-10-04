@@ -7,6 +7,7 @@ import {
 } from "@/lib/user-session";
 
 import { publicAppUrl } from "@/lib/app-url";
+import { linkOAuthPendingToUser } from "@/lib/oauth/link-user";
 
 function appRedirect(path: string) {
   return NextResponse.redirect(new URL(path, publicAppUrl()));
@@ -38,6 +39,10 @@ export async function GET(req: Request) {
       where: { id: user.id },
       data: { emailVerified: new Date() },
     });
+  }
+
+  if (row.oauthPendingId) {
+    await linkOAuthPendingToUser(row.oauthPendingId, user.id);
   }
 
   const session = await createUserSession(user.id);

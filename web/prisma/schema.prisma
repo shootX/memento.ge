@@ -40,17 +40,41 @@ model Session {
 }
 
 model MagicLinkToken {
-  id          String    @id @default(cuid())
-  email       String
-  tokenHash   String    @unique
-  codeHash    String?
-  client      String?
-  redirectUri String?
-  consumedAt  DateTime?
-  expiresAt   DateTime
-  createdAt   DateTime  @default(now())
+  id                    String    @id @default(cuid())
+  email                 String
+  tokenHash             String    @unique
+  codeHash              String?
+  client                String?
+  redirectUri           String?
+  oauthPendingId        String?
+  oauthPending          OAuthPendingLink? @relation(fields: [oauthPendingId], references: [id], onDelete: SetNull)
+  consumedAt            DateTime?
+  expiresAt             DateTime
+  createdAt             DateTime  @default(now())
 
   @@index([email, createdAt])
+}
+
+model OAuthNonce {
+  id        String   @id @default(cuid())
+  nonceHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([expiresAt])
+}
+
+model OAuthPendingLink {
+  id                String   @id @default(cuid())
+  tokenHash         String   @unique
+  provider          String
+  providerUserId    String
+  profileName       String?
+  profileImage      String?
+  emailFromProvider String?
+  expiresAt         DateTime
+  createdAt         DateTime @default(now())
+  magicLinks        MagicLinkToken[]
 }
 
 model MobileAccessToken {
