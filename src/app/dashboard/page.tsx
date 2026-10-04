@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ColorfulShell } from "@/components/colorful-shell";
 import { SiteHeader } from "@/components/site-header";
+import { DashboardSetPassword } from "@/components/dashboard-set-password";
 import { formatEventDate } from "@/lib/format-date";
 
 type EventRow = {
@@ -16,7 +17,7 @@ type EventRow = {
 };
 
 export default function DashboardPage() {
-  const [user, setUser] = useState<{ email: string } | null>(null);
+  const [user, setUser] = useState<{ email: string; hasPassword?: boolean } | null>(null);
   const [events, setEvents] = useState<EventRow[]>([]);
   const [loaded, setLoaded] = useState(false);
 
@@ -63,6 +64,7 @@ export default function DashboardPage() {
             <Button className="btn-gradient border-0">+ ახალი</Button>
           </Link>
         </div>
+        {user.hasPassword === false && <DashboardSetPassword />}
         <ul className="mt-8 space-y-4">
           {events.map((e) => (
             <li key={e.id} className="card-chunky flex flex-wrap justify-between items-center gap-4 p-5">
