@@ -66,3 +66,48 @@ export async function exchangeFacebookCode(params: { code: string; codeVerifier:
     picture: profile.picture?.data?.url,
   };
 }
+
+const FB_DEBUG = "https://graph.facebook.com/v21.0/debug_token";
+
+export async function verifyFacebookAccessToken(userAccessToken: string) {
+  const clientId = process.env.FACEBOOK_APP_ID;
+  const clientSecret = process.env.FACEBOOK_APP_SECRET;
+  if (!clientId || !clientSecret) throw new Error("Facebook OAuth not configured");
+
+  const appAccessToken = `${clientId}|${clientSecret}`;
+  const debugUrl = new URL(FB_DEBUG);
+  debugUrl.searchParams.set("input_token", userAccessToken);
+  debugUrl.searchParams.set("access_token", appAccessToken);
+
+  const debugRes = await fetch(debugUrl);
+  if (!debugRes.ok) {
+    safeLogWarn("[oauth/facebook] debug_token failed");
+    throw new Error("Invalid access token");
+  }
+  const debugBody = (await debugRes.json()) as {
+    data?: { app_id?: string; is_valid?: boolean; user_id?: string };
+  };
+  const data = debugBody.data;
+  if (!data?.is_valid || data.app_id !== clientId || !data.user_id) {
+    throw new Error("Invalid access token");
+  }
+
+  const profileUrl = new URL(FB_GRAPH);
+  profileUrl.searchParams.set("fields", "id,name,email");
+  profileUrl.searchParams.set("access_token", userAccessToken);
+
+  const profileRes = await fetch(profileUrl);
+  if (!profileRes.ok) throw new Error("Profile fetch failed");
+  const profile = (await profileRes.json()) as {
+    id?: string;
+    name?: string;
+    email?: string;
+  };
+  if (!profile.id || profile.id !== data.user_id) throw new Error("Invalid profile");
+
+  return {
+    sub: profile.id,
+    email: profile.email?.toLowerCase().trim(),
+    name: profile.name ?? null,
+  };
+}

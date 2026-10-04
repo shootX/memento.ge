@@ -10,8 +10,16 @@ import { ValidationError } from "@/lib/upload-validation";
 
 export { consumeApi, consumeLogin, consumeUpload };
 
-export function jsonError(status: number, message: string, code?: string) {
-  return NextResponse.json(code ? { error: message, code } : { error: message }, { status });
+export function jsonError(
+  status: number,
+  message: string,
+  code?: string,
+  extra?: Record<string, unknown>,
+) {
+  return NextResponse.json(
+    code ? { error: message, code, ...extra } : { error: message, ...(extra ?? {}) },
+    { status },
+  );
 }
 
 export function handleApiError(err: unknown) {
