@@ -12,9 +12,16 @@ export type PendingOAuthProfile = {
 };
 
 export async function createOAuthPending(profile: PendingOAuthProfile): Promise<string> {
+  const { token } = await createOAuthPendingRecord(profile);
+  return token;
+}
+
+export async function createOAuthPendingRecord(
+  profile: PendingOAuthProfile,
+): Promise<{ id: string; token: string }> {
   const raw = newToken(24);
   const expiresAt = new Date(Date.now() + 30 * 60_000);
-  await prisma.oAuthPendingLink.create({
+  const row = await prisma.oAuthPendingLink.create({
     data: {
       tokenHash: hashToken(raw),
       provider: profile.provider,
@@ -25,7 +32,13 @@ export async function createOAuthPending(profile: PendingOAuthProfile): Promise<
       expiresAt,
     },
   });
-  return raw;
+  return { id: row.id, token: raw };
+}
+
+export async function loadOAuthPendingById(id: string) {
+  const row = await prisma.oAuthPendingLink.findUnique({ where: { id } });
+  if (!row || row.expiresAt < new Date()) return null;
+  return row;
 }
 
 export async function loadOAuthPending(raw: string) {

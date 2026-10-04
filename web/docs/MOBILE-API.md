@@ -42,15 +42,26 @@ Response:
 
 Six-digit code from the magic-link email (alternative to opening the link).
 
+Request:
+
+```json
+{
+  "email": "user@example.com",
+  "code": "482913"
+}
+```
+
+Same success response as `exchange`.
+
 ---
 
-## Native OAuth (Google / Apple)
+## Native OAuth (Google / Apple / Facebook)
 
-Use after the user signs in with the native SDK and you obtain an **ID token** (JWT).
+Rate-limited (same as login).
 
 ### `POST /api/auth/mobile/oauth`
 
-Rate-limited (same as login). Request:
+#### Google
 
 ```json
 {
@@ -59,7 +70,7 @@ Rate-limited (same as login). Request:
 }
 ```
 
-or
+#### Apple
 
 ```json
 {
@@ -68,19 +79,79 @@ or
 }
 ```
 
-Success: same shape as `/api/auth/mobile/exchange` (`accessToken`, `expiresIn`, `user`).
+#### Facebook
 
-Errors:
+After the Facebook SDK returns a **user access token**:
 
-| Status | Code | Meaning |
+```json
+{
+  "provider": "facebook",
+  "accessToken": "<Facebook user access token>"
+}
+```
+
+The server calls Graph `debug_token` (app token `APP_ID|APP_SECRET`), checks `app_id` matches `FACEBOOK_APP_ID`, then `GET /me?fields=id,name,email`.
+
+**Success (200)** — same shape as `/api/auth/mobile/exchange`:
+
+```json
+{
+  "accessToken": "<bearer>",
+  "expiresIn": 2592000,
+  "user": { "id": "...", "email": "...", "name": "..." }
+}
+```
+
+**Errors**
+
+| Status | Body | Meaning |
 |--------|------|---------|
-| 400 | — | Invalid or expired ID token |
-| 409 | `OAUTH_LINK_REQUIRED` | Account must be linked via web (e.g. unverified email / Facebook-style flow) |
-| 429 | `RATE_LIMITED` | Too many attempts |
+| 400 | `{ "error": "..." }` | Invalid token / validation |
+| 409 | `{ "error": "...", "code": "OAUTH_LINK_REQUIRED", "pendingLinkId": "<cuid>" }` | Facebook (or Google/Apple pending link) needs email verification |
+| 429 | `{ "error": "...", "code": "RATE_LIMITED" }` | Too many attempts |
 
-The server validates the JWT (issuer, audience, `email_verified` for Google). It links to an existing user only when the email is already verified on an account, or creates a new verified user. Existing `OAuthAccount` rows log in immediately.
+Google/Apple: JWT validated (issuer, audience, verified email where applicable). Existing `OAuthAccount` → immediate session.
 
-Use `Authorization: Bearer <accessToken>` on protected mobile routes (same as magic-link sessions).
+Facebook: existing `OAuthAccount` → immediate session. Otherwise **always** `409` with `pendingLinkId` (Facebook email is not trusted for auto-linking).
+
+---
+
+### Facebook pending link (mobile)
+
+After `409` + `pendingLinkId`:
+
+#### 1. `POST /api/auth/mobile/oauth/link/start`
+
+Sends the usual 6-digit login code email (same as magic link mobile).
+
+Request:
+
+```json
+{
+  "pendingLinkId": "<from OAUTH_LINK_REQUIRED>",
+  "email": "you@example.com"
+}
+```
+
+Response:
+
+```json
+{ "ok": true }
+```
+
+#### 2. `POST /api/auth/mobile/oauth/link/verify`
+
+Request:
+
+```json
+{
+  "pendingLinkId": "<same id>",
+  "email": "you@example.com",
+  "code": "482913"
+}
+```
+
+Response: same as `/api/auth/mobile/exchange` (`accessToken`, `expiresIn`, `user`). Links the Facebook `OAuthAccount` to the verified email user.
 
 ---
 
