@@ -19,7 +19,9 @@ PAYMENT_MOCK=1 npm run dev   # PORT 43123
 
 იხ. `docs/DEPLOYMENT.md`: build → migrate → env secrets → R2 storage → cron Bearer → domain.
 
-**მონიტორინგი (რекომендация):** HTTP health `/`, cron email JSON response, disk/R2, PostgreSQL connections, error logs (5xx webhook).
+**nginx page cache (prod):** deploy-ის შემდეგ გაასუფთავეთ stale `/` — `rm -rf /www/server/nginx/proxy_cache_dir/*` და nginx reload (panel ან `nginx -s reload`), რომ landing/login ჰედერი არ დარჩეს ძველ cache-ში.
+
+**მონიტორინგი (რეკომендация):** HTTP health `/`, cron email JSON response, disk/R2, PostgreSQL connections, error logs (5xx webhook).
 
 ---
 

@@ -53,7 +53,7 @@ export default function DashboardPage() {
 
   return (
     <ColorfulShell>
-      <SiteHeader />
+      <SiteHeader signedIn />
       <main className="mx-auto max-w-4xl px-4 py-12">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>

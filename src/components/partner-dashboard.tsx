@@ -46,7 +46,7 @@ export function PartnerDashboard({
 
   return (
     <ColorfulShell>
-      <SiteHeader />
+      <SiteHeader signedIn />
       <main className="mx-auto max-w-5xl px-4 py-12" data-testid="partner-ready">
         <h1 className="break-words font-display text-4xl font-bold">{data.name} 🤝</h1>
         <p className="mt-1 text-[var(--text-muted)]">Partner Studio · white-label</p>

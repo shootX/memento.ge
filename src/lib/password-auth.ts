@@ -44,12 +44,8 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 
 export async function assertNotLockedOut(email: string): Promise<void> {
   if (process.env.E2E_RATE_LIMIT_FREE === "1") return;
-  try {
-    await loginLockByEmail.get(`lock:${email.toLowerCase()}`);
-    throw new AuthLockoutError();
-  } catch (err) {
-    if (err instanceof AuthLockoutError) throw err;
-  }
+  const lock = await loginLockByEmail.get(`lock:${email.toLowerCase()}`).catch(() => null);
+  if (lock && lock.consumedPoints >= 1) throw new AuthLockoutError();
 }
 
 export async function recordLoginFailure(email: string, ip: string): Promise<void> {
