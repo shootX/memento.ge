@@ -46,10 +46,19 @@ describe("password auth", () => {
     expect(login).toBeNull();
   });
 
+  it("does not lock out a fresh account", async () => {
+    process.env.E2E_RATE_LIMIT_FREE = "0";
+    const fresh = `fresh-${Date.now()}@memento.test`;
+    await registerUserWithPassword({ email: fresh, password: "securepass1" });
+    await expect(assertNotLockedOut(fresh)).resolves.toBeUndefined();
+    process.env.E2E_RATE_LIMIT_FREE = "1";
+    await prisma.user.deleteMany({ where: { email: fresh } });
+  });
+
   it("locks out after repeated failures", async () => {
     process.env.E2E_RATE_LIMIT_FREE = "0";
     await registerUserWithPassword({ email, password: "securepass1" });
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 6; i++) {
       await recordLoginFailure(email, "127.0.0.1");
     }
     await expect(assertNotLockedOut(email)).rejects.toBeInstanceOf(AuthLockoutError);

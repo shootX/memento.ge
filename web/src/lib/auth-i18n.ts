@@ -33,6 +33,12 @@ type AuthDict = {
   forgotNoEmail: string;
   resetTitle: string;
   resetSubmit: string;
+  logout: string;
+  myDashboard: string;
+  navPricing: string;
+  navPartners: string;
+  navFaq: string;
+  wordmark: string;
 };
 
 const dict: Record<AuthLocale, AuthDict> = {
@@ -71,6 +77,12 @@ const dict: Record<AuthLocale, AuthDict> = {
       "ელფოსტის გაგზავნა არ არის კონფიგურირებული — მიმართეთ ადმინს ერთჯერადი reset ბმულისთვის.",
     resetTitle: "ახალი პაროლი",
     resetSubmit: "შენახვა",
+    logout: "გასვლა",
+    myDashboard: "ჩემი გვერდი",
+    navPricing: "ფასები",
+    navPartners: "პარტნიორებს",
+    navFaq: "კითხვები",
+    wordmark: "მემენტო",
   },
   en: {
     loginTitle: "Log in",
@@ -106,6 +118,12 @@ const dict: Record<AuthLocale, AuthDict> = {
     forgotNoEmail: "Email is not configured — ask admin for a one-time reset link.",
     resetTitle: "Choose a new password",
     resetSubmit: "Save password",
+    logout: "Log out",
+    myDashboard: "My dashboard",
+    navPricing: "Pricing",
+    navPartners: "Partners",
+    navFaq: "FAQ",
+    wordmark: "Memento",
   },
   ru: {
     loginTitle: "Вход",
@@ -141,6 +159,12 @@ const dict: Record<AuthLocale, AuthDict> = {
     forgotNoEmail: "Почта не настроена — попросите админа одноразовую ссылку.",
     resetTitle: "Новый пароль",
     resetSubmit: "Сохранить",
+    logout: "Выйти",
+    myDashboard: "Мой кабинет",
+    navPricing: "Цены",
+    navPartners: "Партнёрам",
+    navFaq: "Вопросы",
+    wordmark: "Memento",
   },
 };
 
