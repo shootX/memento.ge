@@ -54,16 +54,21 @@ function AppleIcon() {
   );
 }
 
-export function SocialLoginButtons({ className }: { className?: string }) {
+export function SocialLoginButtons({
+  className,
+  initialProviders,
+}: {
+  className?: string;
+  initialProviders?: ProviderFlags;
+}) {
   const [locale, setLocale] = useState<AuthLocale>("ka");
-  const [providers, setProviders] = useState<ProviderFlags>({
-    google: false,
-    facebook: false,
-    apple: false,
-  });
+  const [providers, setProviders] = useState<ProviderFlags>(
+    initialProviders ?? { google: false, facebook: false, apple: false },
+  );
 
   useEffect(() => {
     setLocale(readAuthLocaleFromCookie());
+    if (initialProviders) return;
     fetch("/api/auth/config")
       .then((r) => r.json())
       .then((d) =>
@@ -74,7 +79,7 @@ export function SocialLoginButtons({ className }: { className?: string }) {
         }),
       )
       .catch(() => undefined);
-  }, []);
+  }, [initialProviders]);
 
   const any = providers.google || providers.facebook || providers.apple;
   if (!any) return null;

@@ -1,6 +1,6 @@
 # სოციალური შესვლა (Google, Facebook, Apple)
 
-ეს გზამკვლევი აღწერს, როგორ შექმნათ OAuth აპები და რა გ environment ცვლადები ჩაურთოთ Memento-ს production/staging გარემოში.
+ეს გზამკვლევი აღწერს, როგორ შექმნათ OAuth აპები და რა გარემოს ცვლადები ჩაურთოთ Memento-ს production/staging გარემოში.
 
 ## Redirect URI-ები (ზუსტად ასე)
 
@@ -15,17 +15,17 @@
 | Apple | `https://qr.socialsave.cc/api/auth/apple/callback` |
 | Apple | `https://memento.ge/api/auth/apple/callback` |
 
-ლოკალური dev (არა production): `NEXT_PUBLIC_APP_URL`-ის მიხედვით, напр. `http://localhost:43123/api/auth/google/callback` — dev-ში allowlist ავტომატურად ითვლის localhost-ს.
+ლოკალური dev: `NEXT_PUBLIC_APP_URL`-ის მიხედვით, მაგალითად `http://localhost:43123/api/auth/google/callback` — dev-ში allowlist ავტომატურად ითვლის localhost-ს.
 
 დამატებითი დომენები: `OAUTH_ALLOWED_ORIGINS` (მძიმით გამოყოფილი origin-ები, slash-ის გარეშე).
 
 ---
 
-## Environment ცვლადები
+## გარემოს ცვლადები
 
 | სახელი | აღწერა |
 |--------|--------|
-| `NEXT_PUBLIC_APP_URL` | საიტის ს público URL ( напр. `https://qr.socialsave.cc`) — redirect-ისთვის allowlist-ში უნდა იყოს |
+| `NEXT_PUBLIC_APP_URL` | საიტის საჯარო URL (მაგ. `https://qr.socialsave.cc`) — redirect-ისთვის allowlist-ში უნდა იყოს |
 | `GOOGLE_CLIENT_ID` | Google OAuth Client ID |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth Client Secret |
 | `FACEBOOK_APP_ID` | Meta App ID |
@@ -35,6 +35,9 @@
 | `APPLE_KEY_ID` | Sign in with Apple Key ID |
 | `APPLE_PRIVATE_KEY` | `.p8` გასაღების PEM (`.env`-ში `\n` ხაზებად) |
 | `OAUTH_ALLOWED_ORIGINS` | (არასავალდებულო) დამატებითი allowed origin-ები |
+| `HSTS_FROM_EDGE` | `1` — როცა nginx/Cloudflare უკვე აგზავნის HSTS-ს (აპი აღარ დაამატებს header-ს) |
+
+**qr.socialsave.cc:** nginx უკვე აგზავნის `Strict-Transport-Security`-ს — სერვერის `.env`-ში დააყენეთ **`HSTS_FROM_EDGE=1`**, რომ არ იყოს ორმაგი HSTS header.
 
 პროვაიდერის ღილაკი UI-ში ჩანს მხოლოდ მაშინ, როცა შესაბამისი ცვლადები შევსებულია.
 

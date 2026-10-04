@@ -102,7 +102,7 @@ curl -s https://YOUR_DOMAIN/api/health
 # {"ok":true,"db":"up","version":"0.1.0"}
 ```
 
-**HSTS ორმაგი header (prod):** nginx/Cloudflare ხშირად აგზავნის `max-age=31536000`, Next middleware — `63072000`. Production-ზე დააყენეთ **`HSTS_FROM_EDGE=1`** (`.env`) რომ აპმა აღარ დაამატოს HSTS; ან მოაშორეთ nginx HSTS და დატოვეთ მხოლოდ აპი.
+**HSTS ორმაგი header (prod):** nginx/Cloudflare ხშირად აგზავნის `max-age=31536000`, Next middleware — `63072000`. **`qr.socialsave.cc`**-ზე nginx უკვე აგზავნის HSTS-ს — აპის `.env`-ში დააყენეთ **`HSTS_FROM_EDGE=1`**, რომ middleware აღარ დაამატოს `Strict-Transport-Security` (ორმაგი header-ის თავიდან აცილება). სხვა prod გარემოში — იგივე წესი, თუ edge უკვე აგზავნის HSTS-ს; ან მოაშორეთ nginx HSTS და დატოვეთ მხოლოდ აპი.
 
 **Cron:** `CRON_SECRET` **აუცილებელია** ყველა env-ში — ცარიელი secret → 401.
 

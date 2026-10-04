@@ -10,7 +10,13 @@ import { oauthErrorMessageKa } from "@/lib/oauth/messages";
 
 type Mode = "login" | "signup";
 
-export function AuthEmailForm({ mode }: { mode: Mode }) {
+export function AuthEmailForm({
+  mode,
+  oauthProviders,
+}: {
+  mode: Mode;
+  oauthProviders?: { google: boolean; facebook: boolean; apple: boolean };
+}) {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [warning, setWarning] = useState<string | null>(null);
@@ -87,10 +93,13 @@ export function AuthEmailForm({ mode }: { mode: Mode }) {
             </Button>
           </>
         )}
-        <SocialLoginButtons className="mt-6" />
+        <SocialLoginButtons className="mt-6" initialProviders={oauthProviders} />
         <p className="mt-6 text-center text-sm text-[var(--text-muted)]">
           {swapPrompt}{" "}
-          <Link href={swapHref} className="font-bold text-[var(--accent)] underline-offset-2 hover:underline">
+          <Link
+            href={swapHref}
+            className="font-bold text-[var(--text-ink)] underline decoration-2 decoration-[var(--accent)] underline-offset-4 hover:decoration-[var(--accent)]"
+          >
             {swapLabel}
           </Link>
         </p>
