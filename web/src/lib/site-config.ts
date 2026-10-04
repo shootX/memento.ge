@@ -62,6 +62,18 @@ export function isAppleOAuthConfigured(): boolean {
   return appleOAuthConfigured();
 }
 
+export function oauthProviderFlags(): {
+  google: boolean;
+  facebook: boolean;
+  apple: boolean;
+} {
+  return {
+    google: isGoogleOAuthConfigured(),
+    facebook: isFacebookOAuthConfigured(),
+    apple: isAppleOAuthConfigured(),
+  };
+}
+
 export function isEmailDeliveryConfigured(): boolean {
   if (process.env.RESEND_API_KEY) return true;
   if (process.env.EMAIL_TRANSPORT === "resend" && process.env.RESEND_API_KEY) return true;
