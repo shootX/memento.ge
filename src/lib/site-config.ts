@@ -1,4 +1,5 @@
 import { publicAppUrl } from "@/lib/app-url";
+import { isAppleOAuthConfigured as appleOAuthConfigured } from "@/lib/oauth/providers/apple";
 import { bogConfigured } from "@/lib/billing/bog-config";
 import { paymentMockEnabled } from "@/lib/billing/payment-mock";
 import { tbcConfigured } from "@/lib/billing/tbc-config";
@@ -51,6 +52,14 @@ export function isGoogleOAuthConfigured(): boolean {
       process.env.GOOGLE_CLIENT_SECRET &&
       process.env.GOOGLE_CLIENT_ID !== "placeholder",
   );
+}
+
+export function isFacebookOAuthConfigured(): boolean {
+  return Boolean(process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET);
+}
+
+export function isAppleOAuthConfigured(): boolean {
+  return appleOAuthConfigured();
 }
 
 export function isEmailDeliveryConfigured(): boolean {
