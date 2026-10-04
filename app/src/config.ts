@@ -8,6 +8,10 @@ export const config = {
   authRedirectUri: 'memento://auth/callback',
   /** Screenshot/dev builds set EXPO_PUBLIC_INCLUDE_PREVIEW=true */
   includePreviewRoutes: process.env.EXPO_PUBLIC_INCLUDE_PREVIEW === 'true',
+  googleIosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ?? '',
+  googleAndroidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID ?? '',
+  googleWebClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? '',
+  facebookAppId: process.env.EXPO_PUBLIC_FACEBOOK_APP_ID ?? '',
 };
 
 export const PLAN_TIERS = {

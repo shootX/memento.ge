@@ -1,4 +1,5 @@
 import type {
+  AuthSession,
   AuthUser,
   CreateEventResponse,
   DashboardEvent,
@@ -6,6 +7,7 @@ import type {
   HostBootstrap,
   HostMediaItem,
   GuestbookMessage,
+  MobileOAuthRequest,
 } from '@/src/api/types';
 
 const mockUser: AuthUser = { id: 'mock-user', email: 'host@example.com' };
@@ -95,4 +97,22 @@ export const mockApi = {
     items: [{ id: 'gb1', guestName: 'ანა', body: 'გილოცავთ! 💚', status: 'approved' }],
   }),
   uploadGuest: async () => ({ ok: true }),
+  exchangeMobileOAuth: async (body: MobileOAuthRequest): Promise<AuthSession | { status: 'pending_link'; pendingLinkId: string; email: null }> => {
+    if (body.provider === 'facebook' && body.accessToken === 'mock-facebook-pending') {
+      return { status: 'pending_link', pendingLinkId: 'mock-pl-1', email: null };
+    }
+    const email =
+      body.email ??
+      (body.provider === 'apple' ? 'apple-id@privaterelay.appleid.com' : mockUser.email);
+    return {
+      accessToken: `mock-oauth-${body.provider}`,
+      expiresIn: 2592000,
+      user: { id: `oauth-${body.provider}`, email },
+    };
+  },
+  sendOAuthLinkEmail: async (_pendingLinkId: string, _email: string) => ({ ok: true }),
+  verifyOAuthLink: async (_pendingLinkId: string, email: string, code: string): Promise<AuthSession> => {
+    if (code === '000000') throw new Error('invalid');
+    return { accessToken: 'mock-oauth-linked', expiresIn: 2592000, user: { id: 'oauth-fb', email } };
+  },
 };

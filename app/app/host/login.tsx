@@ -4,21 +4,61 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { api } from '@/src/api/client';
+import type { MobileOAuthPendingLink } from '@/src/api/types';
+import {
+  OAuthPendingLinkForm,
+  SocialLoginSection,
+} from '@/src/components/auth/SocialLoginSection';
 import { CodeInput } from '@/src/components/CodeInput';
 import { Card, Field, GhostButton, PrimaryButton } from '@/src/components/ui';
+import { isAnySocialSignInConfigured } from '@/src/auth/social-config';
+import type { OAuthExchangeResult } from '@/src/auth/social-auth-service';
 import { SEED } from '@/src/constants/images';
 import { useAuthStore } from '@/src/stores/auth-store';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
 
+type LoginStep = 'email' | 'code' | 'oauth_pending';
+
 export default function HostLoginScreen() {
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
-  const [step, setStep] = useState<'email' | 'code'>('email');
+  const [step, setStep] = useState<LoginStep>('email');
+  const [oauthPending, setOauthPending] = useState<MobileOAuthPendingLink | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const setSession = useAuthStore((s) => s.setSession);
+
+  const handleOAuthResult = async (result: OAuthExchangeResult) => {
+    setInfo(null);
+    setError(null);
+    if (result.kind === 'cancelled') {
+      setInfo(t('oauthCancelled'));
+      return;
+    }
+    if (result.kind === 'pending_link') {
+      setOauthPending(result.pending);
+      setStep('oauth_pending');
+      return;
+    }
+    if (result.kind === 'error') {
+      setError(t('oauthErrorGeneric'));
+      return;
+    }
+    if (result.kind === 'session') {
+      setBusy(true);
+      try {
+        await setSession(result.session.accessToken, result.session.user.email);
+        router.replace('/host/events');
+      } catch {
+        setError(t('retry'));
+      } finally {
+        setBusy(false);
+      }
+    }
+  };
 
   const sendLink = async () => {
     if (busy || !email.trim().includes('@')) {
@@ -27,6 +67,7 @@ export default function HostLoginScreen() {
     }
     setBusy(true);
     setError(null);
+    setInfo(null);
     try {
       await api.sendMagicLink(email.trim());
       setStep('code');
@@ -52,6 +93,15 @@ export default function HostLoginScreen() {
     }
   };
 
+  const backFromOAuthPending = () => {
+    setOauthPending(null);
+    setStep('email');
+    setError(null);
+    setInfo(null);
+  };
+
+  const showSocial = step === 'email' && isAnySocialSignInConfigured();
+
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.scroll} testID="host-login">
       <Image source={{ uri: SEED.cover }} style={styles.hero} contentFit="cover" />
@@ -59,8 +109,20 @@ export default function HostLoginScreen() {
       <Text style={styles.sub}>{t('loginSubtitle')}</Text>
 
       <Card style={styles.card}>
-        {step === 'email' ? (
+        {step === 'oauth_pending' && oauthPending ? (
           <>
+            <OAuthPendingLinkForm
+              pending={oauthPending}
+              disabled={busy}
+              onResult={(r) => void handleOAuthResult(r)}
+            />
+            <GhostButton label={t('back')} onPress={backFromOAuthPending} />
+          </>
+        ) : step === 'email' ? (
+          <>
+            {showSocial && (
+              <SocialLoginSection disabled={busy} onResult={(r) => void handleOAuthResult(r)} />
+            )}
             <Field
               value={email}
               onChangeText={setEmail}
@@ -68,6 +130,8 @@ export default function HostLoginScreen() {
               keyboardType="email-address"
             />
             <PrimaryButton label={t('sendCode')} disabled={busy} onPress={() => void sendLink()} />
+            {error && <Text style={styles.error}>{error}</Text>}
+            {info && <Text style={styles.info}>{info}</Text>}
           </>
         ) : (
           <>
@@ -96,4 +160,5 @@ const styles = StyleSheet.create({
   card: { marginTop: 20, gap: 12 },
   sent: { color: colors.muted, fontSize: 13, fontFamily: fonts.body },
   error: { color: colors.danger, fontFamily: fonts.bodyMedium },
+  info: { color: colors.muted, fontFamily: fonts.body, textAlign: 'center' },
 });

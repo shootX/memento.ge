@@ -73,6 +73,26 @@ describe('MOBILE-API contract (local mock server)', () => {
     await expect(client.getHost('bad')).rejects.toMatchObject({ status: 404 });
   });
 
+  it('mobile oauth returns session', async () => {
+    const s = await client.exchangeMobileOAuth({
+      provider: 'google',
+      idToken: 'test-jwt',
+      nonce: 'n',
+    });
+    expect('accessToken' in s && s.accessToken).toBe('oauth-bearer');
+  });
+
+  it('mobile oauth facebook pending_link flow', async () => {
+    const pending = await client.exchangeMobileOAuth({
+      provider: 'facebook',
+      accessToken: 'pending-fb',
+    });
+    expect(pending).toMatchObject({ status: 'pending_link', pendingLinkId: 'test-pending-1' });
+    await client.sendOAuthLinkEmail('test-pending-1', 'link@example.com');
+    const linked = await client.verifyOAuthLink('test-pending-1', 'link@example.com', '123456');
+    expect(linked.accessToken).toBe('oauth-linked-bearer');
+  });
+
   it('payment session + status', async () => {
     const session = await client.createPaymentSession('test-host-token', 'memento://x', 'test-bearer');
     expect(session.paymentId).toBe('pay-test-1');

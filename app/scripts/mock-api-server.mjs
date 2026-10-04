@@ -54,6 +54,42 @@ async function handler(req, res) {
     });
   }
 
+  if (req.method === 'POST' && path === '/api/auth/mobile/oauth') {
+    const body = await readBody(req);
+    if (!body?.provider) return json(res, 400, { error: 'invalid provider' });
+    if (body.provider === 'facebook' && body.accessToken === 'pending-fb') {
+      return json(res, 200, {
+        status: 'pending_link',
+        pendingLinkId: 'test-pending-1',
+        email: null,
+      });
+    }
+    if (!body.idToken && !body.accessToken) return json(res, 400, { error: 'missing token' });
+    return json(res, 200, {
+      accessToken: 'oauth-bearer',
+      expiresIn: 3600,
+      user: { id: 'oauth-1', email: body.email ?? 'oauth@example.com' },
+    });
+  }
+
+  if (req.method === 'POST' && path === '/api/auth/mobile/oauth/link-email') {
+    const body = await readBody(req);
+    if (!body?.pendingLinkId || !body?.email?.includes('@')) {
+      return json(res, 400, { error: 'invalid' });
+    }
+    return json(res, 200, { ok: true });
+  }
+
+  if (req.method === 'POST' && path === '/api/auth/mobile/oauth/link-verify') {
+    const body = await readBody(req);
+    if (body?.code !== '123456') return json(res, 400, { error: 'invalid code' });
+    return json(res, 200, {
+      accessToken: 'oauth-linked-bearer',
+      expiresIn: 3600,
+      user: { id: 'oauth-1', email: body.email },
+    });
+  }
+
   if (req.method === 'POST' && path === '/api/auth/mobile/exchange') {
     const body = await readBody(req);
     if (body?.token !== 'good-token') return json(res, 400, { error: 'invalid token' });

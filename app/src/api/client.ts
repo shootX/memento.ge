@@ -5,6 +5,9 @@ import { mockApi } from '@/src/api/mock';
 import type {
   AuthSession,
   AuthUser,
+  MobileOAuthLinkVerifyRequest,
+  MobileOAuthPendingLink,
+  MobileOAuthRequest,
   CreateEventResponse,
   DashboardEvent,
   GuestEventInfo,
@@ -21,6 +24,13 @@ export type MementoClient = {
   sendMagicLink: (email: string) => Promise<{ warning?: string }>;
   exchangeMagicToken: (token: string) => Promise<AuthSession>;
   verifyLoginCode: (email: string, code: string) => Promise<AuthSession>;
+  exchangeMobileOAuth: (body: MobileOAuthRequest) => Promise<AuthSession | MobileOAuthPendingLink>;
+  sendOAuthLinkEmail: (pendingLinkId: string, email: string) => Promise<{ ok: true }>;
+  verifyOAuthLink: (
+    pendingLinkId: string,
+    email: string,
+    code: string,
+  ) => Promise<AuthSession>;
   listMyEvents: (bearerToken: string) => Promise<DashboardEvent[]>;
   createEvent: (input: {
     coupleNames: string;
@@ -119,6 +129,34 @@ export function createLiveClient(): MementoClient {
       return apiFetch<AuthSession>('/api/auth/mobile/verify-code', {
         method: 'POST',
         json: { email, code },
+      });
+    },
+
+    async exchangeMobileOAuth(body) {
+      if (mockEnabled()) return mockApi.exchangeMobileOAuth(body);
+      return apiFetch<AuthSession | MobileOAuthPendingLink>('/api/auth/mobile/oauth', {
+        method: 'POST',
+        json: body,
+      });
+    },
+
+    async sendOAuthLinkEmail(pendingLinkId, email) {
+      if (mockEnabled()) {
+        await mockApi.sendOAuthLinkEmail(pendingLinkId, email);
+        return { ok: true };
+      }
+      return apiFetch<{ ok: true }>('/api/auth/mobile/oauth/link-email', {
+        method: 'POST',
+        json: { pendingLinkId, email },
+      });
+    },
+
+    async verifyOAuthLink(pendingLinkId, email, code) {
+      if (mockEnabled()) return mockApi.verifyOAuthLink(pendingLinkId, email, code);
+      const payload: MobileOAuthLinkVerifyRequest = { pendingLinkId, email, code };
+      return apiFetch<AuthSession>('/api/auth/mobile/oauth/link-verify', {
+        method: 'POST',
+        json: payload,
       });
     },
 

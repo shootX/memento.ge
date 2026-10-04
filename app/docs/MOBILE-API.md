@@ -30,6 +30,59 @@ Response: `{ "accessToken", "expiresIn", "user": { "id", "email" } }`
 
 Same response as verify-code.
 
+### `POST /api/auth/mobile/oauth`
+
+Exchanges a native provider token for a Memento session (or a pending email link).
+
+Request body:
+
+```json
+{
+  "provider": "apple" | "google" | "facebook",
+  "idToken": "<JWT from Apple or Google>",
+  "accessToken": "<Facebook user access token>",
+  "nonce": "<raw nonce sent to Google/Apple>",
+  "fullName": { "givenName": "...", "familyName": "..." },
+  "email": "user@example.com"
+}
+```
+
+- **Google / Apple:** send `idToken` and `nonce` (hashed nonce was passed to the provider).
+- **Facebook:** send `accessToken`. Optional `email` when relayed by the client.
+- **Apple first sign-in:** optional `fullName` and `email` from the credential (relay email allowed).
+
+Success — same shape as verify-code:
+
+```json
+{ "accessToken": "...", "expiresIn": 2592000, "user": { "id": "...", "email": "..." } }
+```
+
+When Facebook has no verified email (or none), the account is held until email verification:
+
+```json
+{
+  "status": "pending_link",
+  "pendingLinkId": "<opaque>",
+  "email": null
+}
+```
+
+### `POST /api/auth/mobile/oauth/link-email`
+
+```json
+{ "pendingLinkId": "<from pending_link>", "email": "host@example.com" }
+```
+
+Response: `{ "ok": true }`
+
+### `POST /api/auth/mobile/oauth/link-verify`
+
+```json
+{ "pendingLinkId": "<id>", "email": "host@example.com", "code": "482913" }
+```
+
+Response: same as verify-code.
+
 ### `GET /api/auth/me`
 
 `Authorization: Bearer <accessToken>`
