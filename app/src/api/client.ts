@@ -8,6 +8,8 @@ import type {
   AuthUser,
   MobileOAuthLinkVerifyRequest,
   MobileOAuthRequest,
+  MobilePasswordLoginRequest,
+  MobilePasswordRegisterRequest,
   CreateEventResponse,
   DashboardEvent,
   GuestEventInfo,
@@ -24,6 +26,8 @@ export type MementoClient = {
   sendMagicLink: (email: string) => Promise<{ warning?: string }>;
   exchangeMagicToken: (token: string) => Promise<AuthSession>;
   verifyLoginCode: (email: string, code: string) => Promise<AuthSession>;
+  mobilePasswordLogin: (email: string, password: string) => Promise<AuthSession>;
+  mobilePasswordRegister: (input: MobilePasswordRegisterRequest) => Promise<AuthSession>;
   exchangeMobileOAuth: (body: MobileOAuthRequest) => Promise<AuthSession>;
   startOAuthLink: (pendingLinkId: string, email: string) => Promise<{ ok: true }>;
   verifyOAuthLink: (
@@ -130,6 +134,17 @@ export function createLiveClient(): MementoClient {
         method: 'POST',
         json: { email, code },
       });
+    },
+
+    async mobilePasswordLogin(email, password) {
+      if (mockEnabled()) return mockApi.mobilePasswordLogin(email, password);
+      const json: MobilePasswordLoginRequest = { email, password };
+      return apiFetch<AuthSession>('/api/auth/mobile/login', { method: 'POST', json });
+    },
+
+    async mobilePasswordRegister(input) {
+      if (mockEnabled()) return mockApi.mobilePasswordRegister(input);
+      return apiFetch<AuthSession>('/api/auth/mobile/register', { method: 'POST', json: input });
     },
 
     async exchangeMobileOAuth(body) {

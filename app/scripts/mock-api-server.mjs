@@ -44,6 +44,36 @@ async function handler(req, res) {
     return json(res, 200, { ok: true });
   }
 
+  if (req.method === 'POST' && path === '/api/auth/mobile/login') {
+    const body = await readBody(req);
+    if (body?.password === 'rate-limit') {
+      return json(res, 429, { code: 'RATE_LIMITED', error: 'RATE_LIMITED' });
+    }
+    if (body?.password !== 'secretpass') {
+      return json(res, 401, { error: 'Wrong email or password' });
+    }
+    return json(res, 200, {
+      accessToken: 'password-login-bearer',
+      expiresIn: 3600,
+      user: { id: 'u-pw', email: body.email },
+    });
+  }
+
+  if (req.method === 'POST' && path === '/api/auth/mobile/register') {
+    const body = await readBody(req);
+    if (body?.password === 'rate-limit') {
+      return json(res, 429, { code: 'RATE_LIMITED', error: 'RATE_LIMITED' });
+    }
+    if (!body?.email?.includes('@') || !body?.password || body.password.length < 8) {
+      return json(res, 400, { error: 'invalid' });
+    }
+    return json(res, 200, {
+      accessToken: 'password-register-bearer',
+      expiresIn: 3600,
+      user: { id: 'u-new', email: body.email },
+    });
+  }
+
   if (req.method === 'POST' && path === '/api/auth/mobile/verify-code') {
     const body = await readBody(req);
     if (body?.code !== '123456') return json(res, 400, { error: 'invalid code' });

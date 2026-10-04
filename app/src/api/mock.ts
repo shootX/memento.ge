@@ -68,6 +68,33 @@ export const mockApi = {
     if (code === '000000') throw new Error('invalid');
     return { accessToken: 'mock-bearer-token', expiresIn: 2592000, user: mockUser };
   },
+  mobilePasswordLogin: async (email: string, password: string): Promise<AuthSession> => {
+    if (password === 'rate-limit') {
+      throw new ApiError('RATE_LIMITED', 429, { code: 'RATE_LIMITED' });
+    }
+    if (password !== 'password123') {
+      throw new ApiError('Wrong email or password', 401, { error: 'Wrong email or password' });
+    }
+    return {
+      accessToken: 'mock-password-login',
+      expiresIn: 2592000,
+      user: { id: 'pw-user', email },
+    };
+  },
+  mobilePasswordRegister: async (input: {
+    email: string;
+    password: string;
+    name?: string;
+  }): Promise<AuthSession> => {
+    if (input.password === 'rate-limit') {
+      throw new ApiError('RATE_LIMITED', 429, { code: 'RATE_LIMITED' });
+    }
+    return {
+      accessToken: 'mock-password-register',
+      expiresIn: 2592000,
+      user: { id: 'pw-new', email: input.email },
+    };
+  },
   dashboardEvents: async (): Promise<{ events: DashboardEvent[] }> => ({
     events: [
       {

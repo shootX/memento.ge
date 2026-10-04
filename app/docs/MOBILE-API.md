@@ -30,6 +30,22 @@ Response: `{ "accessToken", "expiresIn", "user": { "id", "email" } }`
 
 Same response as verify-code.
 
+### `POST /api/auth/mobile/login`
+
+```json
+{ "email": "host@example.com", "password": "********" }
+```
+
+Success: same as verify-code. Errors: `401` (`Wrong email or password`), `429` (rate limit / lockout).
+
+### `POST /api/auth/mobile/register`
+
+```json
+{ "email": "host@example.com", "password": "********", "name": "Optional" }
+```
+
+`name` is optional. Success: same as verify-code. Errors: `429` when rate limited.
+
 ### `POST /api/auth/mobile/oauth`
 
 Native provider token exchange.

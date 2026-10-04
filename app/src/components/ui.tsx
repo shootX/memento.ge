@@ -38,15 +38,18 @@ export function PrimaryButton({
   label,
   onPress,
   disabled,
+  testID,
 }: {
   label: string;
   onPress: () => void;
   disabled?: boolean;
+  testID?: string;
 }) {
   return (
     <Pressable
       onPress={onPress}
       disabled={disabled}
+      testID={testID}
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ disabled: !!disabled }}
@@ -94,12 +97,14 @@ export function Field({
   placeholder,
   keyboardType,
   secureTextEntry,
+  testID,
 }: {
   value: string;
   onChangeText: (v: string) => void;
   placeholder?: string;
   keyboardType?: 'default' | 'email-address' | 'numeric';
   secureTextEntry?: boolean;
+  testID?: string;
 }) {
   return (
     <TextInput
@@ -110,6 +115,7 @@ export function Field({
       keyboardType={keyboardType}
       secureTextEntry={secureTextEntry}
       accessibilityLabel={placeholder}
+      testID={testID}
       style={styles.input}
       autoCapitalize="none"
       multiline={false}

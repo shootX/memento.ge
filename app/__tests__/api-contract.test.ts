@@ -73,6 +73,26 @@ describe('MOBILE-API contract (local mock server)', () => {
     await expect(client.getHost('bad')).rejects.toMatchObject({ status: 404 });
   });
 
+  it('mobile password login success', async () => {
+    const s = await client.mobilePasswordLogin('a@b.c', 'secretpass');
+    expect(s.accessToken).toBe('password-login-bearer');
+  });
+
+  it('mobile password login 401', async () => {
+    await expect(client.mobilePasswordLogin('a@b.c', 'bad')).rejects.toMatchObject({
+      status: 401,
+    });
+  });
+
+  it('mobile password register success', async () => {
+    const s = await client.mobilePasswordRegister({
+      email: 'new@b.c',
+      password: 'secretpass',
+      name: 'Test',
+    });
+    expect(s.accessToken).toBe('password-register-bearer');
+  });
+
   it('mobile oauth returns session', async () => {
     const s = await client.exchangeMobileOAuth({
       provider: 'google',

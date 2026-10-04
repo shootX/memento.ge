@@ -24,6 +24,17 @@ export type MobileOAuthPendingLink = {
   email?: string | null;
 };
 
+export type MobilePasswordLoginRequest = {
+  email: string;
+  password: string;
+};
+
+export type MobilePasswordRegisterRequest = {
+  email: string;
+  password: string;
+  name?: string;
+};
+
 export type MobileOAuthLinkStartRequest = {
   pendingLinkId: string;
   email: string;
