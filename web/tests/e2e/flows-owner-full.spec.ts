@@ -13,7 +13,8 @@ test.describe("owner full flow", () => {
     await page.locator('input[type="email"]').fill(email);
     await page.getByRole("button", { name: /ღონისძიების შექმნა/ }).click();
     await page.waitForURL(/\/host\/([^?]+)/, { timeout: 45_000 });
-    const hostToken = page.url().match(/\/host\/([^?]+)/)?.[1]!;
+    const hostToken = page.url().match(/\/host\/([^?]+)/)?.[1];
+    if (!hostToken) throw new Error("host token missing from URL");
     await mockPay(page, hostToken, "tbc", "success");
     const hostRes = await request.get(`${base}/api/host/${hostToken}`, { headers: e2eHeaders() });
     const { guestSlug } = await hostRes.json();
