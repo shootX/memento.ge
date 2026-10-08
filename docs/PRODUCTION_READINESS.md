@@ -16,8 +16,8 @@
 | PRD-A-008 | P1 | `Event.totalBytes` Int overflow | BigInt + `bigintToNumber` | `production-readiness-phase-a.test.ts` | fixed | `63e6b7b` |
 | PRD-A-009 | P1 | Upload quota race | Tx increment + shot limit in tx | partial (no load test) | partial | `63e6b7b` + follow-up |
 | PRD-A-010 | P1 | Gallery password brute force | `consumeGalleryPassword` | rate-limit + gallery API | fixed | `63e6b7b` |
-| PRD-A-017 | P1 | Upload blocked before `revealAt` | Upload uses upload window only | `guest-reveal-tbilisi.test.ts` | fixed | (this turn) |
-| PRD-A-018 | P1 | Stripe webhook claim before verify | Reordered verify → claim | stripe route + BOG pattern | fixed | (this turn) |
+| PRD-A-017 | P1 | Upload blocked before `revealAt` | Upload uses upload window only | `guest-reveal-tbilisi.test.ts` | fixed | `9ff6d04` |
+| PRD-A-018 | P1 | Stripe webhook claim before verify | Reordered verify → claim | stripe route + BOG pattern | fixed | `9ff6d04` |
 | PRD-A-011 | P2 | Host token plaintext | — | — | open | — |
 | PRD-A-012 | P2 | Payment reconciliation cron | — | — | open (Phase B) | — |
 | PRD-A-013 | P2 | Webhook lease/retry states | idempotency table only | duplicate claim test | partial | — |
