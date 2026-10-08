@@ -101,7 +101,7 @@ jobs:
           cache: npm
           cache-dependency-path: app/package-lock.json
       - if: steps.changes.outputs.app == 'true' || github.event_name != 'pull_request'
-        run: npm ci
+        run: npm ci --legacy-peer-deps
       - if: steps.changes.outputs.app == 'true' || github.event_name != 'pull_request'
         run: npm run typecheck
       - if: steps.changes.outputs.app == 'true' || github.event_name != 'pull_request'
