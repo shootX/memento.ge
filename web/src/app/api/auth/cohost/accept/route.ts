@@ -17,7 +17,7 @@ export async function GET(req: Request) {
     return NextResponse.redirect(new URL("/login?error=invite", req.url));
   }
 
-  let user = await getUserFromSession();
+  const user = await getUserFromSession();
   if (!user) {
     return NextResponse.redirect(
       new URL(`/login?cohost=${token}&email=${encodeURIComponent(invite.email)}`, req.url),

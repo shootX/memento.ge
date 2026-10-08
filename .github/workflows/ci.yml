@@ -1,14 +1,18 @@
 name: CI
 
+permissions:
+  contents: read
+  pull-requests: read
+
 on:
   push:
-    branches: [main, monorepo]
+    branches: [main]
   pull_request:
-    branches: [main, monorepo]
+    branches: [main]
 
 jobs:
   web:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: web
@@ -35,7 +39,7 @@ jobs:
       LOCAL_STORAGE_PATH: ./data/test-uploads
       EMAIL_PROVIDER: log
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dorny/paths-filter@v3
         id: changes
         with:
@@ -44,7 +48,7 @@ jobs:
               - 'web/**'
               - '.github/workflows/ci.yml'
       - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: "22"
           cache: npm
@@ -53,6 +57,8 @@ jobs:
         run: npm ci --legacy-peer-deps
       - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
         run: npx prisma generate
+      - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
+        run: npx next typegen
       - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
         run: npx tsc --noEmit
       - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
@@ -68,25 +74,33 @@ jobs:
       - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
         run: npm run seed:photos
       - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
-        run: npx prisma migrate deploy
+        run: |
+          PAYMENT_MOCK=1 E2E_SECRET=local-e2e E2E_RATE_LIMIT_FREE=1 \
+          ADMIN_PASSWORD=dev-admin-change-me \
+          ADMIN_PASSWORD_HASH='$2b$12$9xlwxf.kxq03ktSCTfULa.SEHDoSmEoNmvd.wwrtQ6zkmiRYMyYgu' \
+          npm run ensure:demo
       - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
-        run: npm run ensure:demo
+        run: |
+          PAYMENT_MOCK=1 E2E_SECRET=local-e2e E2E_RATE_LIMIT_FREE=1 \
+          ADMIN_PASSWORD=dev-admin-change-me \
+          ADMIN_PASSWORD_HASH='$2b$12$9xlwxf.kxq03ktSCTfULa.SEHDoSmEoNmvd.wwrtQ6zkmiRYMyYgu' \
+          npm run start &
       - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
-        run: npm run dev &
+        run: npx wait-on http://127.0.0.1:43123 -t 120000
       - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
-        run: npx wait-on http://localhost:43123 -t 60000
-      - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
+        env:
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:43123
         run: npm run test:e2e
       - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
         run: npm audit --audit-level=high || true
 
   app:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: app
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dorny/paths-filter@v3
         id: changes
         with:
@@ -95,7 +109,7 @@ jobs:
               - 'app/**'
               - '.github/workflows/ci.yml'
       - if: steps.changes.outputs.app == 'true' || github.event_name != 'pull_request'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: "22"
           cache: npm

@@ -41,7 +41,7 @@ async function main() {
   }
 
   const sampleDir = path.join(process.cwd(), "public/seed-samples");
-  let files = (await readdir(sampleDir).catch(() => [])).filter((f) =>
+  const files = (await readdir(sampleDir).catch(() => [])).filter((f) =>
     f.endsWith(".jpg"),
   );
   if (files.length === 0) {

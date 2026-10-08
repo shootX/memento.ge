@@ -163,7 +163,7 @@ export async function validateAndProcessUpload(
   if (isImage) {
     try {
       const decoded = await decodeImageBuffer(buffer, mime);
-      let img = sharp(decoded, { failOn: "error", unlimited: true });
+      const img = sharp(decoded, { failOn: "error", unlimited: true });
       const meta = await img.metadata();
       if (!meta.width || !meta.height) {
         throw new ValidationError("INVALID_IMAGE");

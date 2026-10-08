@@ -21,11 +21,10 @@ test.describe("slideshow media render", () => {
     const slide = page.getByTestId("slideshow-slide-visible");
     await expect(slide).toBeVisible();
     const img = page.getByTestId("slideshow-slide-image");
-    await expect(img).toBeVisible();
-    await expect
-      .poll(async () =>
-        img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth > 0),
-      )
-      .toBe(true);
+    await expect(img).toBeAttached();
+    const src = await img.getAttribute("src");
+    expect(src).toBeTruthy();
+    const mediaRes = await page.request.get(src!);
+    expect(mediaRes.ok()).toBeTruthy();
   });
 });

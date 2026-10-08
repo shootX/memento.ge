@@ -76,7 +76,10 @@ export default function GuestCameraScreen() {
   const [done, setDone] = useState(false);
   const uploadingRef = useRef(false);
   const queueRef = useRef(queue);
-  queueRef.current = queue;
+
+  useEffect(() => {
+    queueRef.current = queue;
+  }, [queue]);
 
   const guestKeyResolved = guestKey || (isDemoSlug(slug) ? DEMO_GUEST_KEY : '');
   const pending = useMemo(() => queue.filter((q) => q.status !== 'done'), [queue]);

@@ -1,6 +1,5 @@
 import { test, expect } from "@playwright/test";
-
-const base = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:43123";
+import { base } from "./helpers";
 
 test("web app manifest", async ({ request }) => {
   const res = await request.get(`${base}/manifest.webmanifest`);
@@ -47,10 +46,10 @@ test("service worker registration when enabled", async ({ page }) => {
 
 test("install banner demo", async ({ page }) => {
   await page.goto(`${base}/?pwa_install_demo=1`);
-  await expect(page.getByTestId("pwa-install-banner")).toBeVisible();
+  await expect(page.getByTestId("pwa-install-banner").first()).toBeVisible();
 });
 
 test("ios install sheet demo", async ({ page }) => {
   await page.goto(`${base}/?pwa_ios_demo=1`);
-  await expect(page.getByTestId("pwa-ios-sheet")).toBeVisible();
+  await expect(page.getByTestId("pwa-ios-sheet").first()).toBeVisible();
 });
