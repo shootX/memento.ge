@@ -125,11 +125,11 @@ export async function exchangeAppleCode(params: {
   const sub = payload.sub;
   if (typeof sub !== "string") throw new Error("Invalid profile");
 
-  let email =
+  const email =
     typeof payload.email === "string" ? payload.email.toLowerCase().trim() : undefined;
   const isPrivateEmail = payload.is_private_email === true || email?.endsWith("@privaterelay.appleid.com");
 
-  let name: string | undefined = parseAppleFirstLoginName(params.userJson);
+  const name: string | undefined = parseAppleFirstLoginName(params.userJson);
 
   if (!email) {
     throw new Error("Missing email");
