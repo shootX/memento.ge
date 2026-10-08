@@ -12,6 +12,8 @@ export const config = {
   googleAndroidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID ?? '',
   googleWebClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? '',
   facebookAppId: process.env.EXPO_PUBLIC_FACEBOOK_APP_ID ?? '',
+  /** Native push delivery requires Expo credentials; disabled until configured. */
+  pushEnabled: process.env.EXPO_PUBLIC_PUSH_ENABLED === 'true',
 };
 
 export const PLAN_TIERS = {

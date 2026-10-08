@@ -1,6 +1,6 @@
 "use client";
 
-import { Locale, LOCALES } from "@/lib/i18n";
+import { Locale, PUBLIC_LOCALES } from "@/lib/i18n";
 import { cn } from "@/lib/cn";
 
 const labels: Record<Locale, string> = { ka: "ქარ", en: "EN", ru: "RU" };
@@ -14,7 +14,7 @@ export function LocaleToggle({
 }) {
   return (
     <div className="flex gap-1 rounded-full bg-white/70 p-1 border border-[var(--color-border)]">
-      {LOCALES.map((l) => (
+      {PUBLIC_LOCALES.map((l) => (
         <button
           key={l}
           type="button"

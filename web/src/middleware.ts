@@ -18,6 +18,7 @@ export function middleware(request: NextRequest) {
   }
 
   const pathname = request.nextUrl.pathname;
+  requestHeaders.set("x-memento-pathname", pathname);
   const localeMatch = pathname.match(/^\/(en|ru)(\/.*)?$/);
   let response: NextResponse;
 

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import { Noto_Sans_Georgian, Manrope } from "next/font/google";
 import { PwaRoot } from "@/components/pwa/pwa-root";
 import { PwaDemoOverlays } from "@/components/pwa/pwa-demo-overlays";
@@ -56,10 +57,13 @@ export const viewport: Viewport = {
   colorScheme: "dark",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const h = await headers();
+  const locale = h.get("x-memento-locale") ?? "ka";
+  const lang = locale === "en" ? "en" : locale === "ru" ? "ru" : "ka";
   return (
     <html
-      lang="ka"
+      lang={lang}
       className={`${notoSans.variable} ${manrope.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">

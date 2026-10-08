@@ -26,7 +26,7 @@ type EventInfo = GuestEventPayload;
 
 type FileProgress = {
   file: File;
-  status: "pending" | "uploading" | "done" | "error";
+  status: "queued" | "uploading" | "retrying" | "completed" | "failed";
   progress: number;
   preview?: string;
   errorMessage?: string;
@@ -104,6 +104,7 @@ async function uploadWithRetry(
   guestKey: string,
   clientUploadKey: string,
   onProgress: (p: number) => void,
+  onRetrying: () => void,
   maxRetries = 4,
 ) {
   let attempt = 0;
@@ -115,6 +116,7 @@ async function uploadWithRetry(
       if (e instanceof GuestUploadError && e.final) throw e;
       attempt += 1;
       if (attempt > maxRetries) throw e;
+      onRetrying();
       await new Promise((r) => setTimeout(r, 800 * attempt));
     }
   }
@@ -182,7 +184,7 @@ export function GuestUpload({
 
   useEffect(() => {
     if (!allDone || reduce) return;
-    const done = queue.length > 0 && queue.every((q) => q.status === "done");
+    const done = queue.length > 0 && queue.every((q) => q.status === "completed");
     if (!done) return;
     localStorage.setItem("memento_guest_has_uploaded", "1");
     confetti({
@@ -232,7 +234,7 @@ export function GuestUpload({
 
       const initial: FileProgress[] = prepared.map(({ file, errorMessage }) => ({
         file,
-        status: errorMessage ? "error" : "pending",
+        status: errorMessage ? "failed" : "queued",
         progress: 0,
         errorMessage,
         preview:
@@ -263,7 +265,7 @@ export function GuestUpload({
           });
           setQueue((q) =>
             q.map((item, idx) =>
-              idx === i ? { ...item, status: "done", progress: 100 } : item,
+              idx === i ? { ...item, status: "queued", progress: 0 } : item,
             ),
           );
           return;
@@ -276,14 +278,28 @@ export function GuestUpload({
         );
         try {
           const clientUploadKey = crypto.randomUUID();
-          await uploadWithRetry(slug, entry.file, guestName, guestKey, clientUploadKey, (p) => {
-            setQueue((q) =>
-              q.map((item, idx) => (idx === i ? { ...item, progress: p } : item)),
-            );
-          });
+          await uploadWithRetry(
+            slug,
+            entry.file,
+            guestName,
+            guestKey,
+            clientUploadKey,
+            (p) => {
+              setQueue((q) =>
+                q.map((item, idx) => (idx === i ? { ...item, progress: p } : item)),
+              );
+            },
+            () => {
+              setQueue((q) =>
+                q.map((item, idx) =>
+                  idx === i ? { ...item, status: "retrying", progress: 0 } : item,
+                ),
+              );
+            },
+          );
           setQueue((q) =>
             q.map((item, idx) =>
-              idx === i ? { ...item, status: "done", progress: 100 } : item,
+              idx === i ? { ...item, status: "completed", progress: 100 } : item,
             ),
           );
         } catch (e) {
@@ -291,7 +307,7 @@ export function GuestUpload({
             const msg = uploadErrorMessage(locale, e.code, e.maxBytes ?? maxBytes);
             setQueue((q) =>
               q.map((item, idx) =>
-                idx === i ? { ...item, status: "error", progress: 0, errorMessage: msg } : item,
+                idx === i ? { ...item, status: "failed", progress: 0, errorMessage: msg } : item,
               ),
             );
             return;
@@ -309,7 +325,7 @@ export function GuestUpload({
           });
           setQueue((q) =>
             q.map((item, idx) =>
-              idx === i ? { ...item, status: "done", progress: 100 } : item,
+              idx === i ? { ...item, status: "queued", progress: 0 } : item,
             ),
           );
         }
@@ -345,9 +361,9 @@ export function GuestUpload({
   const closed = !info.canUpload;
   const disposable = info.disposable?.enabled;
   const shotsLeft = info.limits.shotsRemaining;
-  const doneCount = queue.filter((q) => q.status === "done").length;
+  const doneCount = queue.filter((q) => q.status === "completed").length;
   const showWeakConnectionBanner =
-    browserOffline || (uploadDeferred && queue.some((q) => q.status === "done"));
+    browserOffline || (uploadDeferred && queue.some((q) => q.status === "queued"));
 
   return (
     <div
@@ -547,7 +563,7 @@ export function GuestUpload({
                   : t(locale, "eventNotActivated")}
             </p>
           </div>
-        ) : allDone && queue.every((q) => q.status === "done") ? (
+        ) : allDone && queue.every((q) => q.status === "completed") ? (
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -602,6 +618,8 @@ export function GuestUpload({
                   {queue.map((item, i) => (
                     <li
                       key={i}
+                      data-testid="guest-upload-item"
+                      data-upload-status={item.status}
                       className="relative aspect-square overflow-hidden rounded-2xl border-2 border-[var(--accent)]/30 bg-[var(--surface)] shadow-md"
                     >
                       {item.preview && (
@@ -619,12 +637,12 @@ export function GuestUpload({
                           <Loader2 className="h-6 w-6 animate-spin text-white" />
                         </div>
                       )}
-                      {item.status === "error" && (
+                      {item.status === "failed" && (
                         <div className="absolute inset-0 flex items-center justify-center bg-black/70 p-2 text-center text-xs font-bold text-white">
                           {item.errorMessage ?? t(locale, "uploadFailed")}
                         </div>
                       )}
-                      {item.status === "done" && (
+                      {item.status === "completed" && (
                         <span className="absolute right-1 top-1 rounded-full bg-[var(--success)] px-1.5 text-xs font-bold text-white">
                           ✓
                         </span>

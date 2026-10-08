@@ -69,7 +69,7 @@ describe("phase B/C finish", () => {
     await prisma.event.delete({ where: { id: event.id } });
   });
 
-  it("host media list paginates beyond 500", async () => {
+  it("host media list paginates beyond 500 without truncation", async () => {
     const token = nanoid(32);
     const event = await prisma.event.create({
       data: {
@@ -81,33 +81,44 @@ describe("phase B/C finish", () => {
         isPaid: true,
       },
     });
-    const rows = Array.from({ length: 12 }, (_, i) => ({
-      id: crypto.randomUUID(),
-      eventId: event.id,
-      storageKey: `events/${event.id}/p${i}.jpg`,
-      mimeType: "image/jpeg",
-      size: 1,
-      status: "approved" as const,
-      createdAt: new Date(Date.now() - i * 1000),
-    }));
-    await prisma.media.createMany({ data: rows });
+    const total = 510;
+    for (let batch = 0; batch < total; batch += 100) {
+      const rows = Array.from({ length: Math.min(100, total - batch) }, (_, i) => {
+        const n = batch + i;
+        return {
+          id: crypto.randomUUID(),
+          eventId: event.id,
+          storageKey: `events/${event.id}/p${n}.jpg`,
+          mimeType: "image/jpeg",
+          size: 1,
+          status: "approved" as const,
+          createdAt: new Date(Date.now() - n * 1000),
+        };
+      });
+      await prisma.media.createMany({ data: rows });
+    }
     const { GET } = await import("@/app/api/host/[token]/media/route");
-    const first = await GET(
-      new Request(`http://local/api/host/${token}/media?limit=5`),
-      { params: Promise.resolve({ token }) },
-    );
-    const j1 = (await first.json()) as { items: unknown[]; nextCursor?: string };
-    expect(j1.items.length).toBe(5);
-    expect(j1.nextCursor).toBeTruthy();
-    const second = await GET(
-      new Request(`http://local/api/host/${token}/media?limit=5&cursor=${j1.nextCursor}`),
-      { params: Promise.resolve({ token }) },
-    );
-    const j2 = (await second.json()) as { items: unknown[] };
-    expect(j2.items.length).toBe(5);
+    let cursor: string | undefined;
+    let seen = 0;
+    const ids = new Set<string>();
+    for (let page = 0; page < 60; page++) {
+      const url = cursor
+        ? `http://local/api/host/${token}/media?limit=50&cursor=${cursor}`
+        : `http://local/api/host/${token}/media?limit=50`;
+      const res = await GET(new Request(url), { params: Promise.resolve({ token }) });
+      const j = (await res.json()) as { items: { id: string }[]; nextCursor?: string };
+      for (const item of j.items) {
+        expect(ids.has(item.id)).toBe(false);
+        ids.add(item.id);
+      }
+      seen += j.items.length;
+      cursor = j.nextCursor;
+      if (!cursor) break;
+    }
+    expect(seen).toBe(total);
     await prisma.media.deleteMany({ where: { eventId: event.id } });
     await prisma.event.delete({ where: { id: event.id } });
-  });
+  }, 120_000);
 
   it("export ZIP matches original SHA-256", async () => {
     const event = await prisma.event.create({
@@ -150,6 +161,11 @@ describe("phase B/C finish", () => {
     const { getObject } = await import("@/lib/storage");
     const zipBuf = await getObject(done!.storageKey!);
     expect(zipBuf.length).toBeGreaterThan(100);
+    const { sha256EntriesFromZipBuffer } = await import("@/lib/zip-verify");
+    const entries = await sha256EntriesFromZipBuffer(zipBuf);
+    expect(entries.size).toBeGreaterThanOrEqual(1);
+    const entryHashes = [...entries.values()];
+    expect(entryHashes).toContain(hash);
     await prisma.mediaExportJob.delete({ where: { id: job.id } });
     await prisma.media.deleteMany({ where: { eventId: event.id } });
     await prisma.event.delete({ where: { id: event.id } });

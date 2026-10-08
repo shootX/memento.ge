@@ -91,6 +91,19 @@ export default function DashboardPage() {
             </p>
           )}
         </ul>
+        <section className="mt-12 card-chunky border border-red-500/30 p-6">
+          <h2 className="font-bold text-lg">ანგარიში</h2>
+          <p className="mt-2 text-sm text-[var(--text-muted)]">
+            ანგარიშის წაშლა მუდმივად შლის თქვენს ღონისძიებებს და მედიას. ფინანსური ჩანაწერები
+            ინახება ანონიმიზებული სახით.
+          </p>
+          <Link
+            href="/account/delete-request"
+            className="mt-4 inline-block rounded-full border border-red-400 px-4 py-2 text-sm font-bold text-red-600"
+          >
+            ანგარიშის წაშლის მოთხოვნა
+          </Link>
+        </section>
       </main>
     </ColorfulShell>
   );

@@ -133,17 +133,24 @@ async function runJob(jobId: string) {
     const stillThere = await prisma.media.findUnique({ where: { id: media.id } });
     if (!stillThere) return;
 
+    let posterKey: string | null = null;
+    if (processed.kind === "video") {
+      const { generateVideoPoster } = await import("@/lib/jobs/video-poster");
+      posterKey = await generateVideoPoster(media.id);
+    }
+
     await prisma.media.update({
       where: { id: media.id },
       data: {
-        storageKey: displayKey,
-        displayKey,
+        storageKey: processed.kind === "video" ? originalKey : displayKey,
+        displayKey: processed.kind === "video" ? originalKey : displayKey,
         originalKey,
         mimeType: processed.mime,
         size: media.size,
         width: processed.kind === "image" ? processed.width : null,
         height: processed.kind === "image" ? processed.height : null,
         thumbKey,
+        posterKey: posterKey ?? media.posterKey,
         derivativesReady: true,
       },
     });

@@ -3,6 +3,8 @@ import { uploadErrorMessageKa } from "@/lib/upload-errors";
 export type Locale = "ka" | "en" | "ru";
 
 export const LOCALES: Locale[] = ["ka", "en", "ru"];
+/** Locales shown in public switcher (hide until translations complete). */
+export const PUBLIC_LOCALES: Locale[] = ["ka", "en"];
 
 const dict: Record<Locale, Record<string, string>> = {
   ka: {

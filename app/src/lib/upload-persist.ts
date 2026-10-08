@@ -22,20 +22,27 @@ export type PersistedQueueSnapshot = PersistedUploadMeta & {
 };
 
 const storageKey = (slug: string) => `memento_upload_queue_${slug}`;
-const uploadDir = `${FileSystem.cacheDirectory ?? ''}guest-uploads/`;
+
+/** Durable queue files (survive app restarts; not OS cache eviction). */
+export function uploadQueueDirectory(): string {
+  const base = FileSystem.documentDirectory ?? FileSystem.cacheDirectory ?? "";
+  return `${base}guest-upload-queue/`;
+}
 
 export function createIdempotencyKey(): string {
   return globalThis.crypto?.randomUUID?.() ?? `idem-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
 export async function ensureUploadDir(): Promise<void> {
-  if (!FileSystem.cacheDirectory) return;
+  const uploadDir = uploadQueueDirectory();
+  if (!uploadDir) return;
   const info = await FileSystem.getInfoAsync(uploadDir);
   if (!info.exists) await FileSystem.makeDirectoryAsync(uploadDir, { intermediates: true });
 }
 
 export async function stageUploadFile(sourceUri: string, idempotencyKey: string): Promise<string> {
   await ensureUploadDir();
+  const uploadDir = uploadQueueDirectory();
   const ext = sourceUri.split('.').pop()?.split('?')[0] || 'jpg';
   const dest = `${uploadDir}${idempotencyKey}.${ext}`;
   if (sourceUri.startsWith('http') || sourceUri.startsWith('file://')) {
