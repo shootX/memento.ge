@@ -4,7 +4,6 @@ import { createLiveClient } from '@/src/api/client';
 import { ApiError } from '@/src/api/http';
 
 const PORT = 3998;
-const BASE = `http://127.0.0.1:${PORT}`;
 
 jest.mock('@/src/config', () => ({
   config: {

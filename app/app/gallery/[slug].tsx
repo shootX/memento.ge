@@ -50,8 +50,29 @@ export default function GalleryScreen() {
   };
 
   useEffect(() => {
-    void load();
-  }, [slug]);
+    let active = true;
+    void (async () => {
+      try {
+        const data = await api.getGallery(slug);
+        if (!active) return;
+        setLocked(!!data.locked);
+        setCoupleNames(data.coupleNames ?? '');
+        const mapped = (data.items ?? []).map((it, idx) => ({
+          id: it.id ?? String(idx),
+          url: it.url,
+          thumbUrl: it.thumbUrl,
+          guestName: it.guestName,
+        }));
+        setItems(mapped);
+        if (preview === 'lightbox' && mapped[0]) setLightbox(mapped[0]);
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [slug, preview]);
 
   if (loading) {
     return (

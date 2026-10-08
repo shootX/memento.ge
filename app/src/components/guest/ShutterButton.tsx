@@ -24,9 +24,12 @@ export function ShutterButton({ onPress, disabled, testID, label = 'Shutter' }: 
       accessibilityLabel={label}
       accessibilityState={{ disabled: !!disabled }}
       onPressIn={() => {
+        // Reanimated shared values are mutated in gesture handlers, not React render.
+        // eslint-disable-next-line react-hooks/immutability -- Reanimated shared value
         scale.value = withSpring(0.92, { damping: 14, stiffness: 320 });
       }}
       onPressOut={() => {
+        // eslint-disable-next-line react-hooks/immutability -- Reanimated shared value
         scale.value = withSpring(1, { damping: 12, stiffness: 280 });
       }}
       onPress={() => {
