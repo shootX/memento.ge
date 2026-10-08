@@ -1,8 +1,9 @@
 import { test } from "@playwright/test";
+import fs from "fs";
 import path from "path";
 
 const phase = process.env.A11Y_PHASE === "before" ? "a11y-before" : "a11y-after";
-const out = path.join("/opt/cursor/artifacts/audit", phase);
+const out = path.join(process.env.A11Y_SCREENSHOT_DIR ?? "/opt/cursor/artifacts/audit", phase);
 
 const adminPassword = process.env.ADMIN_PASSWORD ?? "dev-admin-change-me";
 
@@ -15,6 +16,10 @@ const pages: { name: string; url: string; ready?: string }[] = [
 test.describe("inner a11y screenshots 390px", () => {
   test.use({ viewport: { width: 390, height: 844 } });
   test.setTimeout(180_000);
+
+  test.beforeAll(() => {
+    fs.mkdirSync(out, { recursive: true });
+  });
 
   for (const p of pages) {
     test(p.name, async ({ page }) => {

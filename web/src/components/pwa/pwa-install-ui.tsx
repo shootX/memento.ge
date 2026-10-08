@@ -35,7 +35,14 @@ export function PwaInstallUi() {
     const params = new URLSearchParams(window.location.search);
     const demoAndroid = params.get("pwa_install_demo") === "1";
     const demoIos = params.get("pwa_ios_demo") === "1";
-    if (demoAndroid || demoIos) return;
+    if (demoAndroid) {
+      setShowAndroid(true);
+      return;
+    }
+    if (demoIos) {
+      setShowIos(true);
+      return;
+    }
 
     if (!pathname.startsWith("/e/")) return;
 
