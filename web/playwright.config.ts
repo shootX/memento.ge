@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const serverEnv =
-  "npm run build && STORAGE_BACKEND=local LOCAL_STORAGE_PATH=./data/e2e-uploads npm run ensure:demo && PAYMENT_MOCK=1 E2E_SECRET=local-e2e E2E_RATE_LIMIT_FREE=1 ADMIN_PASSWORD_HASH=$2b$12$9xlwxf.kxq03ktSCTfULa.SEHDoSmEoNmvd.wwrtQ6zkmiRYMyYgu STORAGE_BACKEND=local LOCAL_STORAGE_PATH=./data/e2e-uploads npm run start";
+  "npm run build && npm run seed:photos && STORAGE_BACKEND=local LOCAL_STORAGE_PATH=./data/e2e-uploads npm run ensure:demo && PAYMENT_MOCK=1 E2E_SECRET=local-e2e E2E_RATE_LIMIT_FREE=1 ADMIN_PASSWORD_HASH=$2b$12$9xlwxf.kxq03ktSCTfULa.SEHDoSmEoNmvd.wwrtQ6zkmiRYMyYgu STORAGE_BACKEND=local LOCAL_STORAGE_PATH=./data/e2e-uploads npm run start";
 
 export default defineConfig({
   testDir: "tests/e2e",

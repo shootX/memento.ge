@@ -1,6 +1,5 @@
 import { test, expect } from "@playwright/test";
-
-const base = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:43123";
+import { base } from "./helpers";
 
 test("web app manifest", async ({ request }) => {
   const res = await request.get(`${base}/manifest.webmanifest`);
