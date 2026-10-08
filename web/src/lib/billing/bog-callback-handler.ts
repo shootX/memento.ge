@@ -4,10 +4,8 @@ import {
   processSignedBogCallback,
   verifyBogPublicCallbackSignature,
 } from "@/lib/billing/bog-public-callback";
-import {
-  claimWebhookEvent,
-  webhookIdempotencyKey,
-} from "@/lib/billing/activate-payment";
+import { webhookIdempotencyKey } from "@/lib/billing/activate-payment";
+import { processWebhookDelivery } from "@/lib/billing/webhook-processor";
 
 export async function handleBogPaymentCallback(req: Request): Promise<Response> {
   const raw = await req.text();
@@ -26,14 +24,31 @@ export async function handleBogPaymentCallback(req: Request): Promise<Response> 
   }
 
   const key = webhookIdempotencyKey("bog", raw);
-  if (!(await claimWebhookEvent("bog", key))) {
-    return NextResponse.json({ ok: true, duplicate: true });
-  }
-
   const verified = await processSignedBogCallback(callback);
   if (!verified.ok) {
     return NextResponse.json({ error: "verification failed" }, { status: 502 });
   }
 
-  return NextResponse.json({ ok: true, status: verified.status });
+  const outcome =
+    verified.status === "paid" && verified.paymentId && verified.eventId
+      ? "paid"
+      : verified.status === "failed"
+        ? "failed"
+        : "noop";
+
+  return processWebhookDelivery({
+    provider: "bog",
+    idempotencyKey: key,
+    paymentId: verified.paymentId,
+    eventId: verified.eventId,
+    outcome,
+    expected:
+      outcome === "paid"
+        ? {
+            amountGel: verified.amountGel ?? 0,
+            currency: verified.currency ?? "GEL",
+            provider: verified.provider ?? "bog",
+          }
+        : undefined,
+  });
 }

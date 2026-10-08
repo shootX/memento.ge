@@ -8,7 +8,7 @@ describe("upload rate limiting", () => {
     const ip = `test-ip-${Date.now()}`;
     const slug = "ratelimitslug123456";
     let threw = false;
-    for (let i = 0; i < 35; i++) {
+    for (let i = 0; i < 125; i++) {
       try {
         await consumeUpload(ip, slug);
       } catch (e) {

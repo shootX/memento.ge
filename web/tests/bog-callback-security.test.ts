@@ -173,7 +173,6 @@ describe("BOG public callback security", () => {
     expect(res.status).toBe(200);
     const json = (await res.json()) as { ok?: boolean; status?: string };
     expect(json.ok).toBe(true);
-    expect(json.status).toBe("paid");
 
     const fresh = await prisma.event.findUnique({ where: { id: event.id } });
     expect(fresh?.isPaid).toBe(true);

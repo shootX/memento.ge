@@ -8,7 +8,23 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-const backend = process.env.STORAGE_BACKEND ?? "local";
+const backend =
+  process.env.STORAGE_DRIVER ?? process.env.STORAGE_BACKEND ?? "local";
+
+export function assertStorageConfigured(): void {
+  if (process.env.NODE_ENV !== "production") return;
+  if (backend === "local") {
+    if (!process.env.LOCAL_STORAGE_PATH?.trim()) {
+      throw new Error("LOCAL_STORAGE_PATH is required when STORAGE_DRIVER=local in production");
+    }
+    return;
+  }
+  if (backend === "s3") {
+    if (!process.env.S3_BUCKET || !process.env.S3_ACCESS_KEY_ID) {
+      throw new Error("S3_BUCKET and S3_ACCESS_KEY_ID required for STORAGE_DRIVER=s3");
+    }
+  }
+}
 const localRoot = path.resolve(
   process.cwd(),
   process.env.LOCAL_STORAGE_PATH?.replace(/^\.\//, "") ?? "data/uploads",

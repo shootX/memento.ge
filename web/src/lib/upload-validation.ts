@@ -131,6 +131,10 @@ export async function validateUploadIngress(
     throw new ValidationError("UNSUPPORTED_FORMAT");
   }
 
+  if (isVideo && mime === "video/mp4" && buffer.toString("ascii", 4, 8) !== "ftyp") {
+    throw new ValidationError("INVALID_IMAGE");
+  }
+
   return { mime, kind: isImage ? "image" : "video" };
 }
 
@@ -163,10 +167,14 @@ export async function validateAndProcessUpload(
   if (isImage) {
     try {
       const decoded = await decodeImageBuffer(buffer, mime);
-      const img = sharp(decoded, { failOn: "error", unlimited: true });
+      const img = sharp(decoded, { failOn: "error", unlimited: false });
       const meta = await img.metadata();
       if (!meta.width || !meta.height) {
         throw new ValidationError("INVALID_IMAGE");
+      }
+      const maxPixels = Number(process.env.MAX_IMAGE_PIXELS ?? 16_000_000);
+      if (meta.width * meta.height > maxPixels) {
+        throw new ValidationError("FILE_TOO_LARGE", maxBytes);
       }
       const out = await img
         .rotate()

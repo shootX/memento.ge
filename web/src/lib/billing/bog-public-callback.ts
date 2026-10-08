@@ -13,7 +13,6 @@ import {
   normalizeBogOrderStatus,
 } from "@/lib/billing/bog-config";
 import { prisma } from "@/lib/prisma";
-import { markPaymentFailed, markPaymentPaid } from "@/lib/billing/activate-payment";
 import type { WebhookVerifyResult } from "@/lib/billing/types";
 
 export function bogCallbackBodyIsValid(raw: string): BogCallbackBody | null {
@@ -103,8 +102,7 @@ export async function processSignedBogCallback(
   }
 
   if (mapped === "failed" || bogOrderIsTerminalFailure(receiptStatus)) {
-    if (ref) await markPaymentFailed(ref);
-    return { ok: true, status: "failed", paymentId: orderId };
+    return { ok: true, status: "failed", paymentId: ref ?? orderId };
   }
 
   if (!bogOrderIsPaid(receiptStatus)) {
@@ -116,12 +114,14 @@ export async function processSignedBogCallback(
     return { ok: true, paymentId: orderId, status: "failed" };
   }
 
-  await markPaymentPaid(orderId, eventId);
   return {
     ok: true,
     eventId,
-    paymentId: orderId,
+    paymentId: payment.id,
     status: "paid",
+    amountGel: payment.amountGel,
+    currency: payment.currency,
+    provider: "bog",
   };
 }
 

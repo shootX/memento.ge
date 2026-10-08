@@ -26,9 +26,8 @@ export async function getEventByGuestSlug(slug: string): Promise<Event | null> {
 }
 
 export async function getEventByHostToken(token: string): Promise<Event | null> {
-  if (!token || token.length < 24 || token.length > 128) return null;
-  if (!/^[a-zA-Z0-9_-]+$/.test(token)) return null;
-  return prisma.event.findUnique({ where: { hostToken: token } });
+  const { findEventByHostCapabilityToken } = await import("@/lib/host-token");
+  return findEventByHostCapabilityToken(token);
 }
 
 export async function getEventBySlideshowToken(

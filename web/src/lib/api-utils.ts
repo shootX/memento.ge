@@ -54,9 +54,13 @@ export async function readFormData(req: Request): Promise<FormData | Response> {
 }
 
 export function clientIp(req: Request): string {
-  return (
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    req.headers.get("x-real-ip") ||
-    "unknown"
-  );
+  const trusted = process.env.TRUSTED_PROXY_IPS?.split(",").map((s) => s.trim()) ?? [];
+  const remote = req.headers.get("x-vercel-forwarded-for") ?? "127.0.0.1";
+  const trustForward =
+    trusted.length === 0 || trusted.some((ip) => remote.startsWith(ip));
+  if (trustForward) {
+    const xff = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+    if (xff) return xff;
+  }
+  return req.headers.get("x-real-ip") || remote || "unknown";
 }

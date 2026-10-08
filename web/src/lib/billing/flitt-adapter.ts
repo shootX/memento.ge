@@ -10,7 +10,7 @@ import {
   flittVerifyCallback,
 } from "@/lib/billing/flitt-signature";
 import { prisma } from "@/lib/prisma";
-import { markPaymentPaid, parsePaymentMetadata } from "@/lib/billing/activate-payment";
+import { parsePaymentMetadata } from "@/lib/billing/activate-payment";
 
 const FLITT_API = process.env.FLITT_API_URL ?? "https://pay.flitt.com/api/checkout/url";
 
@@ -142,10 +142,13 @@ export async function parseFlittPayload(raw: string): Promise<WebhookVerifyResul
   if (!payment) {
     return { ok: true, paymentId: params.order_id, status: "failed" };
   }
-  await markPaymentPaid(params.order_id, resolvedEventId, {
+  return {
+    ok: true,
+    eventId: resolvedEventId,
+    paymentId: payment.id,
+    status: "paid",
     amountGel: payment.amountGel,
     currency: payment.currency,
     provider: "flitt",
-  });
-  return { ok: true, eventId: resolvedEventId, paymentId: params.order_id, status: "paid" };
+  };
 }

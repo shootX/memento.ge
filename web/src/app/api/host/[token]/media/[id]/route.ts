@@ -46,7 +46,16 @@ export async function DELETE(req: Request, { params }: Params) {
     const media = await assertMediaBelongsToEvent(id, event.id);
     if (!media) return jsonError(404, "Not found");
 
-    await deleteObject(media.storageKey);
+    const keys = [
+      media.storageKey,
+      media.originalKey,
+      media.displayKey,
+      media.thumbKey,
+      media.posterKey,
+    ].filter(Boolean) as string[];
+    for (const key of keys) {
+      await deleteObject(key);
+    }
     await prisma.media.delete({ where: { id: media.id } });
     await prisma.event.update({
       where: { id: event.id },

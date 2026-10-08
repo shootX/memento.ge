@@ -1,58 +1,43 @@
-# Production readiness registry (Phase A)
+# Production readiness registry
 
 **Branch:** `release/prod-readiness`  
-**Baseline main:** `312363a` (post monorepo + CI fix #2)  
-**Prior audit:** `docs/audit/03-ISSUES.md` lists **37** tracked IDs (AUD-001–AUD-037 + AUD-022b). There is **no** separate 44-item audit file; the owner “44 items” map is **37 audit rows + 7 Phase-A-only PRD rows** below.
+**Audit:** `docs/audit/03-ISSUES.md` (37 IDs). Prior “44” = 37 AUD + PRD rows.
 
-| ID | Priority | Evidence | Change | Test | Status | Commit |
-|----|----------|----------|--------|------|--------|--------|
-| PRD-A-001 | P0 | `gallery/route.ts` cookie `"1"` | Signed `gallery-unlock-session` + `galleryAccessVersion` | `production-readiness-phase-a.test.ts` | fixed | `63e6b7b` |
-| PRD-A-002 | P0 | Host settings overwrote password on save | `galleryPasswordAction` unchanged/change/remove | host-settings API | fixed | `63e6b7b` |
-| PRD-A-003 | P0 | Flitt webhook claimed before verify | Verify first; reject if unconfigured | `production-readiness-phase-a.test.ts` | fixed | `63e6b7b` |
-| PRD-A-004 | P0 | `markPaymentPaid` trusted payload eventId | DB row amount/currency/provider match | `production-readiness-phase-a.test.ts` | fixed | `63e6b7b` |
-| PRD-A-005 | P0 | Paid `expiresAt` from payment time | `paidRetentionExpiresAt` from `eventDate` (Tbilisi) | `production-readiness-phase-a.test.ts` | fixed | `63e6b7b` |
-| PRD-A-006 | P0 | `E2E_*` in production | `production-guards.ts` + `instrumentation.ts` | `admin-auth-e2e.test.ts` | fixed | `63e6b7b` |
-| PRD-A-007 | P0 | `PAYMENT_MOCK` in production | `paymentMockEnabled()` false in production | billing paths | fixed | `63e6b7b` |
-| PRD-A-008 | P1 | `Event.totalBytes` Int overflow | BigInt + `bigintToNumber` | `production-readiness-phase-a.test.ts` | fixed | `63e6b7b` |
-| PRD-A-009 | P1 | Upload quota race | Tx increment + shot limit in tx | partial (no load test) | partial | `63e6b7b` + follow-up |
-| PRD-A-010 | P1 | Gallery password brute force | `consumeGalleryPassword` | rate-limit + gallery API | fixed | `63e6b7b` |
-| PRD-A-017 | P1 | Upload blocked before `revealAt` | Upload uses upload window only | `guest-reveal-tbilisi.test.ts` | fixed | `9ff6d04` |
-| PRD-A-018 | P1 | Stripe webhook claim before verify | Reordered verify → claim | stripe route + BOG pattern | fixed | `9ff6d04` |
-| PRD-A-011 | P2 | Host token plaintext | — | — | open | — |
-| PRD-A-012 | P2 | Payment reconciliation cron | — | — | open (Phase B) | — |
-| PRD-A-013 | P2 | Webhook lease/retry states | idempotency table only | duplicate claim test | partial | — |
-| PRD-A-014 | P2 | AUD-035 Postgres exposed prod | prod infra | — | blocked (aaPanel) | — |
-| PRD-A-015 | P2 | AUD-021 Email not configured | no SMTP | — | blocked | — |
-| PRD-A-016 | P2 | npm audit high | CI fails **critical** | `npm audit --audit-level=critical` | partial | `63e6b7b` |
+## Phase A (closed)
 
-## Audit cross-reference (re-verified on this branch)
+| ID | Status | Test | Notes |
+|----|--------|------|-------|
+| PRD-A-001–010 | fixed | `production-readiness-phase-a.test.ts` | Gallery, payments guards, BigInt |
+| PRD-A-011 | **fixed** | `phase-ab-production` host rotation | `host-token.ts`, `/api/host/[token]/capability` |
+| PRD-A-009 | **fixed** | `phase-ab-production` upload idempotency | `GuestUploadReservation` |
+| PRD-A-012 | **fixed** | reconcile cron + mock path | `/api/cron/reconcile-payments` |
+| PRD-A-013 | **fixed** | webhook retry/duplicate/503 | `webhook-processor.ts` |
+| PRD-A-016 | **documented** | — | `docs/NPM-AUDIT-EXCEPTIONS.md` |
+| PRD-A-014/015 | blocked | — | Postgres exposure, email |
 
-| Audit ID | PRD / status | Notes |
-|----------|----------------|-------|
-| AUD-001–002,016 | fixed | TBC poll + BOG signature tests |
-| AUD-003,025 | cant-verify | No live provider keys |
-| AUD-004–006,011–014,016–024,026–034 | fixed-in-branch | Per `03-ISSUES.md`; spot-checked in CI tests |
-| AUD-007 | open | Host token hash/rotate → PRD-A-011 |
-| AUD-008–010,035–037 | needs-decision / blocked | Product/infra owner |
-| AUD-021 | blocked | Email not configured on staging |
-| AUD-022,022b | verified | Runbook-level; not re-run on this VM |
+## Phase B (partial — sections 6–9)
 
-## Migrations (Phase A)
+| ID | Status | Evidence |
+|----|--------|----------|
+| PRD-B-001 | partial | `originalKey` / `displayKey`; derivatives no longer overwrite original bytes |
+| PRD-B-002 | partial | Fake MP4 rejected in `validateUploadIngress`; sharp `unlimited: false` + pixel cap |
+| PRD-B-003 | partial | Host media cursor pagination; pending still needs gallery/slideshow sweep |
+| PRD-B-004 | partial | Postgres `RateLimitBucket`; upload keyed by `eventId` |
+| PRD-B-005 | partial | Derivative job lease + `dead` status; stale recovery exists |
+| PRD-B-006 | partial | `assertStorageConfigured()` production guard |
+| PRD-B-007 | open | Range streaming / ZIP async export / full moderation UI |
+| PRD-B-008 | open | Email outbox worker hardening |
 
-`20261008190000_prod_readiness_phase_a`: `galleryAccessVersion`, schedule columns, `totalBytes` → BIGINT.
+## Migrations
 
-**Backward compatibility:** New columns default safely. Old app on migrated DB: OK. New app on unmigrated DB: **requires migration**.
+- `20261008190000_prod_readiness_phase_a` — schedule, gallery version, BigInt  
+- `20261008210000_phase_ab_finish` — host hash, webhook state, reservations, media keys, rate limits, job leases  
 
-## Baseline (before Phase A on `312363a`)
+**Compat:** deploy migrations before app; old app on new DB OK for additive columns.
 
-| Step | Web (before) | App (before) | Web (after local) | App (after local) |
-|------|----------------|--------------|---------------------|-------------------|
-| install | ok (`npm ci`) | ok | ok | ok |
-| prisma generate | ok | n/a | ok | n/a |
-| typecheck | ok (post fix/ci) | ok | ok | ok |
-| lint | ok | ok | ok | ok |
-| unit/integration | ~130 pass | 54 pass | **135** pass | **54** pass |
-| build | ok | n/a | ok | n/a |
-| e2e | CI desktop | n/a | not re-run full locally | n/a |
+## Baseline (312363a → current)
 
-*“Before” reflects main @ `312363a` CI; “after” = `release/prod-readiness` on Postgres service @ localhost.*
+| Step | Before | After (local PG) |
+|------|--------|------------------|
+| web tests | ~130 | **143** |
+| app tests | 54 | **54** |

@@ -65,15 +65,29 @@ export async function drainMediaDerivativeJobs(): Promise<void> {
 }
 
 async function claimNextJob() {
+  const workerId = `worker-${process.pid}`;
+  const leaseUntil = new Date(Date.now() + 5 * 60_000);
   const pending = await prisma.mediaDerivativeJob.findFirst({
-    where: { status: "pending" },
+    where: {
+      status: "pending",
+      OR: [{ leaseUntil: null }, { leaseUntil: { lt: new Date() } }],
+    },
     orderBy: { createdAt: "asc" },
   });
   if (!pending) return null;
 
   const updated = await prisma.mediaDerivativeJob.updateMany({
-    where: { id: pending.id, status: "pending" },
-    data: { status: "processing", attempts: { increment: 1 } },
+    where: {
+      id: pending.id,
+      status: "pending",
+      OR: [{ leaseUntil: null }, { leaseUntil: { lt: new Date() } }],
+    },
+    data: {
+      status: "processing",
+      attempts: { increment: 1 },
+      leaseUntil,
+      leasedBy: workerId,
+    },
   });
   if (updated.count !== 1) return null;
   return pending.id;
@@ -92,44 +106,39 @@ async function runJob(jobId: string) {
   const planMax = event ? getPlan(event.planTier).maxBytesPerFile : 100 * 1024 * 1024;
 
   try {
-    const original = await getObject(media.storageKey);
+    const originalKey = media.originalKey ?? media.storageKey;
+    const original = await getObject(originalKey);
     const processed = await validateAndProcessUpload(
       original,
       media.mimeType,
       planMax,
-      media.storageKey,
+      originalKey,
     );
 
     const ext = extensionForMime(processed.mime);
-    const optimizedKey = media.storageKey.replace(/\.[^.]+$/, `.${ext}`);
-    await putObject(optimizedKey, processed.buffer, processed.mime);
+    const displayKey = originalKey.replace(/\.[^.]+$/, `_web.${ext}`);
+    await putObject(displayKey, processed.buffer, processed.mime);
 
     let thumbKey: string | null = null;
     if (processed.kind === "image") {
-      thumbKey = `${optimizedKey.replace(/\.[^.]+$/, "")}_thumb.jpg`;
+      thumbKey = `${originalKey.replace(/\.[^.]+$/, "")}_thumb.jpg`;
       await putObject(thumbKey, await processThumbnail(processed.buffer), "image/jpeg");
     }
-
-    const sizeDelta = processed.buffer.length - media.size;
 
     await prisma.media.update({
       where: { id: media.id },
       data: {
-        storageKey: optimizedKey,
+        storageKey: displayKey,
+        displayKey,
+        originalKey,
         mimeType: processed.mime,
-        size: processed.buffer.length,
+        size: media.size,
         width: processed.kind === "image" ? processed.width : null,
         height: processed.kind === "image" ? processed.height : null,
         thumbKey,
         derivativesReady: true,
       },
     });
-    if (sizeDelta !== 0) {
-      await prisma.event.update({
-        where: { id: media.eventId },
-        data: { totalBytes: { increment: sizeDelta } },
-      });
-    }
     await prisma.mediaDerivativeJob.update({
       where: { id: jobId },
       data: { status: "done", lastError: null },
@@ -140,8 +149,10 @@ async function runJob(jobId: string) {
     await prisma.mediaDerivativeJob.update({
       where: { id: jobId },
       data: {
-        status: failed ? "failed" : "pending",
+        status: failed ? "dead" : "pending",
         lastError: msg.slice(0, 500),
+        leaseUntil: null,
+        leasedBy: null,
       },
     });
     if (e instanceof ValidationError && failed) {
