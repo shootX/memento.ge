@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { newToken } from "@/lib/crypto";
 import { AUTH_CSRF_COOKIE } from "@/lib/password-auth";
+import { cookieSecureFlag } from "@/lib/production-guards";
 
 export async function GET() {
   const csrf = newToken(16);
@@ -10,7 +11,7 @@ export async function GET() {
     sameSite: "strict",
     path: "/",
     maxAge: 3600,
-    secure: process.env.NODE_ENV === "production",
+    secure: cookieSecureFlag(),
   });
   return res;
 }

@@ -28,7 +28,12 @@ test("create → manual pay → admin activates → guest upload on host", async
     data: { password: adminPassword },
   });
   if (login.ok()) {
-    const cookie = login.headers()["set-cookie"]?.split(";")[0] ?? "";
+    const setCookies = login
+      .headersArray()
+      .filter((h) => h.name.toLowerCase() === "set-cookie")
+      .map((h) => h.value.split(";")[0])
+      .filter(Boolean);
+    const cookie = setCookies.join("; ");
     const act = await request.patch(`${base}/api/admin/events/${event.id}`, {
       data: { isPaid: true },
       headers: cookie ? { Cookie: cookie } : {},
