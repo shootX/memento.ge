@@ -9,24 +9,31 @@ export default defineConfig({
   expect: { timeout: 15_000 },
   fullyParallel: false,
   workers: 1,
-  retries: process.env.CI ? 1 : 0,
+  retries: 0,
   use: {
     baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:43123",
     trace: "on-first-retry",
   },
-  projects: [
-    {
-      name: "mobile",
-      use: {
-        ...devices["Pixel 5"],
-        viewport: { width: 390, height: 844 },
-      },
-    },
-    {
-      name: "desktop",
-      use: { viewport: { width: 1280, height: 800 } },
-    },
-  ],
+  projects: process.env.CI
+    ? [
+        {
+          name: "desktop",
+          use: { viewport: { width: 1280, height: 800 } },
+        },
+      ]
+    : [
+        {
+          name: "mobile",
+          use: {
+            ...devices["Pixel 5"],
+            viewport: { width: 390, height: 844 },
+          },
+        },
+        {
+          name: "desktop",
+          use: { viewport: { width: 1280, height: 800 } },
+        },
+      ],
   webServer: process.env.PLAYWRIGHT_BASE_URL
     ? undefined
     : {
