@@ -42,5 +42,14 @@ export async function PATCH(req: Request, { params }: Params) {
     data,
   });
 
-  return NextResponse.json({ event: updated });
+  return NextResponse.json({
+    ok: true,
+    event: {
+      id: updated.id,
+      isPaid: updated.isPaid,
+      paidAt: updated.paidAt,
+      expiresAt: updated.expiresAt,
+      totalBytes: Number(updated.totalBytes),
+    },
+  });
 }
