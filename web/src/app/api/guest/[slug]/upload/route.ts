@@ -78,11 +78,14 @@ export async function POST(req: Request, { params }: Params) {
         : `ip:${ip}`;
 
     if (event.disposableEnabled && event.shotsPerGuest > 0) {
-      await prisma.guestShotQuota.upsert({
+      const quota = await prisma.guestShotQuota.upsert({
         where: { eventId_guestKey: { eventId: event.id, guestKey } },
         create: { eventId: event.id, guestKey, used: 0 },
         update: {},
       });
+      if (quota.used >= event.shotsPerGuest) {
+        return jsonError(403, "კადრების ლიმიტი ამოიწურა", "SHOT_LIMIT_REACHED");
+      }
     }
 
     if (!(file instanceof File)) {
@@ -115,13 +118,13 @@ export async function POST(req: Request, { params }: Params) {
 
     const media = await prisma.$transaction(async (tx) => {
       const locked = await tx.event.findUnique({ where: { id: event.id } });
-      if (!locked) throw new ValidationError("NOT_FOUND");
+      if (!locked) throw new ValidationError("STORAGE_LIMIT");
       const total = Number(locked.totalBytes);
       if (total + buffer.length > plan.maxTotalBytes) {
         throw new ValidationError("STORAGE_LIMIT");
       }
       if (locked.uploadCount >= plan.maxUploads) {
-        throw new ValidationError("UPLOAD_LIMIT");
+        throw new ValidationError("STORAGE_LIMIT");
       }
 
       const row = await tx.media.create({
@@ -142,13 +145,10 @@ export async function POST(req: Request, { params }: Params) {
       });
 
       if (event.disposableEnabled && event.shotsPerGuest > 0) {
-        const quota = await tx.guestShotQuota.update({
+        await tx.guestShotQuota.update({
           where: { eventId_guestKey: { eventId: event.id, guestKey } },
           data: { used: { increment: 1 } },
         });
-        if (quota.used > event.shotsPerGuest) {
-          throw new ValidationError("SHOT_LIMIT_REACHED");
-        }
       }
 
       await tx.event.update({
