@@ -72,6 +72,8 @@ jobs:
       - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
         run: npx playwright install chromium --with-deps
       - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
+        run: npm run seed:photos
+      - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
         run: npm run test:e2e
       - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
         run: npm audit --audit-level=high || true
