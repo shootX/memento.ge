@@ -1,4 +1,4 @@
-import { test, expect, devices } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import { base, e2eHeaders, mockPay, patchHostSettings, tinyPng } from "./helpers";
 
 test.describe("owner full flow", () => {
@@ -65,12 +65,10 @@ test.describe("owner full flow", () => {
   });
 });
 
-test.describe("public locales mobile", () => {
-  test.use({ ...devices["iPhone 13"] });
-  for (const path of ["/", "/en", "/en/pricing"]) {
-    test(`locale page ${path}`, async ({ page }) => {
-      await page.goto(`${base}${path}`, { waitUntil: "domcontentloaded" });
-      await expect(page.locator("html")).toHaveAttribute("lang", path.startsWith("/en") ? "en" : "ka");
-    });
-  }
-});
+for (const path of ["/", "/en", "/en/pricing"]) {
+  test(`mobile locale page ${path}`, async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`${base}${path}`, { waitUntil: "domcontentloaded" });
+    await expect(page.locator("html")).toHaveAttribute("lang", path.startsWith("/en") ? "en" : "ka");
+  });
+}
