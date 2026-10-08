@@ -72,16 +72,6 @@ jobs:
       - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
         run: npx playwright install chromium --with-deps
       - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
-        run: npm run seed:photos
-      - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
-        run: npx prisma migrate deploy
-      - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
-        run: npm run ensure:demo
-      - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
-        run: npm run dev &
-      - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
-        run: npx wait-on http://localhost:43123 -t 60000
-      - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
         run: npm run test:e2e
       - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
         run: npm audit --audit-level=high || true
