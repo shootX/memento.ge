@@ -4,6 +4,8 @@ export function e2eRequestAuthorized(req: Request): boolean {
   return req.headers.get("x-e2e-secret") === secret;
 }
 
+import { e2eRateLimitDisabled as prodSafeE2eRateLimit } from "@/lib/production-guards";
+
 export function e2eRateLimitDisabled(): boolean {
-  return process.env.E2E_RATE_LIMIT_FREE === "1";
+  return prodSafeE2eRateLimit();
 }

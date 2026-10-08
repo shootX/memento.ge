@@ -92,7 +92,7 @@ jobs:
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:43123
         run: npm run test:e2e
       - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
-        run: npm audit --audit-level=high || true
+        run: npm audit --audit-level=critical
 
   app:
     runs-on: ubuntu-24.04

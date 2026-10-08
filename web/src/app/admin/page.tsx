@@ -36,7 +36,7 @@ export default async function AdminPage({ searchParams }: Props) {
       planTier: e.planTier,
       isPaid: e.isPaid,
       uploadCount: e.uploadCount,
-      totalBytes: e.totalBytes,
+      totalBytes: Number(e.totalBytes),
       priceGel: getPlan(e.planTier).priceGel,
     }));
   }

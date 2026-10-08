@@ -78,14 +78,11 @@ export async function POST(req: Request, { params }: Params) {
         : `ip:${ip}`;
 
     if (event.disposableEnabled && event.shotsPerGuest > 0) {
-      const quota = await prisma.guestShotQuota.upsert({
+      await prisma.guestShotQuota.upsert({
         where: { eventId_guestKey: { eventId: event.id, guestKey } },
         create: { eventId: event.id, guestKey, used: 0 },
         update: {},
       });
-      if (quota.used >= event.shotsPerGuest) {
-        return jsonError(403, "კადრების ლიმიტი ამოიწურა", "SHOT_LIMIT_REACHED");
-      }
     }
 
     if (!(file instanceof File)) {
@@ -107,11 +104,6 @@ export async function POST(req: Request, { params }: Params) {
     );
     timings.ingressMs = performance.now() - t0;
 
-    const newTotal = event.totalBytes + buffer.length;
-    if (newTotal > plan.maxTotalBytes) {
-      throw new ValidationError("STORAGE_LIMIT");
-    }
-
     const mediaId = crypto.randomUUID();
     const ext = extensionForMime(ingress.mime);
     const storageKey = buildMediaKey(event.id, mediaId, ext);
@@ -121,38 +113,54 @@ export async function POST(req: Request, { params }: Params) {
     const status = event.moderateUploads ? "pending" : "approved";
     const needsDerivatives = ingress.kind === "image";
 
-    const media = await prisma.media.create({
-      data: {
-        id: mediaId,
-        eventId: event.id,
-        storageKey,
-        thumbKey: null,
-        mimeType: ingress.mime,
-        size: buffer.length,
-        guestName,
-        guestKey,
-        width: null,
-        height: null,
-        status,
-        derivativesReady: !needsDerivatives,
-      },
+    const media = await prisma.$transaction(async (tx) => {
+      const locked = await tx.event.findUnique({ where: { id: event.id } });
+      if (!locked) throw new ValidationError("NOT_FOUND");
+      const total = Number(locked.totalBytes);
+      if (total + buffer.length > plan.maxTotalBytes) {
+        throw new ValidationError("STORAGE_LIMIT");
+      }
+      if (locked.uploadCount >= plan.maxUploads) {
+        throw new ValidationError("UPLOAD_LIMIT");
+      }
+
+      const row = await tx.media.create({
+        data: {
+          id: mediaId,
+          eventId: event.id,
+          storageKey,
+          thumbKey: null,
+          mimeType: ingress.mime,
+          size: buffer.length,
+          guestName,
+          guestKey,
+          width: null,
+          height: null,
+          status,
+          derivativesReady: !needsDerivatives,
+        },
+      });
+
+      if (event.disposableEnabled && event.shotsPerGuest > 0) {
+        const quota = await tx.guestShotQuota.update({
+          where: { eventId_guestKey: { eventId: event.id, guestKey } },
+          data: { used: { increment: 1 } },
+        });
+        if (quota.used > event.shotsPerGuest) {
+          throw new ValidationError("SHOT_LIMIT_REACHED");
+        }
+      }
+
+      await tx.event.update({
+        where: { id: event.id },
+        data: {
+          uploadCount: { increment: 1 },
+          totalBytes: { increment: buffer.length },
+        },
+      });
+      return row;
     });
     timings.dbMs = performance.now() - t0;
-
-    if (event.disposableEnabled && event.shotsPerGuest > 0) {
-      await prisma.guestShotQuota.update({
-        where: { eventId_guestKey: { eventId: event.id, guestKey } },
-        data: { used: { increment: 1 } },
-      });
-    }
-
-    await prisma.event.update({
-      where: { id: event.id },
-      data: {
-        uploadCount: { increment: 1 },
-        totalBytes: { increment: buffer.length },
-      },
-    });
 
     if (needsDerivatives) {
       await enqueueMediaDerivativeJob(media.id);

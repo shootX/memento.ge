@@ -58,7 +58,9 @@ export function HostSettings({
           : null,
         publicGallery,
         customSlug: slug || null,
-        galleryPassword: galleryPassword || null,
+        ...(galleryPassword
+          ? { galleryPasswordAction: "change", galleryPasswordNew: galleryPassword }
+          : { galleryPasswordAction: "unchanged" }),
       }),
     });
     const data = await res.json().catch(() => ({}));

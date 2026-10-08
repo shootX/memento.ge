@@ -1,9 +1,10 @@
 import { appUrl } from "@/lib/site-config";
 import type { PaymentProvider } from "@/lib/billing/types";
 import type { PaymentUiLocale } from "@/lib/payment-ui-copy";
+import { paymentMockEnabled as isPaymentMockEnv } from "@/lib/production-guards";
 
 export function paymentMockEnabled(): boolean {
-  return process.env.PAYMENT_MOCK === "1";
+  return isPaymentMockEnv();
 }
 
 export type MockCheckoutQuery = {

@@ -104,8 +104,11 @@ export async function parseFlittPayload(raw: string): Promise<WebhookVerifyResul
     return { ok: false };
   }
 
-  const secret = process.env.FLITT_SECRET_KEY;
-  if (secret && !flittVerifyCallback(secret, params)) {
+  if (!configured()) {
+    return { ok: false };
+  }
+  const secret = process.env.FLITT_SECRET_KEY!;
+  if (!flittVerifyCallback(secret, params)) {
     return { ok: false };
   }
 
@@ -136,6 +139,13 @@ export async function parseFlittPayload(raw: string): Promise<WebhookVerifyResul
     return { ok: true, paymentId: params.order_id, status: "failed" };
   }
 
-  await markPaymentPaid(params.order_id, resolvedEventId);
+  if (!payment) {
+    return { ok: true, paymentId: params.order_id, status: "failed" };
+  }
+  await markPaymentPaid(params.order_id, resolvedEventId, {
+    amountGel: payment.amountGel,
+    currency: payment.currency,
+    provider: "flitt",
+  });
   return { ok: true, eventId: resolvedEventId, paymentId: params.order_id, status: "paid" };
 }

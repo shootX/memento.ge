@@ -7,11 +7,10 @@ describe("admin auth audit VM", () => {
     delete process.env.ADMIN_PASSWORD_HASH;
   });
 
-  it("allows plain ADMIN_PASSWORD in production when E2E_RATE_LIMIT_FREE=1", async () => {
+  it("refuses plain ADMIN_PASSWORD in production (E2E bypass disabled)", async () => {
     process.env.NODE_ENV = "production";
     process.env.E2E_RATE_LIMIT_FREE = "1";
     process.env.ADMIN_PASSWORD = "dev-admin-change-me";
-    expect(await verifyAdminPassword("dev-admin-change-me")).toBe(true);
-    expect(await verifyAdminPassword("wrong")).toBe(false);
+    expect(await verifyAdminPassword("dev-admin-change-me")).toBe(false);
   });
 });

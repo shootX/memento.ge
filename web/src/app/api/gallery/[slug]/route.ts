@@ -3,7 +3,13 @@ import { prisma } from "@/lib/prisma";
 import { signMediaAccess } from "@/lib/crypto";
 import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
-import { jsonError } from "@/lib/api-utils";
+import { jsonError, clientIp } from "@/lib/api-utils";
+import { consumeGalleryPassword, RateLimitError } from "@/lib/rate-limit";
+import {
+  galleryUnlockCookieName,
+  issueGalleryUnlockToken,
+  verifyGalleryUnlockToken,
+} from "@/lib/gallery-unlock-session";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -14,6 +20,11 @@ async function resolveEvent(slug: string) {
   });
 }
 
+function galleryUnlocked(event: { id: string; galleryAccessVersion: number }, jar: Awaited<ReturnType<typeof cookies>>) {
+  const token = jar.get(galleryUnlockCookieName(event.id))?.value;
+  return verifyGalleryUnlockToken(token, event.id, event.galleryAccessVersion);
+}
+
 export async function GET(_req: Request, { params }: Params) {
   const { slug } = await params;
   const event = await resolveEvent(slug);
@@ -21,8 +32,7 @@ export async function GET(_req: Request, { params }: Params) {
 
   if (event.galleryPasswordHash) {
     const jar = await cookies();
-    const unlocked = jar.get(`gallery_${event.id}`)?.value;
-    if (unlocked !== "1") {
+    if (!galleryUnlocked(event, jar)) {
       return NextResponse.json({ locked: true, coupleNames: event.coupleNames });
     }
   }
@@ -59,16 +69,28 @@ export async function POST(req: Request, { params }: Params) {
   const event = await resolveEvent(slug);
   if (!event?.galleryPasswordHash) return jsonError(400, "No password");
 
+  const ip = clientIp(req);
+  try {
+    await consumeGalleryPassword(ip, slug);
+  } catch (e) {
+    if (e instanceof RateLimitError) {
+      return jsonError(429, "ძალიან ბევრი მცდელობა", "RATE_LIMITED");
+    }
+    throw e;
+  }
+
   const { password } = (await req.json()) as { password: string };
   const ok = await bcrypt.compare(password, event.galleryPasswordHash);
-  if (!ok) return jsonError(401, "Wrong password");
+  if (!ok) return jsonError(401, "არასწორი პაროლი");
 
   const jar = await cookies();
-  jar.set(`gallery_${event.id}`, "1", {
+  const secure = process.env.NODE_ENV === "production";
+  jar.set(galleryUnlockCookieName(event.id), issueGalleryUnlockToken(event.id, event.galleryAccessVersion), {
     httpOnly: true,
     sameSite: "lax",
+    secure,
     path: "/",
-    maxAge: 86400,
+    maxAge: 86_400,
   });
   return NextResponse.json({ ok: true });
 }

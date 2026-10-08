@@ -7,6 +7,13 @@ cd "$ROOT"
 BRANCH="${WEB_DEPLOY_BRANCH:-web-deploy}"
 BUNDLE="${1:-memento-web.bundle}"
 MAIN_REF="refs/heads/main"
+SOURCE_REF="${WEB_DEPLOY_SOURCE_REF:-HEAD}"
+
+WORKTREE="$(mktemp -d)"
+trap 'rm -rf "$WORKTREE"' EXIT
+
+git worktree add --detach "$WORKTREE" "$SOURCE_REF"
+cd "$WORKTREE"
 
 git branch -D "$BRANCH" 2>/dev/null || true
 git subtree split --prefix=web -b "$BRANCH"

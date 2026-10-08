@@ -182,7 +182,7 @@ model Event {
   isPaid          Boolean   @default(false)
   paidAt          DateTime?
   expiresAt       DateTime?
-  totalBytes      Int       @default(0)
+  totalBytes      BigInt    @default(0)
   uploadCount     Int       @default(0)
 
   ownerUserId     String?
@@ -196,6 +196,11 @@ model Event {
   moderateUploads     Boolean   @default(false)
   publicGallery       Boolean   @default(false)
   galleryPasswordHash String?
+  galleryAccessVersion Int      @default(0)
+  uploadOpensAt        DateTime?
+  uploadClosesAt       DateTime?
+  galleryExpiresAt     DateTime?
+  purgeAt              DateTime?
   brandingPrimary     String?
   brandingLogoUrl     String?
 

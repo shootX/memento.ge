@@ -15,6 +15,11 @@ const loginLimiter = new RateLimiterMemory({
   duration: 300,
 });
 
+const galleryPasswordLimiter = new RateLimiterMemory({
+  points: 8,
+  duration: 600,
+});
+
 export async function consumeUpload(ip: string, guestSlug: string): Promise<void> {
   if (process.env.E2E_RATE_LIMIT_FREE === "1") return;
   const key = `up:${ip}:${guestSlug}`;
@@ -38,6 +43,15 @@ export async function consumeLogin(ip: string): Promise<void> {
   if (process.env.E2E_RATE_LIMIT_FREE === "1") return;
   try {
     await loginLimiter.consume(ip);
+  } catch {
+    throw new RateLimitError();
+  }
+}
+
+export async function consumeGalleryPassword(ip: string, slug: string): Promise<void> {
+  if (process.env.E2E_RATE_LIMIT_FREE === "1") return;
+  try {
+    await galleryPasswordLimiter.consume(`gallery:${ip}:${slug}`);
   } catch {
     throw new RateLimitError();
   }
