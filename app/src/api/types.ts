@@ -1,0 +1,140 @@
+export type Locale = 'ka' | 'en' | 'ru';
+
+export type AuthUser = {
+  id: string;
+  email: string;
+};
+
+export type AuthSession = {
+  accessToken: string;
+  expiresIn?: number;
+  user: AuthUser;
+};
+
+export type OAuthProvider = 'apple' | 'google' | 'facebook';
+
+export type MobileOAuthRequest = {
+  provider: OAuthProvider;
+  idToken?: string;
+  accessToken?: string;
+};
+
+export type MobileOAuthPendingLink = {
+  pendingLinkId: string;
+  email?: string | null;
+};
+
+export type MobilePasswordLoginRequest = {
+  email: string;
+  password: string;
+};
+
+export type MobilePasswordRegisterRequest = {
+  email: string;
+  password: string;
+  name?: string;
+};
+
+export type MobileOAuthLinkStartRequest = {
+  pendingLinkId: string;
+  email: string;
+};
+
+export type MobileOAuthLinkVerifyRequest = {
+  pendingLinkId: string;
+  email: string;
+  code: string;
+};
+
+export type GuestEventInfo = {
+  coupleNames: string;
+  eventDate: string;
+  coverUrl?: string | null;
+  canUpload: boolean;
+  isPaid: boolean;
+  isActive: boolean;
+  inTrial?: boolean;
+  publicGallery?: boolean;
+  gallerySlug?: string;
+  branding?: { logoUrl?: string };
+  limits: {
+    maxBytesPerFile: number;
+    shotsRemaining?: number | null;
+  };
+  disposable?: {
+    enabled: boolean;
+    shotsPerGuest: number;
+  } | null;
+};
+
+export type GalleryItem = {
+  id: string;
+  url: string;
+  thumbUrl?: string;
+  guestName?: string;
+  mimeType?: string;
+  highlight?: boolean;
+  status?: string;
+};
+
+export type HostBootstrap = {
+  coupleNames: string;
+  eventDate: string;
+  guestUrl: string;
+  hostUrl: string;
+  slideshowUrl: string;
+  isPaid: boolean;
+  planTier: string;
+  coverUrl?: string | null;
+  csrfToken: string;
+  customSlug?: string | null;
+  publicGallery: boolean;
+  disposableEnabled: boolean;
+  shotsPerGuest: number;
+  revealAt?: string | null;
+  moderateUploads?: boolean;
+  usage: {
+    uploadCount: number;
+    maxUploads: number;
+    priceGel: number;
+  };
+};
+
+export type HostMediaItem = GalleryItem;
+
+export type GuestbookMessage = {
+  id: string;
+  guestName?: string;
+  body: string;
+  status?: string;
+};
+
+export type DashboardEvent = {
+  id: string;
+  coupleNames: string;
+  eventDate: string;
+  isPaid: boolean;
+  hostUrl?: string;
+  guestUrl?: string;
+};
+
+export type CreateEventResponse = {
+  hostUrl: string;
+  guestUrl?: string;
+  error?: string;
+};
+
+export type PaymentSession = {
+  checkoutUrl: string;
+  paymentId: string;
+};
+
+export type PaymentStatus = {
+  status: 'pending' | 'paid' | 'failed';
+  isPaid: boolean;
+};
+
+export type PushSubscribeInput = {
+  platform: 'ios' | 'android';
+  expoPushToken: string;
+};

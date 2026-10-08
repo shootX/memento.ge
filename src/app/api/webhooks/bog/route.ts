@@ -1,6 +1,0 @@
-import { handleBogPaymentCallback } from "@/lib/billing/bog-callback-handler";
-
-/** Legacy callback path — forwards to the same handler as `/api/payments/bog/callback`. */
-export async function POST(req: Request) {
-  return handleBogPaymentCallback(req);
-}

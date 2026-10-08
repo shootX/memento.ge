@@ -1,0 +1,419 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// --- Auth & accounts ---
+
+model User {
+  id                 String    @id @default(cuid())
+  email              String    @unique
+  name               String?
+  emailVerified      DateTime?
+  image              String?
+  role               String    @default("user") // user | admin | partner
+  passwordHash       String?
+  passwordUpdatedAt  DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  sessions            Session[]
+  mobileAccessTokens  MobileAccessToken[]
+  oauthAccounts       OAuthAccount[]
+  passwordResetTokens PasswordResetToken[]
+  ownedEvents         Event[]          @relation("EventOwner")
+  coHosts             EventCoHost[]
+  partnerMemberships  PartnerMember[]
+  auditLogs           AuditLog[]
+  payments            Payment[]
+}
+
+model PasswordResetToken {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model MagicLinkToken {
+  id                    String    @id @default(cuid())
+  email                 String
+  tokenHash             String    @unique
+  codeHash              String?
+  client                String?
+  redirectUri           String?
+  oauthPendingId        String?
+  oauthPending          OAuthPendingLink? @relation(fields: [oauthPendingId], references: [id], onDelete: SetNull)
+  consumedAt            DateTime?
+  expiresAt             DateTime
+  createdAt             DateTime  @default(now())
+
+  @@index([email, createdAt])
+}
+
+model OAuthNonce {
+  id        String   @id @default(cuid())
+  nonceHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([expiresAt])
+}
+
+model OAuthPendingLink {
+  id                String   @id @default(cuid())
+  tokenHash         String   @unique
+  provider          String
+  providerUserId    String
+  profileName       String?
+  profileImage      String?
+  emailFromProvider String?
+  expiresAt         DateTime
+  createdAt         DateTime @default(now())
+  magicLinks        MagicLinkToken[]
+}
+
+model MobileAccessToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model OAuthAccount {
+  id             String @id @default(cuid())
+  userId         String
+  user           User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider       String
+  providerUserId String
+
+  @@unique([provider, providerUserId])
+}
+
+// --- Partners (B2B) ---
+
+model PartnerOrg {
+  id               String   @id @default(cuid())
+  name             String
+  slug             String   @unique
+  logoUrl          String?
+  primaryColor     String   @default("#3d4f3f")
+  secondaryColor   String   @default("#c4a574")
+  commissionRate   Float    @default(0.15)
+  creditsBalance   Int      @default(0)
+  whiteLabel       Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  members      PartnerMember[]
+  events       Event[]
+  referrals    PartnerReferral[]
+  subscription PartnerSubscription?
+}
+
+model PartnerMember {
+  id        String     @id @default(cuid())
+  partnerId String
+  partner   PartnerOrg @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String     @default("owner") // owner | staff
+
+  @@unique([partnerId, userId])
+}
+
+model PartnerReferral {
+  id          String     @id @default(cuid())
+  partnerId   String
+  partner     PartnerOrg @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  eventId     String?    @unique
+  event       Event?     @relation(fields: [eventId], references: [id])
+  commissionGel Float    @default(0)
+  status      String     @default("pending") // pending | paid
+  createdAt   DateTime   @default(now())
+}
+
+model PartnerSubscription {
+  id                 String     @id @default(cuid())
+  partnerId          String     @unique
+  partner            PartnerOrg @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  planId             String     @default("partner_starter")
+  status             String     @default("active")
+  externalProvider   String?
+  externalSubscriptionId String?
+  currentPeriodEnd   DateTime?
+}
+
+// --- Events & media ---
+
+model Event {
+  id              String    @id @default(cuid())
+  guestSlug       String    @unique
+  customSlug      String?   @unique
+  hostToken       String    @unique
+  slideshowToken  String    @unique
+  coupleNames     String
+  eventDate       DateTime
+  coverPhotoKey   String?
+  planTier        String    @default("starter")
+  isPaid          Boolean   @default(false)
+  paidAt          DateTime?
+  expiresAt       DateTime?
+  totalBytes      Int       @default(0)
+  uploadCount     Int       @default(0)
+
+  ownerUserId     String?
+  owner           User?     @relation("EventOwner", fields: [ownerUserId], references: [id])
+  partnerOrgId    String?
+  partner         PartnerOrg? @relation(fields: [partnerOrgId], references: [id])
+
+  disposableEnabled   Boolean   @default(false)
+  shotsPerGuest       Int       @default(0)
+  revealAt            DateTime?
+  moderateUploads     Boolean   @default(false)
+  publicGallery       Boolean   @default(false)
+  galleryPasswordHash String?
+  brandingPrimary     String?
+  brandingLogoUrl     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  media         Media[]
+  guestMessages GuestMessage[]
+  coHosts       EventCoHost[]
+  coHostInvites CoHostInvite[]
+  payments      Payment[]
+  referral      PartnerReferral?
+  guestQuotas   GuestShotQuota[]
+  uploadIdempotencyKeys GuestUploadIdempotency[]
+  pushSubs      PushSubscription[]
+  mobilePushRegs MobilePushRegistration[]
+  pushPendingUploadCount Int       @default(0)
+  pushLastUploadNotifyAt DateTime?
+  expiryReminderSentAt   DateTime?
+}
+
+model PushSubscription {
+  id           String   @id @default(cuid())
+  eventId      String
+  event        Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  endpoint     String   @unique
+  p256dh       String
+  auth         String
+  locale       String   @default("ka")
+  notifyUploads    Boolean @default(true)
+  notifyGuestbook  Boolean @default(true)
+  notifyExpiry     Boolean @default(true)
+  createdAt    DateTime @default(now())
+}
+
+/** Expo push token storage for native apps (no delivery in this endpoint). */
+model MobilePushRegistration {
+  id            String   @id @default(cuid())
+  eventId       String
+  event         Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  platform      String
+  expoPushToken String   @unique
+  createdAt     DateTime @default(now())
+
+  @@index([eventId])
+}
+
+model CoHostInvite {
+  id         String    @id @default(cuid())
+  eventId    String
+  event      Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  email      String
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  acceptedAt DateTime?
+  createdAt  DateTime  @default(now())
+}
+
+model EventCoHost {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invitedAt DateTime @default(now())
+
+  @@unique([eventId, userId])
+}
+
+model Media {
+  id          String   @id @default(cuid())
+  eventId     String
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  storageKey  String   @unique
+  thumbKey    String?
+  mimeType    String
+  size        Int
+  guestName   String?
+  guestKey    String?
+  width       Int?
+  height      Int?
+  durationSec Float?
+  status      String   @default("approved") // pending | approved | rejected
+  highlight   Boolean  @default(false)
+  derivativesReady Boolean @default(true)
+  createdAt   DateTime @default(now())
+
+  reactions MediaReaction[]
+  derivativeJob MediaDerivativeJob?
+
+  @@index([eventId, createdAt])
+  @@index([eventId, status])
+}
+
+model MediaDerivativeJob {
+  id        String   @id @default(cuid())
+  mediaId   String   @unique
+  media     Media    @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  status    String   @default("pending") // pending | processing | done | failed
+  attempts  Int      @default(0)
+  lastError String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, createdAt])
+}
+
+model GuestShotQuota {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  guestKey  String
+  used      Int      @default(0)
+
+  @@unique([eventId, guestKey])
+}
+
+/** Client-provided upload idempotency key per event (PWA offline flush dedupe). */
+model GuestUploadIdempotency {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  clientKey String
+  mediaId   String
+  createdAt DateTime @default(now())
+
+  @@unique([eventId, clientKey])
+  @@index([eventId])
+}
+
+model GuestMessage {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  guestName String?
+  body      String?
+  audioKey  String?
+  type      String   @default("text") // text | audio
+  status    String   @default("approved")
+  createdAt DateTime @default(now())
+}
+
+model MediaReaction {
+  id        String   @id @default(cuid())
+  mediaId   String
+  media     Media    @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  guestKey  String
+  type      String   @default("like")
+  createdAt DateTime @default(now())
+
+  @@unique([mediaId, guestKey])
+}
+
+// --- Billing ---
+
+model Payment {
+  id               String   @id @default(cuid())
+  userId           String?
+  user             User?    @relation(fields: [userId], references: [id])
+  eventId          String?
+  event            Event?   @relation(fields: [eventId], references: [id])
+  amountGel        Int
+  currency         String   @default("GEL")
+  provider         String   // stripe | bog | tbc | flitt | manual
+  externalId       String?
+  status           String   @default("pending")
+  metadata         String?
+  createdAt        DateTime @default(now())
+}
+
+// --- Ops ---
+
+model AdminSession {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String
+  entity    String?
+  entityId  String?
+  metadata  String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model EmailOutbox {
+  id            String    @id @default(cuid())
+  toEmail       String
+  template      String
+  payload       String
+  locale        String    @default("ka")
+  attempts      Int       @default(0)
+  lastError     String?
+  nextAttemptAt DateTime  @default(now())
+  sentAt        DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([sentAt, nextAttemptAt])
+}
+
+model PaymentWebhookEvent {
+  id             String   @id @default(cuid())
+  provider       String
+  idempotencyKey String   @unique
+  paymentId      String?
+  createdAt      DateTime @default(now())
+}
+
+model UsageSnapshot {
+  id         String   @id @default(cuid())
+  totalBytes BigInt   @default(0)
+  eventCount Int      @default(0)
+  capturedAt DateTime @default(now())
+}

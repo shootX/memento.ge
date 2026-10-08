@@ -2,13 +2,16 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, monorepo]
   pull_request:
-    branches: [main]
+    branches: [main, monorepo]
 
 jobs:
-  test:
+  web:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
     services:
       postgres:
         image: postgres:16-alpine
@@ -33,22 +36,75 @@ jobs:
       EMAIL_PROVIDER: log
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            web:
+              - 'web/**'
+              - '.github/workflows/ci.yml'
+      - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
+        uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: npm
-      - run: npm ci --legacy-peer-deps
-      - run: npx prisma generate
-      - run: npx tsc --noEmit
-      - run: npm run lint
-      - run: npx prisma migrate deploy
-      - run: npm test
-      - run: npm run build
-      - run: npx playwright install chromium --with-deps
-      - run: npm run seed:photos
-      - run: npx prisma migrate deploy
-      - run: npm run ensure:demo
-      - run: npm run dev &
-      - run: npx wait-on http://localhost:43123 -t 60000
-      - run: npm run test:e2e
-      - run: npm audit --audit-level=high || true
+          cache-dependency-path: web/package-lock.json
+      - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
+        run: npm ci --legacy-peer-deps
+      - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
+        run: npx prisma generate
+      - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
+        run: npx tsc --noEmit
+      - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
+        run: npm run lint
+      - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
+        run: npx prisma migrate deploy
+      - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
+        run: npm test
+      - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
+        run: npm run build
+      - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
+        run: npx playwright install chromium --with-deps
+      - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
+        run: npm run seed:photos
+      - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
+        run: npx prisma migrate deploy
+      - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
+        run: npm run ensure:demo
+      - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
+        run: npm run dev &
+      - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
+        run: npx wait-on http://localhost:43123 -t 60000
+      - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
+        run: npm run test:e2e
+      - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
+        run: npm audit --audit-level=high || true
+
+  app:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            app:
+              - 'app/**'
+              - '.github/workflows/ci.yml'
+      - if: steps.changes.outputs.app == 'true' || github.event_name != 'pull_request'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - if: steps.changes.outputs.app == 'true' || github.event_name != 'pull_request'
+        run: npm ci --legacy-peer-deps
+      - if: steps.changes.outputs.app == 'true' || github.event_name != 'pull_request'
+        run: npm run typecheck
+      - if: steps.changes.outputs.app == 'true' || github.event_name != 'pull_request'
+        run: npm run lint
+      - if: steps.changes.outputs.app == 'true' || github.event_name != 'pull_request'
+        run: npm test
