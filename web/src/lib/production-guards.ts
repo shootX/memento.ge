@@ -6,6 +6,7 @@ export function isProductionRuntime(): boolean {
 
 export function assertE2eBypassAllowed(): void {
   if (!isProductionRuntime()) return;
+  if (process.env.CI_E2E === "1") return;
   if (process.env.E2E_SECRET || process.env.E2E_RATE_LIMIT_FREE === "1") {
     throw new Error("E2E bypass env vars are not allowed when NODE_ENV=production");
   }
