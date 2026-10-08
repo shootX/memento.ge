@@ -74,19 +74,19 @@ npm run seed:full     # სრული QA მონაცემები
 
 | ფაილი | შინაარსი |
 |--------|-----------|
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | არქიტექტურა, ნაკადები, storage, queue |
-| [docs/SETUP.md](docs/SETUP.md) | env, DB, seed, troubleshooting |
-| [docs/FEATURES.md](docs/FEATURES.md) | ფუნქციები, routes, მოდელები |
-| [docs/API.md](docs/API.md) | ყველა API handler |
-| [docs/SECURITY.md](docs/SECURITY.md) | auth, upload, CSP, ხვრელები |
-| [docs/PAYMENTS.md](docs/PAYMENTS.md) | პაკეტები, Stripe, webhook stubs |
-| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Fly/Railway, R2, DNS, VAPID |
-| [docs/TESTING.md](docs/TESTING.md) | Vitest, Playwright, CI, Lighthouse |
-| [docs/ROADMAP.md](docs/ROADMAP.md) | რისკები და TODO |
-| [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) | კონვენციები |
-| [docs/database.md](docs/database.md) | Prisma მოდელები + ER |
-| [docs/competitive-analysis.md](docs/competitive-analysis.md) | ბაზრის ანალიზი |
-| [docs/en/HANDOVER.md](docs/en/HANDOVER.md) | English handover summary |
+| [docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md) | არქიტექტურა, ნაკადები, storage, queue |
+| [docs/SETUP.md](../../docs/SETUP.md) | env, DB, seed, troubleshooting |
+| [docs/FEATURES.md](../../docs/FEATURES.md) | ფუნქციები, routes, მოდელები |
+| [docs/API.md](../../docs/API.md) | ყველა API handler |
+| [docs/SECURITY.md](../../docs/SECURITY.md) | auth, upload, CSP, ხვრელები |
+| [docs/PAYMENTS.md](../../docs/PAYMENTS.md) | პაკეტები, Stripe, webhook stubs |
+| [docs/DEPLOYMENT.md](../../docs/DEPLOYMENT.md) | Fly/Railway, R2, DNS, VAPID |
+| [docs/TESTING.md](../../docs/TESTING.md) | Vitest, Playwright, CI, Lighthouse |
+| [docs/ROADMAP.md](../../docs/ROADMAP.md) | რისკები და TODO |
+| [docs/CONTRIBUTING.md](../../docs/CONTRIBUTING.md) | კონვენციები |
+| [docs/database.md](../../docs/database.md) | Prisma მოდელები + ER |
+| [docs/competitive-analysis.md](../../docs/competitive-analysis.md) | ბაზრის ანალიზი |
+| [docs/en/HANDOVER.md](../../docs/en/HANDOVER.md) | English handover summary |
 
 ---
 
