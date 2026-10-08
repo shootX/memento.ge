@@ -1,14 +1,5 @@
 import { test, expect, devices } from "@playwright/test";
-import {
-  activateEvent,
-  attachDiagnostics,
-  base,
-  createEvent,
-  e2eHeaders,
-  mockPay,
-  patchHostSettings,
-  tinyPng,
-} from "./helpers";
+import { base, e2eHeaders, mockPay, patchHostSettings, tinyPng } from "./helpers";
 
 test.describe("owner full flow", () => {
   test("signup → event → pay → guest media → moderation → gallery → export → revoke", async ({
