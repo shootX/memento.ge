@@ -101,6 +101,11 @@ async function runJob(jobId: string) {
   if (!job?.media) return;
 
   const media = job.media;
+  const exists = await prisma.media.findUnique({ where: { id: media.id } });
+  if (!exists) {
+    await prisma.mediaDerivativeJob.delete({ where: { id: jobId } }).catch(() => {});
+    return;
+  }
   const event = await prisma.event.findUnique({ where: { id: media.eventId } });
   const { getPlan } = await import("@/lib/plans");
   const planMax = event ? getPlan(event.planTier).maxBytesPerFile : 100 * 1024 * 1024;
@@ -124,6 +129,9 @@ async function runJob(jobId: string) {
       thumbKey = `${originalKey.replace(/\.[^.]+$/, "")}_thumb.jpg`;
       await putObject(thumbKey, await processThumbnail(processed.buffer), "image/jpeg");
     }
+
+    const stillThere = await prisma.media.findUnique({ where: { id: media.id } });
+    if (!stillThere) return;
 
     await prisma.media.update({
       where: { id: media.id },

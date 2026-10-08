@@ -24,7 +24,7 @@ export async function getPublicGalleryBootstrap(slug: string) {
   const media = await prisma.media.findMany({
     where: { eventId: event.id, status: "approved" },
     orderBy: { createdAt: "desc" },
-    take: 200,
+    take: 100,
   });
   const exp = Date.now() + 3600_000;
   return {

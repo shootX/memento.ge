@@ -1,5 +1,7 @@
 import fs from "fs/promises";
+import { createReadStream, statSync } from "fs";
 import path from "path";
+import type { Readable } from "stream";
 import {
   S3Client,
   PutObjectCommand,
@@ -90,6 +92,60 @@ export async function putObject(
   const full = path.join(localRoot, safeKey);
   await ensureLocalDir(full);
   await fs.writeFile(full, body);
+}
+
+export async function statObject(key: string): Promise<{ size: number }> {
+  const safeKey = sanitizeStorageKey(key);
+  if (!safeKey) throw new Error("Invalid storage key");
+  const client = s3Client();
+  if (client && process.env.S3_BUCKET) {
+    const res = await client.send(
+      new GetObjectCommand({ Bucket: process.env.S3_BUCKET, Key: safeKey }),
+    );
+    return { size: Number(res.ContentLength ?? 0) };
+  }
+  const full = path.join(localRoot, safeKey);
+  const st = statSync(full);
+  return { size: st.size };
+}
+
+export type ObjectReadResult = {
+  stream: Readable;
+  size: number;
+  start: number;
+  end: number;
+};
+
+export async function openObjectReadStream(
+  key: string,
+  range?: { start: number; end: number },
+): Promise<ObjectReadResult> {
+  const safeKey = sanitizeStorageKey(key);
+  if (!safeKey) throw new Error("Invalid storage key");
+  const { size } = await statObject(safeKey);
+  const start = range ? Math.max(0, range.start) : 0;
+  const end = range ? Math.min(size - 1, range.end) : size - 1;
+  if (start > end || size === 0) throw new Error("Invalid range");
+
+  const client = s3Client();
+  if (client && process.env.S3_BUCKET) {
+    const res = await client.send(
+      new GetObjectCommand({
+        Bucket: process.env.S3_BUCKET,
+        Key: safeKey,
+        Range: `bytes=${start}-${end}`,
+      }),
+    );
+    const body = res.Body;
+    if (!body || typeof (body as Readable).pipe !== "function") {
+      throw new Error("Empty object stream");
+    }
+    return { stream: body as Readable, size, start, end };
+  }
+
+  const full = path.join(localRoot, safeKey);
+  const stream = createReadStream(full, { start, end });
+  return { stream, size, start, end };
 }
 
 export async function getObject(key: string): Promise<Buffer> {

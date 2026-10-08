@@ -132,6 +132,7 @@ model PartnerOrg {
   events       Event[]
   referrals    PartnerReferral[]
   subscription PartnerSubscription?
+  creditLedger PartnerCreditLedger[]
 }
 
 model PartnerMember {
@@ -218,6 +219,7 @@ model Event {
   guestQuotas   GuestShotQuota[]
   uploadIdempotencyKeys GuestUploadIdempotency[]
   uploadReservations    GuestUploadReservation[]
+  exportJobs            MediaExportJob[]
   pushSubs      PushSubscription[]
   mobilePushRegs MobilePushRegistration[]
   pushPendingUploadCount Int       @default(0)
@@ -427,13 +429,61 @@ model EmailOutbox {
   template      String
   payload       String
   locale        String    @default("ka")
+  idempotencyKey String?  @unique
   attempts      Int       @default(0)
   lastError     String?
   nextAttemptAt DateTime  @default(now())
   sentAt        DateTime?
+  deadAt        DateTime?
   createdAt     DateTime  @default(now())
 
   @@index([sentAt, nextAttemptAt])
+}
+
+model MediaExportJob {
+  id                 String   @id @default(cuid())
+  eventId            String
+  event              Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  status             String   @default("pending")
+  storageKey         String?
+  bytesWritten       BigInt   @default(0)
+  mediaTotal         Int      @default(0)
+  mediaDone          Int      @default(0)
+  resumeAfterMediaId String?
+  leaseUntil         DateTime?
+  leasedBy           String?
+  attempts           Int      @default(0)
+  lastError          String?
+  idempotencyKey     String?  @unique
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([eventId, status])
+}
+
+model MediaReport {
+  id        String   @id @default(cuid())
+  mediaId   String
+  eventId   String
+  reason    String
+  guestKey  String?
+  createdAt DateTime @default(now())
+
+  @@index([eventId])
+}
+
+model PartnerCreditLedger {
+  id           String     @id @default(cuid())
+  partnerId    String
+  partner      PartnerOrg @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  type         String
+  amount       Int
+  balanceAfter Int
+  reference    String?
+  metadata     String?
+  createdAt    DateTime   @default(now())
+
+  @@index([partnerId, createdAt])
 }
 
 model PaymentWebhookEvent {

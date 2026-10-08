@@ -20,6 +20,7 @@ export default function HostPayScreen() {
   const bearer = useAuthStore((s) => s.accessToken);
   const [opening, setOpening] = useState(preview !== 'ui');
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
+  const [priceGel, setPriceGel] = useState<number | null>(null);
   const paymentIdRef = useRef<string | null>(null);
   const pollingRef = useRef(false);
 
@@ -40,6 +41,8 @@ export default function HostPayScreen() {
     if (preview === 'ui') return;
     (async () => {
       try {
+        const host = await api.getHost(token);
+        setPriceGel(host.usage?.priceGel ?? null);
         const session = await api.createPaymentSession(
           token,
           `memento://host/${token}/pay-complete`,
@@ -70,7 +73,9 @@ export default function HostPayScreen() {
       <Title>{t('pay')}</Title>
       <View style={styles.card}>
         <Text style={styles.provider}>TBC / BOG</Text>
-        <Text style={styles.amount}>99 ₾</Text>
+        <Text style={styles.amount}>
+          {priceGel != null ? `${priceGel} ₾` : "—"}
+        </Text>
         <Text style={styles.hint} numberOfLines={3}>{t('payHint')}</Text>
         {opening ? (
           <ActivityIndicator color={colors.lime} style={{ marginTop: 16 }} />

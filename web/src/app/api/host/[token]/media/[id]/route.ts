@@ -21,15 +21,23 @@ export async function PATCH(req: Request, { params }: Params) {
     const event = auth.event;
     const media = await assertMediaBelongsToEvent(id, event.id);
     if (!media) return jsonError(404, "Not found");
-    const body = (await req.json()) as { highlight?: boolean };
-    if (typeof body.highlight !== "boolean") {
-      return jsonError(400, "highlight required");
+    const body = (await req.json()) as {
+      highlight?: boolean;
+      status?: "approved" | "rejected" | "pending";
+    };
+    const data: Record<string, unknown> = {};
+    if (typeof body.highlight === "boolean") data.highlight = body.highlight;
+    if (body.status && ["approved", "rejected", "pending"].includes(body.status)) {
+      data.status = body.status;
+    }
+    if (Object.keys(data).length === 0) {
+      return jsonError(400, "highlight or status required");
     }
     await prisma.media.update({
       where: { id: media.id },
-      data: { highlight: body.highlight },
+      data,
     });
-    return NextResponse.json({ ok: true, highlight: body.highlight });
+    return NextResponse.json({ ok: true, ...data });
   } catch (e) {
     return handleApiError(e);
   }

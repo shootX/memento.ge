@@ -140,6 +140,10 @@ export async function commitGuestUploadReservation(params: {
   guestKey: string;
   disposableShotCheck: boolean;
 }): Promise<void> {
+  if (process.env.UPLOAD_TEST_FAIL_COMMIT === "1") {
+    process.env.UPLOAD_TEST_FAIL_COMMIT = "0";
+    throw new Error("UPLOAD_DB_COMMIT_FAILED");
+  }
   await prisma.$transaction(async (tx) => {
     await tx.guestUploadReservation.updateMany({
       where: {
