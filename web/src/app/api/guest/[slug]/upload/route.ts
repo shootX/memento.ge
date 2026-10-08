@@ -13,7 +13,6 @@ import {
 } from "@/lib/upload-validation";
 import { buildMediaKey, putObject } from "@/lib/storage";
 import { clientIp, consumeUpload, handleApiError, jsonError, readFormData } from "@/lib/api-utils";
-import { isGalleryRevealed } from "@/lib/tbilisi-time";
 import {
   findExistingUploadByClientKey,
   recordUploadClientKey,
@@ -23,6 +22,13 @@ import { enqueueMediaDerivativeJob } from "@/lib/jobs/media-derivatives";
 import { z } from "zod";
 
 type Params = { params: Promise<{ slug: string }> };
+
+class ShotLimitReached extends Error {
+  constructor() {
+    super("shot limit");
+    this.name = "ShotLimitReached";
+  }
+}
 
 const nameSchema = z.string().max(80).optional();
 
@@ -39,10 +45,6 @@ export async function POST(req: Request, { params }: Params) {
     if (!event) return jsonError(404, "ღონისძიება ვერ მოიძებნა", "NOT_FOUND");
     if (!eventAllowsUpload(event)) {
       return jsonError(403, "ატვირთვა დახურულია", "UPLOADS_NOT_ALLOWED");
-    }
-
-    if (!isGalleryRevealed(event.revealAt, event.disposableEnabled)) {
-      return jsonError(403, "გალერეა ჯერ არ არის გახსნილი", "GALLERY_NOT_REVEALED");
     }
 
     const plan = getPlan(event.planTier);
@@ -77,17 +79,6 @@ export async function POST(req: Request, { params }: Params) {
         ? String(guestKeyRaw)
         : `ip:${ip}`;
 
-    if (event.disposableEnabled && event.shotsPerGuest > 0) {
-      const quota = await prisma.guestShotQuota.upsert({
-        where: { eventId_guestKey: { eventId: event.id, guestKey } },
-        create: { eventId: event.id, guestKey, used: 0 },
-        update: {},
-      });
-      if (quota.used >= event.shotsPerGuest) {
-        return jsonError(403, "კადრების ლიმიტი ამოიწურა", "SHOT_LIMIT_REACHED");
-      }
-    }
-
     if (!(file instanceof File)) {
       return jsonError(400, "Missing file");
     }
@@ -117,6 +108,17 @@ export async function POST(req: Request, { params }: Params) {
     const needsDerivatives = ingress.kind === "image";
 
     const media = await prisma.$transaction(async (tx) => {
+      if (event.disposableEnabled && event.shotsPerGuest > 0) {
+        const quota = await tx.guestShotQuota.upsert({
+          where: { eventId_guestKey: { eventId: event.id, guestKey } },
+          create: { eventId: event.id, guestKey, used: 0 },
+          update: {},
+        });
+        if (quota.used >= event.shotsPerGuest) {
+          throw new ShotLimitReached();
+        }
+      }
+
       const locked = await tx.event.findUnique({ where: { id: event.id } });
       if (!locked) throw new ValidationError("STORAGE_LIMIT");
       const total = Number(locked.totalBytes);
@@ -190,6 +192,9 @@ export async function POST(req: Request, { params }: Params) {
     );
     return res;
   } catch (e) {
+    if (e instanceof ShotLimitReached) {
+      return jsonError(403, "კადრების ლიმიტი ამოიწურა", "SHOT_LIMIT_REACHED");
+    }
     return handleApiError(e);
   }
 }

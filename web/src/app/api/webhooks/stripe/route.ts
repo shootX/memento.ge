@@ -8,14 +8,14 @@ import {
 
 export async function POST(req: Request) {
   const raw = await req.text();
-  const key = webhookIdempotencyKey("stripe", raw);
-  if (!(await claimWebhookEvent("stripe", key))) {
-    return NextResponse.json({ ok: true, duplicate: true });
-  }
-
   const verified = await stripeAdapter.verifyWebhook(req, raw);
   if (!verified.ok) {
     return NextResponse.json({ error: "invalid" }, { status: 400 });
+  }
+
+  const key = webhookIdempotencyKey("stripe", raw);
+  if (!(await claimWebhookEvent("stripe", key))) {
+    return NextResponse.json({ ok: true, duplicate: true });
   }
 
   if (verified.eventId && verified.status === "paid" && verified.paymentId) {
