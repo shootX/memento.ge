@@ -5,7 +5,7 @@
 
 | Suite | Command | Result |
 |-------|---------|--------|
-| Web unit/integration | `cd web && DATABASE_URL=postgresql://… npm test` | **143** passed |
+| Web unit/integration | `cd web && DATABASE_URL=postgresql://… npm test` | **151** passed |
 | Web typecheck | `cd web && npm run typecheck` | pass |
 | Web lint | `cd web && npm run lint` | pass (warnings only) |
 | App | `cd app && npm test` | **54** passed |
