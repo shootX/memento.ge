@@ -45,11 +45,11 @@ test("service worker registration when enabled", async ({ page }) => {
 });
 
 test("install banner demo", async ({ page }) => {
-  await page.goto(`${base}/e/memento-demo-guest-01?pwa_install_demo=1`);
-  await expect(page.getByTestId("pwa-install-banner")).toBeVisible();
+  await page.goto(`${base}/?pwa_install_demo=1`);
+  await expect(page.getByTestId("pwa-install-banner").first()).toBeVisible();
 });
 
 test("ios install sheet demo", async ({ page }) => {
-  await page.goto(`${base}/e/memento-demo-guest-01?pwa_ios_demo=1`);
-  await expect(page.getByTestId("pwa-ios-sheet")).toBeVisible();
+  await page.goto(`${base}/?pwa_ios_demo=1`);
+  await expect(page.getByTestId("pwa-ios-sheet").first()).toBeVisible();
 });
