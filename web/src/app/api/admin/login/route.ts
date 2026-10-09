@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import {
+  ADMIN_COOKIE,
+  adminCookieOptions,
   createAdminSession,
-  setAdminCookie,
 } from "@/lib/session";
 import { clientIp, consumeLogin, jsonError } from "@/lib/api-utils";
 import { verifyAdminPassword } from "@/lib/admin-auth";
@@ -22,6 +23,7 @@ export async function POST(req: Request) {
   }
 
   const token = await createAdminSession();
-  await setAdminCookie(token);
-  return NextResponse.json({ ok: true });
+  const res = NextResponse.json({ ok: true });
+  res.cookies.set(ADMIN_COOKIE, token, adminCookieOptions());
+  return res;
 }

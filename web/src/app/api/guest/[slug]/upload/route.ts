@@ -1,10 +1,8 @@
+import { createHash } from "crypto";
 import { performance } from "perf_hooks";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import {
-  getEventByPublicSlug,
-  eventAllowsUpload,
-} from "@/lib/auth";
+import { getEventByPublicSlug, eventAllowsUpload } from "@/lib/auth";
 import { getPlan } from "@/lib/plans";
 import {
   validateUploadIngress,
@@ -13,12 +11,16 @@ import {
 } from "@/lib/upload-validation";
 import { buildMediaKey, putObject } from "@/lib/storage";
 import { clientIp, consumeUpload, handleApiError, jsonError, readFormData } from "@/lib/api-utils";
-import { isGalleryRevealed } from "@/lib/tbilisi-time";
+import { resolveUploadIdempotencyKey } from "@/lib/guest-upload-idempotency";
 import {
-  findExistingUploadByClientKey,
-  recordUploadClientKey,
-  resolveUploadIdempotencyKey,
-} from "@/lib/guest-upload-idempotency";
+  commitGuestUploadReservation,
+  releaseGuestUploadReservation,
+  reserveGuestUpload,
+  uploadPayloadHash,
+  UploadIdempotencyConflict,
+  UploadQuotaExceeded,
+  UploadShotLimitReached,
+} from "@/lib/guest-upload-reservation";
 import { enqueueMediaDerivativeJob } from "@/lib/jobs/media-derivatives";
 import { z } from "zod";
 
@@ -29,20 +31,17 @@ const nameSchema = z.string().max(80).optional();
 export async function POST(req: Request, { params }: Params) {
   const timings: Record<string, number> = {};
   const t0 = performance.now();
+  let reservedKey: string | null = null;
+  let reservedEventId: string | null = null;
   try {
     const { slug } = await params;
     const ip = clientIp(req);
-    await consumeUpload(ip, slug);
-    timings.rateLimitMs = performance.now() - t0;
-
     const event = await getEventByPublicSlug(slug);
     if (!event) return jsonError(404, "ღონისძიება ვერ მოიძებნა", "NOT_FOUND");
+    await consumeUpload(ip, slug, event.id);
+    timings.rateLimitMs = performance.now() - t0;
     if (!eventAllowsUpload(event)) {
       return jsonError(403, "ატვირთვა დახურულია", "UPLOADS_NOT_ALLOWED");
-    }
-
-    if (!isGalleryRevealed(event.revealAt, event.disposableEnabled)) {
-      return jsonError(403, "გალერეა ჯერ არ არის გახსნილი", "GALLERY_NOT_REVEALED");
     }
 
     const plan = getPlan(event.planTier);
@@ -52,20 +51,6 @@ export async function POST(req: Request, { params }: Params) {
     timings.formMs = performance.now() - t0;
 
     const clientUploadKey = resolveUploadIdempotencyKey(req, form);
-    if (clientUploadKey) {
-      const existing = await findExistingUploadByClientKey(event.id, clientUploadKey);
-      if (existing) {
-        const prior = await prisma.media.findUnique({ where: { id: existing.mediaId } });
-        if (prior) {
-          return NextResponse.json({
-            id: prior.id,
-            ok: true,
-            status: prior.status,
-            duplicate: true,
-          });
-        }
-      }
-    }
     const file = form.get("file");
     const guestNameRaw = form.get("guestName");
     const guestKeyRaw = form.get("guestKey");
@@ -77,23 +62,39 @@ export async function POST(req: Request, { params }: Params) {
         ? String(guestKeyRaw)
         : `ip:${ip}`;
 
-    if (event.disposableEnabled && event.shotsPerGuest > 0) {
-      const quota = await prisma.guestShotQuota.upsert({
-        where: { eventId_guestKey: { eventId: event.id, guestKey } },
-        create: { eventId: event.id, guestKey, used: 0 },
-        update: {},
-      });
-      if (quota.used >= event.shotsPerGuest) {
-        return jsonError(403, "კადრების ლიმიტი ამოიწურა", "SHOT_LIMIT_REACHED");
-      }
-    }
-
     if (!(file instanceof File)) {
       return jsonError(400, "Missing file");
     }
 
     if (file.size > plan.maxBytesPerFile) {
       throw new ValidationError("FILE_TOO_LARGE", plan.maxBytesPerFile);
+    }
+
+    const payloadHash = uploadPayloadHash(file.size, file.type || "application/octet-stream", guestKey);
+    const shotCheck = event.disposableEnabled && event.shotsPerGuest > 0;
+
+    if (clientUploadKey) {
+      reservedKey = clientUploadKey;
+      reservedEventId = event.id;
+      const reserved = await reserveGuestUpload({
+        event,
+        clientKey: clientUploadKey,
+        payloadHash,
+        reservedBytes: file.size,
+        guestKey,
+        disposableShotCheck: shotCheck,
+      });
+      if (reserved.duplicate && reserved.mediaId) {
+        const prior = await prisma.media.findUnique({ where: { id: reserved.mediaId } });
+        if (prior) {
+          return NextResponse.json({
+            id: prior.id,
+            ok: true,
+            status: prior.status,
+            duplicate: true,
+          });
+        }
+      }
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
@@ -107,52 +108,107 @@ export async function POST(req: Request, { params }: Params) {
     );
     timings.ingressMs = performance.now() - t0;
 
-    const newTotal = event.totalBytes + buffer.length;
-    if (newTotal > plan.maxTotalBytes) {
-      throw new ValidationError("STORAGE_LIMIT");
-    }
-
     const mediaId = crypto.randomUUID();
     const ext = extensionForMime(ingress.mime);
     const storageKey = buildMediaKey(event.id, mediaId, ext);
+    const contentSha256 = createHash("sha256").update(buffer).digest("hex");
+
     await putObject(storageKey, buffer, ingress.mime);
     timings.storageMs = performance.now() - t0;
 
     const status = event.moderateUploads ? "pending" : "approved";
     const needsDerivatives = ingress.kind === "image";
 
-    const media = await prisma.media.create({
-      data: {
-        id: mediaId,
+    let media;
+    if (clientUploadKey) {
+      await prisma.media.create({
+        data: {
+          id: mediaId,
+          eventId: event.id,
+          storageKey,
+          originalKey: storageKey,
+          displayKey: null,
+          mimeType: ingress.mime,
+          size: buffer.length,
+          contentSha256,
+          guestName,
+          guestKey,
+          width: null,
+          height: null,
+          status,
+          derivativesReady: !needsDerivatives,
+        },
+      });
+      await commitGuestUploadReservation({
         eventId: event.id,
-        storageKey,
-        thumbKey: null,
-        mimeType: ingress.mime,
-        size: buffer.length,
-        guestName,
+        clientKey: clientUploadKey,
+        mediaId,
+        byteSize: buffer.length,
         guestKey,
-        width: null,
-        height: null,
-        status,
-        derivativesReady: !needsDerivatives,
-      },
-    });
-    timings.dbMs = performance.now() - t0;
+        disposableShotCheck: shotCheck,
+      });
+      media = await prisma.media.findUnique({ where: { id: mediaId } });
+      reservedKey = null;
+    } else {
+      media = await prisma.$transaction(async (tx) => {
+        if (shotCheck) {
+          const quota = await tx.guestShotQuota.upsert({
+            where: { eventId_guestKey: { eventId: event.id, guestKey } },
+            create: { eventId: event.id, guestKey, used: 0 },
+            update: {},
+          });
+          if (quota.used >= event.shotsPerGuest) {
+            throw new UploadShotLimitReached();
+          }
+        }
 
-    if (event.disposableEnabled && event.shotsPerGuest > 0) {
-      await prisma.guestShotQuota.update({
-        where: { eventId_guestKey: { eventId: event.id, guestKey } },
-        data: { used: { increment: 1 } },
+        const locked = await tx.event.findUnique({ where: { id: event.id } });
+        if (!locked) throw new ValidationError("STORAGE_LIMIT");
+        const total = Number(locked.totalBytes);
+        if (total + buffer.length > plan.maxTotalBytes) {
+          throw new ValidationError("STORAGE_LIMIT");
+        }
+        if (locked.uploadCount >= plan.maxUploads) {
+          throw new ValidationError("STORAGE_LIMIT");
+        }
+
+        const row = await tx.media.create({
+          data: {
+            id: mediaId,
+            eventId: event.id,
+            storageKey,
+            originalKey: storageKey,
+            displayKey: null,
+            mimeType: ingress.mime,
+            size: buffer.length,
+            contentSha256,
+            guestName,
+            guestKey,
+            status,
+            derivativesReady: !needsDerivatives,
+          },
+        });
+
+        if (shotCheck) {
+          await tx.guestShotQuota.update({
+            where: { eventId_guestKey: { eventId: event.id, guestKey } },
+            data: { used: { increment: 1 } },
+          });
+        }
+
+        await tx.event.update({
+          where: { id: event.id },
+          data: {
+            uploadCount: { increment: 1 },
+            totalBytes: { increment: buffer.length },
+          },
+        });
+        return row;
       });
     }
+    timings.dbMs = performance.now() - t0;
 
-    await prisma.event.update({
-      where: { id: event.id },
-      data: {
-        uploadCount: { increment: 1 },
-        totalBytes: { increment: buffer.length },
-      },
-    });
+    if (!media) throw new Error("media missing");
 
     if (needsDerivatives) {
       await enqueueMediaDerivativeJob(media.id);
@@ -161,10 +217,6 @@ export async function POST(req: Request, { params }: Params) {
     if (status === "approved") {
       const { notifyBatchedUploads } = await import("@/lib/push-server");
       void notifyBatchedUploads(event.id, event.coupleNames);
-    }
-
-    if (clientUploadKey) {
-      await recordUploadClientKey(event.id, clientUploadKey, media.id);
     }
 
     timings.totalMs = performance.now() - t0;
@@ -182,6 +234,18 @@ export async function POST(req: Request, { params }: Params) {
     );
     return res;
   } catch (e) {
+    if (reservedKey && reservedEventId) {
+      await releaseGuestUploadReservation(reservedEventId, reservedKey).catch(() => {});
+    }
+    if (e instanceof UploadIdempotencyConflict) {
+      return jsonError(409, "იდემპოტენტობის გასაღები უკვე გამოყენებულია", "IDEMPOTENCY_CONFLICT");
+    }
+    if (e instanceof UploadShotLimitReached) {
+      return jsonError(403, "კადრების ლიმიტი ამოიწურა", "SHOT_LIMIT_REACHED");
+    }
+    if (e instanceof UploadQuotaExceeded) {
+      return jsonError(403, "ალბომის ლიმიტი ამოიწურა", "STORAGE_LIMIT");
+    }
     return handleApiError(e);
   }
 }

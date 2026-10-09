@@ -26,6 +26,9 @@ export interface WebhookVerifyResult {
   eventId?: string;
   paymentId?: string;
   status?: "paid" | "failed";
+  amountGel?: number;
+  currency?: string;
+  provider?: PaymentProvider;
 }
 
 export interface BillingAdapter {

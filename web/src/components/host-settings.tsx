@@ -58,7 +58,9 @@ export function HostSettings({
           : null,
         publicGallery,
         customSlug: slug || null,
-        galleryPassword: galleryPassword || null,
+        ...(galleryPassword
+          ? { galleryPasswordAction: "change", galleryPasswordNew: galleryPassword }
+          : { galleryPasswordAction: "unchanged" }),
       }),
     });
     const data = await res.json().catch(() => ({}));
@@ -180,6 +182,62 @@ export function HostSettings({
             {inviteStatus.msg}
           </p>
         )}
+      </div>
+
+      <div className="border-t pt-4">
+        <p className="text-sm font-medium">ჰოსტის ბმული (უსაფრთხოება)</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          როტაცია ძველ ბმულს აუქმებს. გაუქმება დახურავს წვდომას საყოვარებლის პანელზე.
+        </p>
+        <div className="mt-2 flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={async () => {
+              const res = await fetch(`/api/host/${token}/capability`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "x-csrf-token": csrfToken,
+                },
+                body: JSON.stringify({ action: "rotate" }),
+              });
+              const data = await res.json().catch(() => ({}));
+              if (!res.ok) {
+                alert(data.error ?? "როტაცია ვერ მოხერხდა");
+                return;
+              }
+              if (data.hostUrl) {
+                window.location.href = data.hostUrl;
+              }
+            }}
+          >
+            ბმულის როტაცია
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={async () => {
+              if (!confirm("ჰოსტის ბმული გაუქმდება. გავაგრძელოთ?")) return;
+              const res = await fetch(`/api/host/${token}/capability`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "x-csrf-token": csrfToken,
+                },
+                body: JSON.stringify({ action: "revoke" }),
+              });
+              if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                alert(data.error ?? "გაუქმება ვერ მოხერხდა");
+              } else {
+                alert("წვდომა გაუქმებულია");
+              }
+            }}
+          >
+            ბმულის გაუქმება
+          </Button>
+        </div>
       </div>
 
       <PushSettings hostToken={token} csrfToken={csrfToken} />

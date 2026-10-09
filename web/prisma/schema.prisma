@@ -132,6 +132,7 @@ model PartnerOrg {
   events       Event[]
   referrals    PartnerReferral[]
   subscription PartnerSubscription?
+  creditLedger PartnerCreditLedger[]
 }
 
 model PartnerMember {
@@ -174,6 +175,8 @@ model Event {
   guestSlug       String    @unique
   customSlug      String?   @unique
   hostToken       String    @unique
+  hostTokenHash   String?   @unique
+  hostCapabilityRevoked Boolean @default(false)
   slideshowToken  String    @unique
   coupleNames     String
   eventDate       DateTime
@@ -182,7 +185,7 @@ model Event {
   isPaid          Boolean   @default(false)
   paidAt          DateTime?
   expiresAt       DateTime?
-  totalBytes      Int       @default(0)
+  totalBytes      BigInt    @default(0)
   uploadCount     Int       @default(0)
 
   ownerUserId     String?
@@ -196,6 +199,11 @@ model Event {
   moderateUploads     Boolean   @default(false)
   publicGallery       Boolean   @default(false)
   galleryPasswordHash String?
+  galleryAccessVersion Int      @default(0)
+  uploadOpensAt        DateTime?
+  uploadClosesAt       DateTime?
+  galleryExpiresAt     DateTime?
+  purgeAt              DateTime?
   brandingPrimary     String?
   brandingLogoUrl     String?
 
@@ -210,6 +218,8 @@ model Event {
   referral      PartnerReferral?
   guestQuotas   GuestShotQuota[]
   uploadIdempotencyKeys GuestUploadIdempotency[]
+  uploadReservations    GuestUploadReservation[]
+  exportJobs            MediaExportJob[]
   pushSubs      PushSubscription[]
   mobilePushRegs MobilePushRegistration[]
   pushPendingUploadCount Int       @default(0)
@@ -270,6 +280,10 @@ model Media {
   eventId     String
   event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   storageKey  String   @unique
+  originalKey String?
+  displayKey  String?
+  posterKey   String?
+  contentSha256 String?
   thumbKey    String?
   mimeType    String
   size        Int
@@ -294,13 +308,16 @@ model MediaDerivativeJob {
   id        String   @id @default(cuid())
   mediaId   String   @unique
   media     Media    @relation(fields: [mediaId], references: [id], onDelete: Cascade)
-  status    String   @default("pending") // pending | processing | done | failed
+  status    String   @default("pending") // pending | processing | done | failed | dead
   attempts  Int      @default(0)
   lastError String?
+  leaseUntil DateTime?
+  leasedBy   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([status, createdAt])
+  @@index([status, leaseUntil])
 }
 
 model GuestShotQuota {
@@ -314,6 +331,24 @@ model GuestShotQuota {
 }
 
 /** Client-provided upload idempotency key per event (PWA offline flush dedupe). */
+model GuestUploadReservation {
+  id            String   @id @default(cuid())
+  eventId       String
+  event         Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  clientKey     String
+  payloadHash   String
+  status        String   // reserved | committed | released
+  reservedBytes Int
+  mediaId       String?
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([eventId, clientKey])
+  @@index([eventId, status])
+  @@index([expiresAt])
+}
+
 model GuestUploadIdempotency {
   id        String   @id @default(cuid())
   eventId   String
@@ -394,13 +429,61 @@ model EmailOutbox {
   template      String
   payload       String
   locale        String    @default("ka")
+  idempotencyKey String?  @unique
   attempts      Int       @default(0)
   lastError     String?
   nextAttemptAt DateTime  @default(now())
   sentAt        DateTime?
+  deadAt        DateTime?
   createdAt     DateTime  @default(now())
 
   @@index([sentAt, nextAttemptAt])
+}
+
+model MediaExportJob {
+  id                 String   @id @default(cuid())
+  eventId            String
+  event              Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  status             String   @default("pending")
+  storageKey         String?
+  bytesWritten       BigInt   @default(0)
+  mediaTotal         Int      @default(0)
+  mediaDone          Int      @default(0)
+  resumeAfterMediaId String?
+  leaseUntil         DateTime?
+  leasedBy           String?
+  attempts           Int      @default(0)
+  lastError          String?
+  idempotencyKey     String?  @unique
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([eventId, status])
+}
+
+model MediaReport {
+  id        String   @id @default(cuid())
+  mediaId   String
+  eventId   String
+  reason    String
+  guestKey  String?
+  createdAt DateTime @default(now())
+
+  @@index([eventId])
+}
+
+model PartnerCreditLedger {
+  id           String     @id @default(cuid())
+  partnerId    String
+  partner      PartnerOrg @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  type         String
+  amount       Int
+  balanceAfter Int
+  reference    String?
+  metadata     String?
+  createdAt    DateTime   @default(now())
+
+  @@index([partnerId, createdAt])
 }
 
 model PaymentWebhookEvent {
@@ -408,7 +491,20 @@ model PaymentWebhookEvent {
   provider       String
   idempotencyKey String   @unique
   paymentId      String?
+  status         String   @default("received") // received | processing | succeeded | failed
+  leaseUntil     DateTime?
+  attempts       Int      @default(0)
+  lastError      String?
+  processedAt    DateTime?
   createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model RateLimitBucket {
+  bucketKey   String   @id
+  points      Int
+  windowStart DateTime
+  updatedAt   DateTime @updatedAt
 }
 
 model UsageSnapshot {

@@ -11,8 +11,9 @@ export function notifyUnauthorized() {
   try {
     unauthorizedHandler();
   } finally {
-    setTimeout(() => {
+    const t = setTimeout(() => {
       handlingUnauthorized = false;
     }, 2000);
+    t.unref?.();
   }
 }

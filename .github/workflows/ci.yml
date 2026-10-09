@@ -81,7 +81,7 @@ jobs:
           npm run ensure:demo
       - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
         run: |
-          PAYMENT_MOCK=1 E2E_SECRET=local-e2e E2E_RATE_LIMIT_FREE=1 \
+          CI_E2E=1 PAYMENT_MOCK=1 E2E_SECRET=local-e2e E2E_RATE_LIMIT_FREE=1 \
           ADMIN_PASSWORD=dev-admin-change-me \
           ADMIN_PASSWORD_HASH='$2b$12$9xlwxf.kxq03ktSCTfULa.SEHDoSmEoNmvd.wwrtQ6zkmiRYMyYgu' \
           npm run start &
@@ -90,9 +90,52 @@ jobs:
       - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
         env:
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:43123
+          CI_E2E: "1"
         run: npm run test:e2e
       - if: steps.changes.outputs.web == 'true' || github.event_name != 'pull_request'
-        run: npm audit --audit-level=high || true
+        run: npm audit --audit-level=critical
+
+  db-backup-smoke:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: memento
+          POSTGRES_PASSWORD: memento
+          POSTGRES_DB: memento_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U memento -d memento_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://memento:memento@localhost:5432/memento_test
+      SCRATCH_DATABASE_URL: postgresql://memento:memento@localhost:5432/memento_scratch
+      PGPASSWORD: memento
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - working-directory: web
+        run: npm ci --legacy-peer-deps
+      - working-directory: web
+        run: npx prisma migrate deploy
+      - name: Create scratch database
+        run: |
+          psql -h localhost -U memento -d memento_test -c "DROP DATABASE IF EXISTS memento_scratch;"
+          psql -h localhost -U memento -d memento_test -c "CREATE DATABASE memento_scratch;"
+      - name: Backup primary and restore into scratch
+        run: |
+          pg_dump -h localhost -U memento memento_test | psql -h localhost -U memento -d memento_scratch
+      - name: Smoke query on scratch
+        run: |
+          psql -h localhost -U memento -d memento_scratch -c "SELECT COUNT(*) FROM \"Event\";"
 
   app:
     runs-on: ubuntu-24.04

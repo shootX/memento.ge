@@ -55,10 +55,11 @@ export async function sendPushToEvent(
 const BATCH_MS = 2 * 60 * 1000;
 
 export async function notifyBatchedUploads(eventId: string, coupleNames: string) {
-  await prisma.event.update({
+  const bumped = await prisma.event.updateMany({
     where: { id: eventId },
     data: { pushPendingUploadCount: { increment: 1 } },
   });
+  if (bumped.count === 0) return;
   const event = await prisma.event.findUnique({ where: { id: eventId } });
   if (!event) return;
 
@@ -82,7 +83,7 @@ export async function notifyBatchedUploads(eventId: string, coupleNames: string)
     { uploads: true },
   );
 
-  await prisma.event.update({
+  await prisma.event.updateMany({
     where: { id: eventId },
     data: { pushPendingUploadCount: 0, pushLastUploadNotifyAt: new Date() },
   });

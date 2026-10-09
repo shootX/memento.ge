@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { buildCsp } from "@/lib/csp";
+import { cookieSecureFlag } from "@/lib/production-guards";
 import {
   isMarketingCachePath,
   isPrivateAppPath,
@@ -18,6 +19,7 @@ export function middleware(request: NextRequest) {
   }
 
   const pathname = request.nextUrl.pathname;
+  requestHeaders.set("x-memento-pathname", pathname);
   const localeMatch = pathname.match(/^\/(en|ru)(\/.*)?$/);
   let response: NextResponse;
 
@@ -72,7 +74,7 @@ export function middleware(request: NextRequest) {
   if (hostMatch && !pathname.includes("/slideshow")) {
     response.cookies.set("memento_host_csrf", hostMatch[1], {
       httpOnly: true,
-      secure: !isDev,
+      secure: cookieSecureFlag(),
       sameSite: "strict",
       path: "/",
       maxAge: 24 * 3600,

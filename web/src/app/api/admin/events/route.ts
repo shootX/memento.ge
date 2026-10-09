@@ -26,7 +26,7 @@ export async function GET() {
       planTier: e.planTier,
       isPaid: e.isPaid,
       uploadCount: e.uploadCount,
-      totalBytes: e.totalBytes,
+      totalBytes: Number(e.totalBytes),
       createdAt: e.createdAt,
       priceGel: getPlan(e.planTier).priceGel,
     })),

@@ -3,6 +3,8 @@ import type { Event } from "@/generated/prisma/client";
 import { getPlan } from "@/lib/plans";
 import { trialUploadLimit } from "@/lib/site-config";
 import { isEventExpired } from "@/lib/tbilisi-time";
+import { bigintToNumber } from "@/lib/bytes-json";
+import { isWithinUploadWindow } from "@/lib/event-schedule";
 
 function isValidPublicSlug(slug: string): boolean {
   if (!slug || slug.length < 3 || slug.length > 64) return false;
@@ -24,9 +26,8 @@ export async function getEventByGuestSlug(slug: string): Promise<Event | null> {
 }
 
 export async function getEventByHostToken(token: string): Promise<Event | null> {
-  if (!token || token.length < 24 || token.length > 128) return null;
-  if (!/^[a-zA-Z0-9_-]+$/.test(token)) return null;
-  return prisma.event.findUnique({ where: { hostToken: token } });
+  const { findEventByHostCapabilityToken } = await import("@/lib/host-token");
+  return findEventByHostCapabilityToken(token);
 }
 
 export async function getEventBySlideshowToken(
@@ -50,12 +51,17 @@ export function eventInTrialUploads(event: Event): boolean {
 }
 
 export function eventAllowsUpload(event: Event): boolean {
-  if (isEventExpired(event.expiresAt)) return false;
+  const expiry = event.galleryExpiresAt ?? event.expiresAt;
+  if (isEventExpired(expiry)) return false;
+  if (!isWithinUploadWindow(new Date(), event.uploadOpensAt, event.uploadClosesAt)) {
+    return false;
+  }
   const plan = getPlan(event.planTier);
+  const totalBytes = bigintToNumber(event.totalBytes);
 
   if (event.isPaid) {
     if (event.uploadCount >= plan.maxUploads) return false;
-    if (event.totalBytes >= plan.maxTotalBytes) return false;
+    if (totalBytes >= plan.maxTotalBytes) return false;
     return true;
   }
 

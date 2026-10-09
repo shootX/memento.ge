@@ -57,7 +57,7 @@ export async function getHostBootstrap(token: string) {
     planTier: event.planTier,
     usage: {
       uploadCount: event.uploadCount,
-      totalBytes: event.totalBytes,
+      totalBytes: Number(event.totalBytes),
       maxUploads: plan.maxUploads,
       priceGel: plan.priceGel,
     },

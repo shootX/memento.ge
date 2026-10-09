@@ -15,7 +15,8 @@ const schema = z.object({
   moderateUploads: z.boolean().optional(),
   publicGallery: z.boolean().optional(),
   customSlug: z.string().min(3).max(40).regex(/^[a-z0-9-]+$/).nullable().optional(),
-  galleryPassword: z.string().min(4).max(100).nullable().optional(),
+  galleryPasswordAction: z.enum(["unchanged", "change", "remove"]).optional(),
+  galleryPasswordNew: z.string().min(4).max(100).optional(),
 });
 
 export async function PATCH(req: Request, { params }: Params) {
@@ -62,10 +63,17 @@ export async function PATCH(req: Request, { params }: Params) {
   }
 
   if (body.customSlug !== undefined) data.customSlug = body.customSlug;
-  if (body.galleryPassword !== undefined) {
-    data.galleryPasswordHash = body.galleryPassword
-      ? await bcrypt.hash(body.galleryPassword, 12)
-      : null;
+
+  const pwdAction = body.galleryPasswordAction ?? "unchanged";
+  if (pwdAction === "change") {
+    if (!body.galleryPasswordNew) {
+      return jsonError(400, "ახალი პაროლი სავალდებულოა", "PASSWORD_REQUIRED");
+    }
+    data.galleryPasswordHash = await bcrypt.hash(body.galleryPasswordNew, 12);
+    data.galleryAccessVersion = { increment: 1 };
+  } else if (pwdAction === "remove") {
+    data.galleryPasswordHash = null;
+    data.galleryAccessVersion = { increment: 1 };
   }
 
   const updated = await prisma.event.update({

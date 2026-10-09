@@ -1,21 +1,35 @@
-import { NextResponse } from "next/server";
 import { flittAdapter } from "@/lib/billing/flitt-adapter";
-import {
-  claimWebhookEvent,
-  webhookIdempotencyKey,
-} from "@/lib/billing/activate-payment";
+import { webhookIdempotencyKey } from "@/lib/billing/activate-payment";
+import { processWebhookDelivery } from "@/lib/billing/webhook-processor";
 
 export async function POST(req: Request) {
   const raw = await req.text();
-  const key = webhookIdempotencyKey("flitt", raw);
-  if (!(await claimWebhookEvent("flitt", key))) {
-    return NextResponse.json({ ok: true, duplicate: true });
-  }
-
   const verified = await flittAdapter.verifyWebhook(req, raw);
   if (!verified.ok) {
-    return NextResponse.json({ error: "invalid signature" }, { status: 401 });
+    return Response.json({ error: "invalid signature" }, { status: 401 });
   }
 
-  return NextResponse.json({ ok: true, status: verified.status });
+  const key = webhookIdempotencyKey("flitt", raw);
+  const outcome =
+    verified.status === "paid" && verified.paymentId && verified.eventId
+      ? "paid"
+      : verified.status === "failed"
+        ? "failed"
+        : "noop";
+
+  return processWebhookDelivery({
+    provider: "flitt",
+    idempotencyKey: key,
+    paymentId: verified.paymentId,
+    eventId: verified.eventId,
+    outcome,
+    expected:
+      outcome === "paid"
+        ? {
+            amountGel: verified.amountGel ?? 0,
+            currency: verified.currency ?? "GEL",
+            provider: verified.provider ?? "flitt",
+          }
+        : undefined,
+  });
 }

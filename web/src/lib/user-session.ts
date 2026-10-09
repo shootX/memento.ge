@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { createHash } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { newToken } from "@/lib/crypto";
+import { cookieSecureFlag } from "@/lib/production-guards";
 
 const USER_COOKIE = "memento_user";
 
@@ -58,7 +59,7 @@ export async function setUserCookie(token: string) {
   const jar = await cookies();
   jar.set(USER_COOKIE, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: cookieSecureFlag(),
     sameSite: "lax",
     path: "/",
     maxAge: 30 * 24 * 3600,

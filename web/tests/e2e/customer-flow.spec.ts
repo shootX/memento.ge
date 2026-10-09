@@ -28,12 +28,10 @@ test("create → manual pay → admin activates → guest upload on host", async
     data: { password: adminPassword },
   });
   if (login.ok()) {
-    const cookie = login.headers()["set-cookie"]?.split(";")[0] ?? "";
     const act = await request.patch(`${base}/api/admin/events/${event.id}`, {
       data: { isPaid: true },
-      headers: cookie ? { Cookie: cookie } : {},
     });
-    expect(act.ok()).toBeTruthy();
+    expect(act.ok(), await act.text()).toBeTruthy();
   } else {
     const act = await request.post(`${base}/api/e2e/activate-event`, {
       data: { eventId: event.id },

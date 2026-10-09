@@ -13,14 +13,22 @@ export async function GET(req: Request, { params }: Params) {
     const event = await getEventByHostToken(token);
     if (!event) return jsonError(404, "Not found");
 
+    const url = new URL(req.url);
+    const cursor = url.searchParams.get("cursor");
+    const take = Math.min(100, Number(url.searchParams.get("limit") ?? "50") || 50);
+
     const items = await prisma.media.findMany({
       where: { eventId: event.id },
       orderBy: { createdAt: "desc" },
-      take: 500,
+      take: take + 1,
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
     });
+    const hasMore = items.length > take;
+    const page = hasMore ? items.slice(0, take) : items;
+    const nextCursor = hasMore ? page[page.length - 1]?.id : null;
 
     const exp = Date.now() + 3600_000;
-    const mapped = items.map((m) => {
+    const mapped = page.map((m) => {
       const mediaToken = signMediaAccess(m.id, exp);
       const thumbToken = m.thumbKey ? signMediaAccess(`${m.id}:thumb`, exp) : null;
       return {
@@ -37,7 +45,7 @@ export async function GET(req: Request, { params }: Params) {
       };
     });
 
-    return NextResponse.json({ items: mapped });
+    return NextResponse.json({ items: mapped, nextCursor });
   } catch (e) {
     return handleApiError(e);
   }

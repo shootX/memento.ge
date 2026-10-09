@@ -2,8 +2,19 @@ import { cookies } from "next/headers";
 import { createHash } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { newToken } from "@/lib/crypto";
+import { cookieSecureFlag } from "@/lib/production-guards";
 
-const ADMIN_COOKIE = "memento_admin";
+export const ADMIN_COOKIE = "memento_admin";
+
+export function adminCookieOptions() {
+  return {
+    httpOnly: true as const,
+    secure: cookieSecureFlag(),
+    sameSite: "lax" as const,
+    path: "/",
+    maxAge: 7 * 24 * 3600,
+  };
+}
 const HOST_CSRF_COOKIE = "memento_host_csrf";
 
 export function hashToken(token: string): string {
@@ -36,13 +47,7 @@ export async function getAdminTokenFromCookies(): Promise<string | undefined> {
 
 export async function setAdminCookie(token: string) {
   const jar = await cookies();
-  jar.set(ADMIN_COOKIE, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 7 * 24 * 3600,
-  });
+  jar.set(ADMIN_COOKIE, token, adminCookieOptions());
 }
 
 export async function clearAdminCookie() {
@@ -54,7 +59,7 @@ export async function setHostCsrf(hostToken: string) {
   const jar = await cookies();
   jar.set(HOST_CSRF_COOKIE, hostToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: cookieSecureFlag(),
     sameSite: "strict",
     path: "/",
     maxAge: 24 * 3600,

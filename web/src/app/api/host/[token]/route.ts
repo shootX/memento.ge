@@ -37,7 +37,7 @@ export async function GET(req: Request, { params }: Params) {
       expiresAt: event.expiresAt,
       usage: {
         uploadCount: event.uploadCount,
-        totalBytes: event.totalBytes,
+        totalBytes: Number(event.totalBytes),
         maxUploads: plan.maxUploads,
         maxTotalBytes: plan.maxTotalBytes,
         priceGel: plan.priceGel,

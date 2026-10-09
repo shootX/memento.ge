@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-const wa = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "995555123456";
+const wa = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.replace(/\D/g, "") ?? "";
 
 export function LandingFinalCta() {
   return (
@@ -21,14 +21,16 @@ export function LandingFinalCta() {
                 უფასო დაწყება
               </Button>
             </Link>
-            <a
-              href={`https://wa.me/${wa}?text=${encodeURIComponent("გამარჯობა, მემენტოს შესახებ")}`}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center rounded-full border-2 border-white/80 px-8 py-4 font-bold text-white hover:bg-white/10"
-            >
-              WhatsApp
-            </a>
+            {wa ? (
+              <a
+                href={`https://wa.me/${wa}?text=${encodeURIComponent("გამარჯობა, მემენტოს შესახებ")}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center rounded-full border-2 border-white/80 px-8 py-4 font-bold text-white hover:bg-white/10"
+              >
+                WhatsApp
+              </a>
+            ) : null}
           </div>
         </div>
       </div>

@@ -1,6 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { signMediaAccess } from "@/lib/crypto";
 import { cookies } from "next/headers";
+import {
+  galleryUnlockCookieName,
+  verifyGalleryUnlockToken,
+} from "@/lib/gallery-unlock-session";
 
 export async function getPublicGalleryBootstrap(slug: string) {
   const event = await prisma.event.findFirst({
@@ -11,8 +15,8 @@ export async function getPublicGalleryBootstrap(slug: string) {
 
   if (event.galleryPasswordHash) {
     const jar = await cookies();
-    const unlocked = jar.get(`gallery_${event.id}`)?.value;
-    if (unlocked !== "1") {
+    const token = jar.get(galleryUnlockCookieName(event.id))?.value;
+    if (!verifyGalleryUnlockToken(token, event.id, event.galleryAccessVersion)) {
       return { locked: true as const, coupleNames: event.coupleNames, items: [] };
     }
   }
@@ -20,7 +24,7 @@ export async function getPublicGalleryBootstrap(slug: string) {
   const media = await prisma.media.findMany({
     where: { eventId: event.id, status: "approved" },
     orderBy: { createdAt: "desc" },
-    take: 200,
+    take: 100,
   });
   const exp = Date.now() + 3600_000;
   return {

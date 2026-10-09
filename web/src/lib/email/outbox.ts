@@ -13,13 +13,19 @@ export async function queueEmail(
   template: string,
   payload: Record<string, unknown>,
   locale: EmailLocale = "ka",
+  idempotencyKey?: string,
 ) {
+  if (idempotencyKey) {
+    const existing = await prisma.emailOutbox.findUnique({ where: { idempotencyKey } });
+    if (existing) return;
+  }
   await prisma.emailOutbox.create({
     data: {
       toEmail,
       template,
       payload: JSON.stringify(payload),
       locale,
+      idempotencyKey,
     },
   });
 
@@ -65,7 +71,12 @@ export async function processEmailOutbox(limit = 20): Promise<{ sent: number; fa
       if (attempts >= MAX_ATTEMPTS) {
         await prisma.emailOutbox.update({
           where: { id: row.id },
-          data: { attempts, lastError: err, nextAttemptAt: new Date(Date.now() + 86400000) },
+          data: {
+            attempts,
+            lastError: err,
+            deadAt: new Date(),
+            nextAttemptAt: new Date(Date.now() + 86400000),
+          },
         });
       } else {
         await prisma.emailOutbox.update({

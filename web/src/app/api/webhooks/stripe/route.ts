@@ -1,26 +1,36 @@
 import { NextResponse } from "next/server";
 import { stripeAdapter } from "@/lib/billing/stripe-adapter";
-import {
-  claimWebhookEvent,
-  markPaymentPaid,
-  webhookIdempotencyKey,
-} from "@/lib/billing/activate-payment";
+import { webhookIdempotencyKey } from "@/lib/billing/activate-payment";
+import { processWebhookDelivery } from "@/lib/billing/webhook-processor";
 
 export async function POST(req: Request) {
   const raw = await req.text();
-  const key = webhookIdempotencyKey("stripe", raw);
-  if (!(await claimWebhookEvent("stripe", key))) {
-    return NextResponse.json({ ok: true, duplicate: true });
-  }
-
   const verified = await stripeAdapter.verifyWebhook(req, raw);
   if (!verified.ok) {
     return NextResponse.json({ error: "invalid" }, { status: 400 });
   }
 
-  if (verified.eventId && verified.status === "paid" && verified.paymentId) {
-    await markPaymentPaid(verified.paymentId, verified.eventId);
-  }
+  const key = webhookIdempotencyKey("stripe", raw);
+  const outcome =
+    verified.status === "paid" && verified.paymentId && verified.eventId
+      ? "paid"
+      : verified.status === "failed"
+        ? "failed"
+        : "noop";
 
-  return NextResponse.json({ ok: true });
+  return processWebhookDelivery({
+    provider: "stripe",
+    idempotencyKey: key,
+    paymentId: verified.paymentId,
+    eventId: verified.eventId,
+    outcome,
+    expected:
+      outcome === "paid"
+        ? {
+            amountGel: verified.amountGel ?? 0,
+            currency: verified.currency ?? "GEL",
+            provider: verified.provider ?? "stripe",
+          }
+        : undefined,
+  });
 }
