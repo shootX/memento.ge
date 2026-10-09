@@ -7,7 +7,7 @@
 
 | # | Item | Status | Tests / evidence |
 |---|------|--------|------------------|
-| 1 | CI web+app+E2E | in flight | GitHub Actions on PR #3 |
+| 1 | CI web+app+E2E | **green** | https://github.com/shootX/memento.ge/actions/runs/37897561897 @ `c84361b` |
 | 2 | ZIP SHA-256 per entry | done | `zip-verify.ts`, `phase-bc-finish.test.ts` |
 | 3 | Pagination &gt;500 | done | 510 media cursor test |
 | 4 | Cross-tenant matrix | done | `cross-tenant-matrix.test.ts` |
@@ -43,5 +43,8 @@
 
 | Suite | Count |
 |-------|-------|
-| web vitest | **160** |
+| web vitest | **162** |
 | app jest | **56** |
+| CI E2E | **108 passed** / 2 skipped |
+
+Staging bundle from `c84361b`: `git bundle list-heads` → `14e7e53c4a0406e45a343466315ffd43de5aec71 refs/heads/main`.
